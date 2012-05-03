@@ -1,5 +1,14 @@
 #!/usr/bin/env ruby
 
 $:.unshift File.expand_path('../../lib',__FILE__)
-require 'hehe'
-Raven::Generator::UnitTest.start
+require 'thor'
+
+#require 'hehe'
+#Raven::Generator::UnitTest.start
+
+Thor::Util.load_thorfile File.expand_path('../../lib/hehe.rb',__FILE__)
+
+require 'thor/runner'
+$thor_runner = true
+Thor::Runner.start
+

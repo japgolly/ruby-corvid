@@ -1,5 +1,5 @@
 # encoding: utf-8
-require_relative '<%= bootstrap %>'
+require_relative '<%= bootstrap_dir %>/unit'
 require '<%= src %>'
 
 class <%= testcase_name %>Test < MiniTest::Unit::TestCase

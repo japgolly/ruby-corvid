@@ -7,6 +7,8 @@ RAVEN_ROOT= File.expand_path('../..',__FILE__)
 module Raven
   module Generator
     class Base < Thor
+      include Thor::Actions
+
       def self.source_root
         "#{RAVEN_ROOT}/templates"
       end
@@ -17,20 +19,39 @@ module Raven
       protected
 
       def copy_file_unless_exists(src, tgt=nil, options={})
-        tgt ||= src.sub /\.tt$/, ''
+        tgt ||= src
         copy_file src, tgt, options unless File.exists?(tgt)
       end
     end
 
-    class UnitTest < Base
-      include Thor::Actions
+    class InitTest < Base
+      namespace 'init:test'
 
+      desc 'unit', 'Adds support for unit tests.'
+      def unit
+        copy_file_unless_exists 'test/bootstrap/all.rb'
+        copy_file 'test/bootstrap/unit.rb'
+      end
+
+      desc 'spec', 'Adds support for specifications.'
+      def spec
+        copy_file_unless_exists 'test/bootstrap/all.rb'
+        copy_file 'test/bootstrap/spec.rb'
+      end
+    end
+
+    class Test < Base
+      namespace :test
       argument :name, :type => :string
-      desc 'unit_test name', 'Generates a unit test.'
-      def unit_test
-        copy_file_unless_exists 'test/bootstrap/all.rb.tt'
-        copy_file_unless_exists 'test/bootstrap/unit.rb.tt'
+
+      desc 'unit', 'Generates a new unit test.'
+      def unit
         template 'test/unit/%src%_test.rb.tt', "test/unit/#{src}_test.rb"
+      end
+
+      desc 'spec', 'Generates a new specification.'
+      def spec
+        template 'test/spec/%src%_spec.rb.tt', "test/spec/#{src}_spec.rb"
       end
 
       private
@@ -39,12 +60,16 @@ module Raven
         name.underscore.gsub /^[\\\/]+|\.rb$/, ''
       end
 
-      def bootstrap
-        '../'*src.split(/[\\\/]+/).size + 'bootstrap/unit'
+      def bootstrap_dir
+        '../'*src.split(/[\\\/]+/).size + 'bootstrap'
       end
 
       def testcase_name
         src.split(/[\\\/]+/).last.camelcase
+      end
+
+      def subject
+        src.camelcase
       end
 
     end
