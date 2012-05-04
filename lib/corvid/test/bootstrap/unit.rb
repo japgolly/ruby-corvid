@@ -3,7 +3,7 @@ Bundler.require :test_unit
 require 'minitest/unit'
 MiniTest::Unit.autorun
 
-if ENV['ci']
+if ENV.on?('CI')
   ENV['CI_REPORTS'] ||= "#{APP_ROOT}/target/test-reports/unit"
   require 'ci/reporter/minitest'
   MiniTest::Unit.runner = CI::Reporter::Runner.new

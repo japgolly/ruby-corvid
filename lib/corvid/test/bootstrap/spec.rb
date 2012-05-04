@@ -1,6 +1,6 @@
 Bundler.require :test_spec
 
-if ENV['ci']
+if ENV.on?('CI')
   ENV['CI_REPORTS'] ||= "#{APP_ROOT}/target/test-reports/spec"
   require 'ci/reporter/rspec'
   RSpec.configure do |config|

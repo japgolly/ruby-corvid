@@ -4,9 +4,10 @@ unless defined?(APP_ROOT)
 end
 
 require 'rubygems'
+require 'corvid/environment'
 
 # Load coverage library before Bundler or anything else
-require 'corvid/test/simplecov' if ENV['coverage']
+require 'corvid/test/simplecov' if ENV.on?('coverage')
 
 def require_if_available(lib)
   require lib
