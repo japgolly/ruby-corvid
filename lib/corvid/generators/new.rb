@@ -1,7 +1,7 @@
-require 'raven/generators/base'
+require 'corvid/generators/base'
 
-module Raven::Generator::New
-  class Test < Raven::Generator::Base
+module Corvid::Generator::New
+  class Test < Corvid::Generator::Base
     argument :name, type: :string
 
     desc 'unit', 'Generates a new unit test.'

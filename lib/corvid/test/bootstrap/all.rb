@@ -1,12 +1,12 @@
 unless defined?(APP_ROOT)
-  $stderr.puts "ERROR: APP_ROOT is not defined.\nIt should be defined in your test/bootstrap/all.rb file before loading Raven."
+  $stderr.puts "ERROR: APP_ROOT is not defined.\nIt should be defined in your test/bootstrap/all.rb file before loading Corvid."
   exit 1
 end
 
 require 'rubygems'
 
 # Load coverage library before Bundler or anything else
-require 'raven/test/simplecov' if ENV['coverage']
+require 'corvid/test/simplecov' if ENV['coverage']
 
 def require_if_available(lib)
   require lib

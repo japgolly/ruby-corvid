@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require_relative '../../lib/raven/environment'
+require_relative '../../lib/corvid/environment'
 
 require 'tmpdir'
 require 'fileutils'
@@ -10,9 +10,9 @@ BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 
 module TestHelpers
-  def invoke_raven(args)
+  def invoke_corvid(args)
     args= args.map(&:inspect).join ' ' if args.kind_of?(Array)
-    cmd= %`"#{RAVEN_ROOT}/bin/raven" #{args}`
+    cmd= %`"#{CORVID_ROOT}/bin/corvid" #{args}`
     r= `#{cmd}`
     #puts r
   end
@@ -22,14 +22,14 @@ module TestHelpers
   end
 
   def file_should_match_template(f, src=nil)
-    File.read(f).should == File.read("#{RAVEN_ROOT}/templates/#{src || f}")
+    File.read(f).should == File.read("#{CORVID_ROOT}/templates/#{src || f}")
   end
 
   def inside_fixture(fixture_name)
     Dir.mktmpdir {|dir|
-      FileUtils.cp_r "#{RAVEN_ROOT}/test/fixtures/#{fixture_name}", dir
+      FileUtils.cp_r "#{CORVID_ROOT}/test/fixtures/#{fixture_name}", dir
       Dir.chdir "#{dir}/#{fixture_name}" do
-        `sed -i 's|\.\./\.\./\.\.|#{RAVEN_ROOT}|g; s/0\.0\.1/#{Raven::VERSION}/' Gem*`
+        `sed -i 's|\.\./\.\./\.\.|#{CORVID_ROOT}|g; s/0\.0\.1/#{Corvid::VERSION}/' Gem*`
         yield
       end
     }

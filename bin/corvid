@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-require_relative '../lib/raven/environment'
+require_relative '../lib/corvid/environment'
 require 'thor'
 
 # Load generators
-Dir["#{RAVEN_ROOT}/lib/raven/generators/**/*.rb"].each {|f| Thor::Util.load_thorfile f }
+Dir["#{CORVID_ROOT}/lib/corvid/generators/**/*.rb"].each {|f| Thor::Util.load_thorfile f }
 
 # Show available tasks by default
 ARGV<< '-T' if ARGV.empty?

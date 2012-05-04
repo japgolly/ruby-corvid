@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    raven (0.0.1)
+    corvid (0.0.1)
 
 GEM
   remote: http://rubygems.org/
@@ -44,9 +44,9 @@ PLATFORMS
 DEPENDENCIES
   activesupport
   ci_reporter
+  corvid!
   guard-rspec
   rake
-  raven!
   rdiscount
   rspec
   simplecov

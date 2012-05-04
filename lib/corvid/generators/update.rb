@@ -1,20 +1,20 @@
-require 'raven/generators/base'
+require 'corvid/generators/base'
 
-class Raven::Generator::Update < Raven::Generator::Base
+class Corvid::Generator::Update < Corvid::Generator::Base
 
-  desc 'deps', 'Update dependencies. (Recreates Gemfile.raven)'
+  desc 'deps', 'Update dependencies. (Recreates Gemfile.corvid)'
   method_options dryrun: false
-  method_options use_raven_gem: true
+  method_options use_corvid_gem: true
   def deps
     d= DepBuilder.new(options)
-    d.instance_eval File.read("#{self.class.source_root}/Gemfile.raven")
+    d.instance_eval File.read("#{self.class.source_root}/Gemfile.corvid")
     content= d.to_s
     if options[:dryrun]
       puts content
     else
-      create_file 'Gemfile.raven', content
-      unless $raven_bundle_install_at_exit_installed
-        $raven_bundle_install_at_exit_installed= true
+      create_file 'Gemfile.corvid', content
+      unless $corvid_bundle_install_at_exit_installed
+        $corvid_bundle_install_at_exit_installed= true
         #at_exit{ say_status 'exec','bundle install'; system "bundle install" }
         at_exit{ run "bundle install" }
       end

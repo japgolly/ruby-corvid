@@ -1,7 +1,7 @@
 PATH
   remote: ../../..
   specs:
-    raven (0.0.1)
+    corvid (0.0.1)
 
 GEM
   specs:
@@ -10,4 +10,4 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  raven!
+  corvid!

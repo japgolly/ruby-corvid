@@ -1,8 +1,8 @@
-require 'raven/generators/base'
+require 'corvid/generators/base'
 
-class Raven::Generator::Init < Raven::Generator::Base
+class Corvid::Generator::Init < Corvid::Generator::Base
 
-  desc 'project', 'Creates a new Raven project in the current directory.'
+  desc 'project', 'Creates a new Corvid project in the current directory.'
   method_option :'test-unit', type: :boolean
   method_option :'test-spec', type: :boolean
   def project
@@ -14,7 +14,7 @@ class Raven::Generator::Init < Raven::Generator::Base
     invoke 'update:deps'
   end
 
-  class Test < Raven::Generator::Base
+  class Test < Corvid::Generator::Base
 
     desc 'unit', 'Adds support for unit tests.'
     method_options :'update-deps' => true
