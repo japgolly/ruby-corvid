@@ -9,6 +9,7 @@ class Corvid::Generator::Init < Corvid::Generator::Base
     copy_file       '.gitignore'
     copy_file       '.simplecov'
     copy_file       'Gemfile'
+    copy_file       'Guardfile'
     copy_file       'Rakefile'
     copy_executable 'bin/rake'
     empty_directory 'lib'

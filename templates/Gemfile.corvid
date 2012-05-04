@@ -10,22 +10,19 @@ end
 gem 'rake', group: :rake
 
 group :test do
-  gem 'simplecov'
+  gem 'ci_reporter', require: false
+  gem 'simplecov', require: false
 end if Dir.exists?('test')
 
 group :test_unit do
   gem 'minitest'
-  gem 'guard-minitest', '>= 0.5.0'
+  gem 'guard-minitest', '>= 0.5.0', require: false
 end if Dir.exists?('test/unit')
 
 group :test_spec do
   gem 'rspec'
-  gem 'guard-rspec'
+  gem 'guard-rspec', require: false
 end if Dir.exists?('test/spec')
-
-group :ci do
-  gem 'ci_reporter', require: false
-end
 
 group :doc do
   gem 'yard'
