@@ -3,14 +3,14 @@ require 'corvid/generators/base'
 class Corvid::Generator::Update < Corvid::Generator::Base
 
   desc 'deps', 'Update dependencies. (Recreates Gemfile.corvid)'
-  method_options dryrun: false
+  method_options :'dry-run' => false
   method_options use_corvid_gem: true
   method_options :'bundle-install' => true
   def deps
     d= DepBuilder.new(options)
     d.instance_eval File.read("#{self.class.source_root}/Gemfile.corvid")
     content= d.to_s
-    if options[:dryrun]
+    if options[:'dry-run']
       puts content
     else
       create_file 'Gemfile.corvid', content
