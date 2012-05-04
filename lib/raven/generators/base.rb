@@ -25,6 +25,11 @@ module Raven
         tgt ||= src
         copy_file src, tgt, options unless File.exists?(tgt)
       end
+
+      def boolean_specified_or_ask(option_name, question)
+        v= options[option_name.to_sym]
+        v or v.nil? && yes?(question + ' [yn]')
+      end
     end
   end
 end
