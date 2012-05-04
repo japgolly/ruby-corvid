@@ -14,27 +14,48 @@ describe 'Integration test' do
   end
 
   around :each do |ex|
+    clean
     Dir.chdir($dir){ ex.run }
   end
 
+  def clean
+    return unless Dir.exist?('target')
+    invoke_sh! 'bundle exec rake clean'
+    Dir.exist?('target').should == false
+  end
+
   it("should initialise project"){
-    invoke_corvid! 'init:project --test-unit --no-test-spec'
+    invoke_corvid! 'init:project --test-unit --test-spec'
+    invoke_sh! 'echo "class Hehe; def num; 123 end end" > lib/hehe.rb'
   }
 
   it("should support unit tests"){
-    # Create lib and test
-    invoke_sh! 'echo "class Hehe; def num; 123 end end" > lib/hehe.rb'
+    # Create unit test
     invoke_corvid! 'new:test:unit hehe'
     invoke_sh! %!sed -i 's/# TODO/def test_hehe; assert_equal 123, Hehe.new.num end/' test/unit/hehe_test.rb!
 
-    # Invoke directly and check coverage
-    invoke_sh! 'ruby test/unit/hehe_test.rb', 'coverage'=>'1'
+    # Invoke via rake
+    invoke_sh! 'bundle exec rake test:unit', 'coverage'=>'1'
     File.exist?('target/coverage/index.html').should == true
 
-    # Redo with rake
-    invoke_sh! 'bundle exec rake clean'
-    File.exist?('target/coverage/index.html').should == false
-    invoke_sh! 'bundle exec rake test:unit', 'coverage'=>'1'
+    # Rerun directly
+    clean
+    invoke_sh! 'ruby test/unit/hehe_test.rb', 'coverage'=>'1'
+    File.exist?('target/coverage/index.html').should == true
+  }
+
+  it("should support specs"){
+    # Create spec
+    invoke_corvid! 'new:test:spec hehe'
+    invoke_sh! %!sed -i 's/# TODO/it("num"){ subject.num.should == 123 }/' test/spec/hehe_spec.rb!
+
+    # Invoke via rake
+    invoke_sh! 'bundle exec rake test:spec', 'coverage'=>'1'
+    File.exist?('target/coverage/index.html').should == true
+
+    # Rerun directly
+    clean
+    invoke_sh! 'bin/rspec test/spec/hehe_spec.rb', 'coverage'=>'1'
     File.exist?('target/coverage/index.html').should == true
   }
 end

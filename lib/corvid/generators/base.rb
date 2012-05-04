@@ -30,6 +30,11 @@ module Corvid
         v= options[option_name.to_sym]
         v or v.nil? && yes?(question + ' [yn]')
       end
+
+      def copy_executable(name, *extra_args)
+        copy_file name, *extra_args
+        chmod name, 0755, *extra_args
+      end
     end
   end
 end

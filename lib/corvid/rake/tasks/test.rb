@@ -9,7 +9,21 @@ namespace :test do
       require 'rake/testtask'
       Rake::TestTask.new(:'test:unit') do |t|
         t.pattern= "#{APP_ROOT}/test/unit{,/*,/**}/*_test.rb"
-        t.verbose= true
+        t.verbose= false
+      end
+    end
+    corvid_test_tasks<< 'test:unit'
+  end
+
+  # test:spec
+  if Dir.exists?("#{APP_ROOT}/test/unit")
+    desc "Test specifications."
+    task :spec do
+      require 'rspec/core/rake_task'
+      RSpec::Core::RakeTask.new(:'test:spec') do |t|
+        t.rspec_path= "#{APP_ROOT}/bin/rspec"
+        t.pattern= "#{APP_ROOT}/test/spec{,/*,/**}/*_spec.rb"
+        t.verbose= false
       end
     end
     corvid_test_tasks<< 'test:unit'
