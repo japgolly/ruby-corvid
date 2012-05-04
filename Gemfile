@@ -1,15 +1,9 @@
 source :rubygems
 
-group :rake do
-  gem 'rake'
-end
-
-gem 'thor'
-gem 'activesupport'
+gemspec
 
 # Testing
 group :test do
-  gem 'rspec'
   gem 'simplecov', require: false
   gem 'guard-rspec'
 end
@@ -23,9 +17,4 @@ end
 group :doc do
   gem 'yard'
   gem 'rdiscount'
-end
-
-# Debugging
-group :debug do
-  gem 'debugger'
 end
