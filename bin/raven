@@ -3,10 +3,9 @@
 $:.unshift File.expand_path('../../lib',__FILE__)
 require 'thor'
 
-#require 'hehe'
-#Raven::Generator::UnitTest.start
-
 Thor::Util.load_thorfile File.expand_path('../../lib/hehe.rb',__FILE__)
+
+ARGV<< '-T' if ARGV.empty?
 
 require 'thor/runner'
 $thor_runner = true
