@@ -10,15 +10,30 @@ BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 
 module TestHelpers
-  def invoke_corvid(args)
+  def invoke_corvid(args,env=nil)
     args= args.map(&:inspect).join ' ' if args.kind_of?(Array)
     cmd= %`"#{CORVID_ROOT}/bin/corvid" #{args}`
-    r= `#{cmd}`
-    #puts r
+    invoke_sh cmd, env
+  end
+  def invoke_corvid!(args,env=nil)
+    invoke_corvid(args,env).should eq(true), 'Corvid failed.'
+  end
+  def invoke_sh(cmd,env=nil)
+    cmd= cmd.map(&:inspect).join ' ' if cmd.kind_of?(Array)
+    system env || {}, cmd
+    $?.success?
+  end
+  def invoke_sh!(args,env=nil)
+    invoke_sh(args,env).should eq(true), 'Shell command failed.'
   end
 
-  def files
+  def files(force=false)
+    @files= nil if force
     @files ||= Dir['**/*'].select{|f| ! File.directory? f}.sort
+  end
+  def dirs(force=false)
+    @dirs= nil if force
+    @dirs ||= Dir['**/*'].select{|f| File.directory? f}.sort
   end
 
   def file_should_match_template(f, src=nil)

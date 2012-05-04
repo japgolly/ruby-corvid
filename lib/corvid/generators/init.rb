@@ -9,6 +9,7 @@ class Corvid::Generator::Init < Corvid::Generator::Base
     copy_file '.gitignore'
     copy_file '.simplecov'
     copy_file 'Gemfile'
+    empty_directory 'lib'
     invoke 'init:test:unit', nil, :'update-deps' => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
     invoke 'init:test:spec', nil, :'update-deps' => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'
     invoke 'update:deps'
