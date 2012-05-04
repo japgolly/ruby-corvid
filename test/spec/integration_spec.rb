@@ -29,6 +29,12 @@ describe 'Integration test' do
 
     # Invoke directly and check coverage
     invoke_sh! 'ruby test/unit/hehe_test.rb', 'coverage'=>'1'
-    files.should include 'target/coverage/index.html'
+    File.exist?('target/coverage/index.html').should == true
+
+    # Redo with rake
+    invoke_sh! 'bundle exec rake clean'
+    File.exist?('target/coverage/index.html').should == false
+    invoke_sh! 'bundle exec rake test', 'coverage'=>'1'
+    File.exist?('target/coverage/index.html').should == true
   }
 end
