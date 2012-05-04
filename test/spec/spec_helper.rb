@@ -18,7 +18,7 @@ module TestHelpers
   end
 
   def files
-    @files ||= Dir['**/*'].select{|f| ! File.directory? f}.sort - %w[Gemfile Gemfile.lock]
+    @files ||= Dir['**/*'].select{|f| ! File.directory? f}.sort
   end
 
   def file_should_match_template(f, src=nil)
