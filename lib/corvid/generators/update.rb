@@ -5,6 +5,7 @@ class Corvid::Generator::Update < Corvid::Generator::Base
   desc 'deps', 'Update dependencies. (Recreates Gemfile.corvid)'
   method_options dryrun: false
   method_options use_corvid_gem: true
+  method_options :'bundle-install' => true
   def deps
     d= DepBuilder.new(options)
     d.instance_eval File.read("#{self.class.source_root}/Gemfile.corvid")
@@ -13,9 +14,8 @@ class Corvid::Generator::Update < Corvid::Generator::Base
       puts content
     else
       create_file 'Gemfile.corvid', content
-      unless $corvid_bundle_install_at_exit_installed
+      if options[:'bundle-install'] and !$corvid_bundle_install_at_exit_installed
         $corvid_bundle_install_at_exit_installed= true
-        #at_exit{ say_status 'exec','bundle install'; system "bundle install" }
         at_exit{ run "bundle install" }
       end
     end
