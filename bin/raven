@@ -1,10 +1,12 @@
 #!/usr/bin/env ruby
 
-$:.unshift File.expand_path('../../lib',__FILE__)
+require_relative '../lib/raven/environment'
 require 'thor'
 
-Thor::Util.load_thorfile File.expand_path('../../lib/hehe.rb',__FILE__)
+# Load generators
+Dir["#{RAVEN_ROOT}/lib/raven/generators/**/*.rb"].each {|f| Thor::Util.load_thorfile f }
 
+# Show available tasks by default
 ARGV<< '-T' if ARGV.empty?
 
 require 'thor/runner'
