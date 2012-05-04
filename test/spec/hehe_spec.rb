@@ -17,7 +17,7 @@ describe 'Generator' do
   end
 
   def files
-    @files ||= Dir['**/*'].select{|f| ! File.directory? f}.sort
+    @files ||= Dir['**/*'].select{|f| ! File.directory? f}.sort - %w[Gemfile Gemfile.lock]
   end
 
   def file_should_match_template(f, src=nil)
@@ -30,6 +30,7 @@ describe 'Generator' do
       Dir.mktmpdir {|dir|
         FileUtils.cp_r "#{RAVEN_ROOT}/test/data/bare", dir
         Dir.chdir "#{dir}/bare" do
+          `sed -i 's|\.\./\.\./\.\.|#{RAVEN_ROOT}|g; s/0\.0\.1/#{Raven::VERSION}/' Gem*`
           ex.run
         end
       }
