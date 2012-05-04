@@ -16,7 +16,7 @@ namespace :test do
   end
 
   # test:spec
-  if Dir.exists?("#{APP_ROOT}/test/unit")
+  if Dir.exists?("#{APP_ROOT}/test/spec")
     desc "Test specifications."
     task :spec do
       require 'rspec/core/rake_task'
