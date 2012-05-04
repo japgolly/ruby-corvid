@@ -34,7 +34,7 @@ describe 'Integration test' do
     # Redo with rake
     invoke_sh! 'bundle exec rake clean'
     File.exist?('target/coverage/index.html').should == false
-    invoke_sh! 'bundle exec rake test', 'coverage'=>'1'
+    invoke_sh! 'bundle exec rake test:unit', 'coverage'=>'1'
     File.exist?('target/coverage/index.html').should == true
   }
 end
