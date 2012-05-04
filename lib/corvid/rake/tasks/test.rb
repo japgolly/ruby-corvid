@@ -26,7 +26,7 @@ namespace :test do
         t.verbose= false
       end
     end
-    corvid_test_tasks<< 'test:unit'
+    corvid_test_tasks<< 'test:spec'
   end
 
 end
