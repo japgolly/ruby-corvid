@@ -25,7 +25,7 @@ describe 'Integration test' do
   end
 
   it("should initialise project"){
-    invoke_corvid! 'init:project --test-unit --test-spec'
+    invoke_corvid! 'init:project --no-use_corvid_gem --test-unit --test-spec'
     invoke_sh! 'echo "class Hehe; def num; 123 end end" > lib/hehe.rb'
   }
 
