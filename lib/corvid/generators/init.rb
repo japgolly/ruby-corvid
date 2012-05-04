@@ -10,7 +10,7 @@ class Corvid::Generator::Init < Corvid::Generator::Base
     copy_file       '.simplecov'
     copy_file       'Gemfile'
     copy_file       'Rakefile'
-    copy_file       'bin/rake'
+    copy_executable 'bin/rake'
     empty_directory 'lib'
 
     invoke 'init:test:unit', nil, :'update-deps' => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
