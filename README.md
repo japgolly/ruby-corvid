@@ -1,3 +1,6 @@
+[![Build Status](https://secure.travis-ci.org/japgolly/corvid.png?branch=master)](http://travis-ci.org/japgolly/corvid)
+[![Dependency Status](https://gemnasium.com/japgolly/corvid.png)](https://gemnasium.com/japgolly/corvid)
+
 Features
 ========
 
