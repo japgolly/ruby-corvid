@@ -4,8 +4,11 @@ SimpleCov.start do
   # add_group 'Models', 'app/model'
   # add_group 'Plugins', '(app|lib)/plugins'
 
-  # Remove coverage for test code
+  # Remove test code from coverage
   add_filter 'test'
+
+  # Add files that don't get required to coverage too
+  add_files_to_coverage_at_exit '{app,lib}/**/*.rb'
 end
 
-# vim: ft=ruby et ts=2 sw=2 :
+# vim:ft=ruby et ts=2 sw=2:
