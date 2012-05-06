@@ -56,8 +56,12 @@ describe 'Integration test' do
     invoke_corvid! 'new:test:unit hehe'
     invoke_sh! %!sed -i 's/# TODO/def test_hehe; assert_equal 123, Hehe.new.num end/' test/unit/hehe_test.rb!
 
+    # Invoke via rake (by default without coverage)
+    invoke_rake! 'test:unit'
+    File.exist?('target/coverage/index.html').should == false
+
     # Invoke via rake
-    invoke_rake! 'test:unit', 'coverage'=>'1'
+    invoke_rake! 'test:unit coverage=1'
     File.exist?('target/coverage/index.html').should == true
 
     # Rerun directly
@@ -72,7 +76,7 @@ describe 'Integration test' do
     invoke_sh! %!sed -i 's/# TODO/it("num"){ subject.num.should == 123 }/' test/spec/hehe_spec.rb!
 
     # Invoke via rake
-    invoke_rake! 'test:spec', 'coverage'=>'1'
+    invoke_rake! 'test:spec coverage=1'
     File.exist?('target/coverage/index.html').should == true
 
     # Rerun directly
