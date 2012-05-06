@@ -3,4 +3,4 @@ APP_ROOT ||= File.expand_path(File.dirname(__FILE__))
 require 'corvid/rake/tasks'
 
 # Set default task to test
-# task :default => :test
+task :default => :test
