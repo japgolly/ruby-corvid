@@ -8,10 +8,15 @@ class Corvid::Generator::Init < Corvid::Generator::Base
   def project
     copy_file       '.gitignore'
     copy_file       '.simplecov'
+    copy_file       '.yardopts'
     copy_file       'Gemfile'
     copy_file       'Guardfile'
     copy_file       'Rakefile'
+    copy_file       'README.md'
     copy_executable 'bin/rake'
+    copy_executable 'bin/yard'
+    copy_executable 'bin/yardoc'
+    copy_executable 'bin/yri'
     empty_directory 'lib'
 
     invoke 'init:test:unit', nil, :'update-deps' => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
