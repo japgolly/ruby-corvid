@@ -1,4 +1,4 @@
 --color
---order default # Due to integration test
+--order default
 --format nested
 

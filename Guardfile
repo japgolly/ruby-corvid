@@ -11,7 +11,8 @@ group :spec do
     # Each spec
     watch(%r'^test/spec/.+_spec\.rb$')
 
-    # app + lib
-    watch(%r'^lib/(.+)\.rb$')                      {|m| "test/spec/#{m[1]}_spec.rb"}
+    # Lib
+    watch(%r'^lib/(.+)\.rb$')             {|m| "test/spec/#{m[1]}_spec.rb"}
+    watch(%r'^lib/corvid/(.+)\.rb$')      {|m| "test/spec/#{m[1]}_spec.rb"}
   end
 end
