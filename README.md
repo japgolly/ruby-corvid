@@ -11,6 +11,7 @@ Features
 	* Unit tests
 	* Specs
 *	Bunch of managed rake tasks
+*	Doco
 *	Testing
 	* Bootstraps
 	* Organisation (same as structure)
@@ -27,6 +28,15 @@ Features
 TODO
 ====
 
-*	Configure paths
-*	Configure options (enable/disable stuff)
-*	Configure gems
+*	Corvid config
+	* Configure paths
+	* Configure options (enable/disable stuff)
+	* Configure gems
+*	Testing
+	* Unit/Spec specific helpers
+	* Live tests
+	* Integration tests
+	* Performance tests
+*	Code & test stats
+*	Metrics
+
