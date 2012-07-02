@@ -11,6 +11,7 @@ class Corvid::Generator::Init < Corvid::Generator::Base
     copy_file       '.gitignore'
     copy_file       '.simplecov'
     copy_file       '.yardopts'
+    copy_file       'CHANGELOG.md'
     copy_file       'Gemfile'
     copy_file       'Guardfile'
     copy_file       'Rakefile'
