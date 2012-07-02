@@ -4,8 +4,11 @@ class Corvid::Generator::Update < Corvid::Generator::Base
 
   desc 'deps', 'Update dependencies. (Recreates Gemfile.corvid)'
   method_options :'dry-run' => false
-  method_options use_corvid_gem: true
-  method_options :'bundle-install' => true
+  def self.add_update_deps_options(t)
+    t.method_options use_corvid_gem: true
+    t.method_options :'bundle-install' => true
+  end
+  add_update_deps_options self
   def deps
     d= DepBuilder.new(options)
     d.instance_eval File.read("#{self.class.source_root}/Gemfile.corvid")

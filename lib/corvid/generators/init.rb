@@ -1,10 +1,12 @@
 require 'corvid/generators/base'
+require 'corvid/generators/update'
 
 class Corvid::Generator::Init < Corvid::Generator::Base
 
   desc 'project', 'Creates a new Corvid project in the current directory.'
   method_option :'test-unit', type: :boolean
   method_option :'test-spec', type: :boolean
+  ::Corvid::Generator::Update.add_update_deps_options self
   def project
     copy_file       '.gitignore'
     copy_file       '.simplecov'
@@ -28,6 +30,7 @@ class Corvid::Generator::Init < Corvid::Generator::Base
 
     desc 'unit', 'Adds support for unit tests.'
     method_options :'update-deps' => true
+    ::Corvid::Generator::Update.add_update_deps_options self
     def unit
       copy_executable         'bin/guard'
       copy_file_unless_exists 'test/bootstrap/all.rb'
@@ -39,6 +42,7 @@ class Corvid::Generator::Init < Corvid::Generator::Base
 
     desc 'spec', 'Adds support for specifications.'
     method_options :'update-deps' => true
+    ::Corvid::Generator::Update.add_update_deps_options self
     def spec
       copy_file               '.rspec'
       copy_executable         'bin/guard'
