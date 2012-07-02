@@ -10,8 +10,7 @@ gem 'rake', group: :rake
 
 group :test do
   gem 'ci_reporter', require: false
-  #gem 'simplecov', require: false
-  gem 'simplecov', require: false, git: 'git://github.com/japgolly/simplecov.git', branch: 'nan_fix'
+  gem 'simplecov', '>= 0.6.4', require: false
 end if Dir.exists?('test')
 
 group :test_unit do
