@@ -29,6 +29,9 @@ SimpleCov.command_name $coverage_name || 'test'
 SimpleCov.coverage_dir 'target/coverage'
 SimpleCov.start unless SimpleCov.running
 
+# Avoid simplecov/result_merger.rb:72:in `block in store_result': undefined method `pretty_generate' for JSON:Module (NoMethodError)
+require 'json'
+
 # Ignore lines that make no sense covering
 class SimpleCov::SourceFile
   alias :old_process_skipped_lines :process_skipped_lines!
