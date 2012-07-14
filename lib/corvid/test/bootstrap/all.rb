@@ -3,7 +3,6 @@ unless defined?(APP_ROOT)
   exit 1
 end
 
-require 'rubygems'
 require 'corvid/environment'
 
 # Load coverage library before Bundler or anything else
@@ -17,7 +16,6 @@ rescue LoadError
 end
 
 # Load test dependencies
-require 'bundler'
 Bundler.require :test
 
 # Add the app's test/ directory to the load path
@@ -29,9 +27,6 @@ $:.unshift "#{APP_ROOT}/lib"
 # Create empty TestHelpers module so that TODO
 module TestHelpers
 end
-
-# Load test helpers
-Dir.glob("#{APP_ROOT}/test/helpers/**/*.rb") {|f| require f}
 
 # Ensure all transactions are rolled back as expected
 at_exit do
