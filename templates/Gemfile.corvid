@@ -16,7 +16,7 @@ end if Dir.exists?('test')
 group :test_unit do
   gem 'minitest'
   gem 'guard-minitest', '>= 0.5.0', require: false
-  gem 'turn'
+  gem 'turn', '>= 0.9.4'
 end if Dir.exists?('test/unit')
 
 group :test_spec do
