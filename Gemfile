@@ -16,5 +16,6 @@ end
 # Documentation
 group :doc do
   gem 'yard'
-  gem 'rdiscount'
+  gem 'rdiscount', platforms: :mri
+  gem 'kramdown', platforms: :jruby
 end
