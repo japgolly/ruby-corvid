@@ -4,7 +4,10 @@ require_relative '../spec_helper'
 describe 'corvid init' do
 
   around :each do |ex|
-    inside_fixture('bare'){ ex.run }
+    inside_fixture('bare'){
+      File.delete '.corvid/Gemfile'
+      ex.run
+    }
   end
 
   context 'init:test:unit' do

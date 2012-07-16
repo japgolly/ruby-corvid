@@ -13,7 +13,10 @@ BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 module TestHelpers
   def invoke_sh(cmd,env=nil)
     cmd= cmd.map(&:inspect).join ' ' if cmd.kind_of?(Array)
-    system env || {}, cmd
+    env ||= {}
+    env['BUNDLE_GEMFILE'] ||= nil
+    env['RUBYOPT'] ||= nil
+    system env, cmd
     $?.success?
   end
   def invoke_sh!(args,env=nil)
@@ -49,14 +52,27 @@ module TestHelpers
     File.read(f).should == File.read("#{CORVID_ROOT}/templates/#{src || f}")
   end
 
-  def inside_fixture(fixture_name)
+  def inside_fixture(fixture_name, copy_templates=false)
     Dir.mktmpdir {|dir|
-      FileUtils.cp_r "#{CORVID_ROOT}/test/fixtures/#{fixture_name}", dir
-      Dir.chdir "#{dir}/#{fixture_name}" do
-        `sed -i 's|\.\./\.\./\.\.|#{CORVID_ROOT}|g; s/0\.0\.1/#{Corvid::VERSION}/' Gem*`
+      FileUtils.cp_r "#{CORVID_ROOT}/templates/.", dir, dereference_root: true if copy_templates
+      FileUtils.cp_r "#{CORVID_ROOT}/test/fixtures/#{fixture_name}/.", dir
+      Dir.chdir dir do
+        # TODO remove this
+        `perl -pi -e '
+          s|(?<=['"'"'"])\\.\\.(?:/\\.\\.){2,}|#{CORVID_ROOT}|g;
+          s/0\\.0\\.1/#{Corvid::VERSION}/;
+         ' Gemfile* .corvid/Gemfile`
+         patch_corvid_gemfile
         yield
       end
     }
+  end
+
+  def patch_corvid_gemfile
+    `perl -pi -e '
+       s|^\\s*(gem\\s+.corvid.)\\s*(?:,\\s*path.*)?$|\\1, path: "#{CORVID_ROOT}"|
+     ' Gemfile .corvid/Gemfile`
+    raise 'patch failed' unless $?.success?
   end
 end
 

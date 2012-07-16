@@ -1,0 +1,8 @@
+# Load Corvid dependencies
+eval File.read(File.expand_path '../.corvid/Gemfile', __FILE__)
+
+gem 'mock_plugin', path: 'mock_plugin'
+
+# golly-utils currently doesn't exist as a gem
+cg= File.read(File.expand_path '../../../../Gemfile', __FILE__).split(/\s*[\r\n]\s*/)
+cg.select{|l| /^[^#]*golly-utils/ === l}.each{|l| eval l}

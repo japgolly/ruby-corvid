@@ -1,1 +1,2 @@
-gem 'corvid', path: '../../..'
+# Load Corvid dependencies
+eval File.read(File.expand_path '../.corvid/Gemfile', __FILE__)
