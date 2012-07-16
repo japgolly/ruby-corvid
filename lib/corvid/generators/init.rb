@@ -7,12 +7,13 @@ class Corvid::Generator::Init < Corvid::Generator::Base
   method_option :'test-spec', type: :boolean
   run_bundle_option(self)
   def project
+    empty_directory '.corvid'
+    copy_file       '.corvid/Gemfile'
     copy_file       '.gitignore'
     copy_file       '.simplecov'
     copy_file       '.yardopts'
     copy_file       'CHANGELOG.md'
     copy_file       'Gemfile'
-    copy_file       'Gemfile.corvid'
     copy_file       'Guardfile'
     copy_file       'Rakefile'
     copy_file       'README.md'

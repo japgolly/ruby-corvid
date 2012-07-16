@@ -1,7 +1,7 @@
 source :rubygems
 
-# Load Gemfile.corvid
-eval File.read(__FILE__ + '.corvid')
+# Load Corvid dependencies
+import File.expand_path('../.corvid/Gemfile', __FILE__)
 
 # Parser for Markdown documentation
 group :doc do
