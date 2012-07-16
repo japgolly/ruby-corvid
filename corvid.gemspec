@@ -5,16 +5,15 @@ Gem::Specification.new do |gem|
   gem.name          = "corvid"
   gem.version       = Corvid::VERSION
   gem.date          = Date.today.to_s
-  gem.summary       = %q{TODO: Write a gem summary}
-  gem.description   = %q{TODO: Write a gem description}
+  #gem.summary       = %q{TODO: Write a gem summary}
+  #gem.description   = %q{TODO: Write a gem description}
   gem.authors       = ["David Barri"]
   gem.email         = ["japgolly@gmail.com"]
-  #gem.homepage      = ""
+  gem.homepage      = "https://github.com/japgolly/corvid"
 
-  #gem.add_dependency 'thor'
-  #gem.add_dependency 'activesupport'
-  gem.add_development_dependency 'thor'
-  gem.add_development_dependency 'activesupport'
+  gem.add_dependency 'golly-utils'
+  gem.add_dependency 'activesupport'
+  gem.add_dependency 'thor'
   gem.add_development_dependency 'rspec'
   gem.add_development_dependency 'rake'
 

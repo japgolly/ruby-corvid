@@ -3,4 +3,4 @@ raise "Gemfile not found in Corvid root: #{CORVID_ROOT}" unless File.exists?("#{
 
 $:.unshift "#{CORVID_ROOT}/lib"
 require 'corvid/version'
-require 'corvid/env_helpers'
+require 'golly-utils/ruby_ext/env_helpers'

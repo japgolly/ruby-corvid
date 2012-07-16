@@ -1,7 +1,16 @@
+GIT
+  remote: git://github.com/japgolly/golly-utils.git
+  revision: e73a4817e6becf9638bd7fc1ba048984b0bcb406
+  specs:
+    golly-utils (0.0.1)
+
 PATH
   remote: .
   specs:
     corvid (0.0.1)
+      activesupport
+      golly-utils
+      thor
 
 GEM
   remote: http://rubygems.org/
@@ -54,14 +63,13 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activesupport
   ci_reporter
   corvid!
+  golly-utils!
   guard-rspec
   kramdown
   rake
   rdiscount
   rspec
   simplecov
-  thor
   yard

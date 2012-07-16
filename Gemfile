@@ -1,6 +1,7 @@
 source :rubygems
 
 gemspec
+gem 'golly-utils', git: 'git://github.com/japgolly/golly-utils.git' # TODO remove this
 
 # Testing
 group :test do
