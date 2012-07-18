@@ -37,14 +37,12 @@ describe 'corvid template upgrades' do
   end
 
   context 'clean slate' do
-    it("should install 001"){
-      migrate from: nil, to: 1, migration_dir: upgrade_dir
-      assert_files upgrade_dir(1)
-    }
-    it("should install 002"){
-      migrate from: nil, to: 2, migration_dir: upgrade_dir
-      assert_files upgrade_dir(2)
-    }
+    def test_clean_install(ver)
+      migrate from: nil, to: ver, migration_dir: upgrade_dir
+      assert_files upgrade_dir(ver)
+    end
+    it("should install 001"){ test_clean_install 1 }
+    it("should install 002"){ test_clean_install 2 }
   end
 
   context 'clean upgrading' do
@@ -57,7 +55,21 @@ describe 'corvid template upgrades' do
   end
 
   context 'dirty upgrading' do
-    it("should upgrade from 001 to 002"){
+    def copy_file(ver, filename)
+      FileUtils.mkdir_p File.dirname(filename)
+      FileUtils.cp "#{upgrade_dir ver}/#{filename}", filename
+    end
+    it("should upgrade from 000 to 002 - v2 file manually copied"){
+      copy_file 2, "stuff/.hehe"
+      migrate from: 0, to: 2, migration_dir: upgrade_dir
+      assert_files upgrade_dir(2)
+    }
+    it("should upgrade from 000 to 002 - v1 file manually copied"){
+      copy_file 1, "stuff/.hehe"
+      migrate from: 0, to: 2, migration_dir: upgrade_dir
+      assert_files upgrade_dir(2)
+    }
+    it("should upgrade from 001 to 002 - v1 file edited"){
       populate_with 1
       File.write 'stuff/.hehe', "hehe\n\nawesome"
       migrate from: 1, to: 2, migration_dir: upgrade_dir

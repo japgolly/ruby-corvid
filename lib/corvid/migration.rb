@@ -1,7 +1,9 @@
 require 'fileutils'
 require 'tempfile'
+require 'digest/sha2'
 
 class Migration
+  DIGEST= Digest::SHA2
 
   def migrate(options)
     from_ver = options[:from] || 0
@@ -29,20 +31,32 @@ class Migration
       end
     end
 
-    # For now, simply copy each file
-    #filelist.keys.each do |f|
-    #  FileUtils.mkdir_p File.dirname(f)
-    #  FileUtils.cp "#{src_dir}/#{f}", f
-    #end
-
     # Create patches
     patches= {}
-    filelist.each do |f,v|
-      from_file,to_file = [from_ver,to_ver]
+    filelist.each do |f,fv|
+      from_ver2= from_ver
+
+      # Check if deployed is identical to a versioned copy
+      if File.exists?(f)
+        csum= DIGEST.file(f)
+        to_ver.downto(from_ver) do |ver|
+          vf= "#{upgrade_dir ver}/#{f}"
+          if File.exists?(vf) and csum == DIGEST.file(vf)
+            # Found a match
+            from_ver2= ver
+            break
+          end
+        end
+      end
+
+      # Do nothing if target is already up-to-date
+      next if from_ver2 == to_ver
+
+      # Create patch
+      from_file,to_file = [from_ver2,to_ver]
         .map{|ver| "#{upgrade_dir ver}/#{f}" }
         .map{|f| File.exists?(f) ? f : '/dev/null'}
-        .map(&:inspect)
-      patch= `diff -u #{from_file} #{to_file} 2>/dev/null`
+      patch= `diff -u #{from_file.inspect} #{to_file.inspect} 2>/dev/null`
       case $?.exitstatus
       when 0
         # No differences
