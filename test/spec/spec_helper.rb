@@ -48,6 +48,14 @@ module TestHelpers
     File.read(f).should == File.read("#{CORVID_ROOT}/templates/#{src || f}")
   end
 
+  def inside_empty_dir
+    Dir.mktmpdir do |dir|
+      Dir.chdir dir do
+        yield dir
+      end
+    end
+  end
+
   def inside_fixture(fixture_name)
     Dir.mktmpdir {|dir|
       FileUtils.cp_r "#{CORVID_ROOT}/test/fixtures/#{fixture_name}", dir
