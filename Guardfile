@@ -6,7 +6,7 @@ rspec_cli= File.read(File.expand_path('../.rspec',__FILE__))
 # test/spec
 
 group :spec do
-  guard 'rspec', binstubs: true, spec_paths: ['test/spec'], cli: rspec_cli, all_on_start: false, all_after_pass: false do
+  guard 'rspec', binstubs: true, spec_paths: ['test/spec'], cli: rspec_cli, all_on_start: false, all_after_pass: false, keep_failed: false do
 
     # Each spec
     watch(%r'^test/spec/.+_spec\.rb$')
