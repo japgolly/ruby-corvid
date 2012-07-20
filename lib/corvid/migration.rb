@@ -63,8 +63,8 @@ class Migration
       when 1
         # Differences found
         patchlines= patch.split($/)
-        patchlines[0].sub! /^\-\-\- .+?(?=\t)/, "--- #{f}"
-        patchlines[1].sub! /^\+\+\+ .+?(?=\t)/, "+++ #{f}"
+        replace_filename_in_patchline! patchlines[0], f
+        replace_filename_in_patchline! patchlines[1], f
         patch= patchlines.join($/)
         patches[f]= patch
       else
@@ -103,4 +103,8 @@ class Migration
     d
   end
 
+  def replace_filename_in_patchline!(line, filename)
+    return line if %r!^(?:-{3}|\+{3})\s+?/dev/null\t! === line
+    line.sub! /(?<=^(?:-{3}|\+{3})\s).+?(?=\t)/, filename
+  end
 end

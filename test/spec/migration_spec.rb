@@ -43,6 +43,7 @@ describe 'corvid template upgrades' do
     end
     it("should install 001"){ test_clean_install 1 }
     it("should install 002"){ test_clean_install 2 }
+    it("should install 003"){ test_clean_install 3 }
   end
 
   context 'clean upgrading' do
@@ -52,6 +53,8 @@ describe 'corvid template upgrades' do
       assert_files upgrade_dir(to)
     end
     it("should upgrade from 001 to 002"){ test_clean_upgrade 1,2 }
+    it("should upgrade from 001 to 003"){ test_clean_upgrade 1,3 }
+    it("should upgrade from 002 to 003"){ test_clean_upgrade 2,3 }
   end
 
   context 'dirty upgrading' do
@@ -75,5 +78,17 @@ describe 'corvid template upgrades' do
       migrate from: 1, to: 2, migration_dir: upgrade_dir
       assert_files upgrade_dir(2), 'stuff/.hehe' => "hehe2\n\nawesome"
     }
+    it("should upgrade from 001 to 003 - v2 file manually copied"){
+      populate_with 1
+      copy_file 2, "stuff/.hehe"
+      migrate from: 1, to: 3, migration_dir: upgrade_dir
+      assert_files upgrade_dir(3)
+    }
+    #it("should upgrade from 001 to 003 - v2 file edited"){
+    #  populate_with 1
+    #  File.write 'stuff/.hehe', "hehe2\n\nawesome"
+    #  migrate from: 1, to: 3, migration_dir: upgrade_dir
+    #  assert_files upgrade_dir(3), 'stuff/.hehe' => "hehe3\n\nawesome"
+    #}
   end
 end
