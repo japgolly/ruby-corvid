@@ -84,6 +84,12 @@ describe 'corvid template upgrades' do
       migrate from: 1, to: 3, migration_dir: upgrade_dir
       assert_files upgrade_dir(3)
     }
+    it("should upgrade from 002 to 003 - file deleted in v3 edited"){
+      populate_with 2
+      File.write 'v2.txt', "Before\nv2 bro\nAfter"
+      migrate from: 2, to: 3, migration_dir: upgrade_dir
+      assert_files upgrade_dir(3), 'v2.txt' => "Before\nAfter"
+    }
     #it("should upgrade from 001 to 003 - v2 file edited"){
     #  populate_with 1
     #  File.write 'stuff/.hehe', "hehe2\n\nawesome"

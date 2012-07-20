@@ -80,7 +80,7 @@ class Migration
       begin
         tmp.write megapatch
         tmp.close
-        `patch -p0 -ui #{tmp.path.inspect}`
+        `patch -p0 -u -i #{tmp.path.inspect} --no-backup-if-mismatch`
         # patch's  exit  status  is  0 if all hunks are applied successfully, 1 if some
         # hunks cannot be applied or there were merge conflicts, and 2 if there is more
         # serious trouble.  When applying a set of patches in a loop it behooves you to
