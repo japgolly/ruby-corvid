@@ -1,0 +1,8 @@
+--color
+
+--order random
+#--order random:12321 # Use a specific seed value
+
+#--format progress
+--format documentation
+
