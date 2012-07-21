@@ -160,6 +160,7 @@ describe 'corvid template upgrades' do
       it("should create & deploy v1, v2"){
         create_patch_1
         create_patch_2
+#puts '_'*80;1.upto(2){|i| puts `cat mig/0000#{i}.patch`;puts '_'*80}
         deploy_pkg{ assert_files upgrade_dir 2 }
         deploy_pkg(1){ assert_files upgrade_dir 1 }
       }
@@ -168,6 +169,7 @@ describe 'corvid template upgrades' do
         create_patch_1
         create_patch_2
         create_patch_3
+#puts '_'*80;1.upto(3){|i| puts `cat mig/0000#{i}.patch`;puts '_'*80}
         deploy_pkg{ assert_files upgrade_dir 3 }
         deploy_pkg(2){ assert_files upgrade_dir 2 }
         deploy_pkg(1){ assert_files upgrade_dir 1 }

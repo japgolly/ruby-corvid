@@ -77,21 +77,28 @@ class Migration
     raise unless Dir.exists?(to_dir)
     raise unless Dir.exists?(migration_dir)
 
-    content= create_pkg_content from_dir, to_dir
-    return nil unless content
+    content_backwards= create_pkg_content to_dir, from_dir
+    return nil unless content_backwards
+    content_new= create_pkg_content nil, to_dir
 
-    prev_ver= get_latest_migration_version migration_dir
+    prev_ver= get_latest_migration_version
+    prev_pkg= prev_ver == 0 ? nil : migration_file(prev_ver)
     this_ver= prev_ver + 1
-    this_pkg= migration_file this_ver
+    this_pkg= migration_file(this_ver)
 
-    File.write this_pkg, content # TODO encoding
-    this_pkg
+    File.write prev_pkg, content_backwards if prev_pkg # TODO encoding
+    File.write this_pkg, content_new # TODO encoding
+
+    true
   end
 
+  # @param [nil,String] from_dir
+  # @param [String] to_dir
+  # @return String
   def create_pkg_content(from_dir, to_dir)
     files= get_files_in_dir(from_dir) | get_files_in_dir(to_dir)
     patch= files.sort
-             .map{|f| create_patch f, "#{from_dir}/#{f}", "#{to_dir}/#{f}" }
+             .map{|f| create_patch f, from_dir ? "#{from_dir}/#{f}" : nil, "#{to_dir}/#{f}" }
              .join("\n") + "\n"
     return nil if patch.empty?
 
@@ -103,20 +110,24 @@ class Migration
     header + patch
   end
 
-  def deploy_pkg_file(target_dir, version=nil)
-    version ||= get_latest_migration_version migration_dir
-    puts "Deploying ver #{version}..."
-    raise if version < 0
-    return if version == 0
+  def deploy_pkg_file(target_dir, target_version=nil, from_version=nil)
+    latest_version= get_latest_migration_version
+    target_version ||= latest_version
+    from_version ||= 0
+    puts "Deploying ver #{target_version}..."
+    raise unless target_version > 0 and target_version <= latest_version
+    raise unless from_version  >= 0 and from_version   <= target_version
+    return if from_version == target_version
 
     # Explode each ver into its own directory
     Dir.mktmpdir do |ver_dir|
       @ver_dir= ver_dir
+      last_dir= nil
+      last_dir_digest= digest_dir(ver_dir) # ver_dir contains no files
 
-      Dir.mkdir ver_dir(0)
-
-      1.upto(version) do |ver|
-        Dir.mkdir ver_dir(ver)
+      latest_version.downto(from_version + 1) do |ver|
+        this_dir= ver_dir(ver)
+        Dir.mkdir this_dir
 
         # Read migration patch
         pkg= File.read migration_file(ver) # TODO encoding
@@ -127,38 +138,43 @@ class Migration
         to_digest= read_digest_from_pkg_header header, 'After'
         patch_digest= read_digest_from_pkg_header header, 'Patch'
 
-        # Check checksums
+        # Check patch-checksum
         x= DIGEST.hexdigest patch
         if patch_digest != x
           raise "Patch ##{ver} is invalid. The expected patch checksum is #{patch_digest} but the current file's is #{x}."
         end
-        x= digest_dir ver_dir(ver-1)
-        if from_digest != x
+
+        # Check before-checksum
+        if from_digest != last_dir_digest
           raise "These seems to be a mismatch between patch ver ##{ver-1}, and the parent/base ver of ###{ver}."
         end
 
-        # Crete new version
-        Dir.chdir ver_dir(ver) do
-          FileUtils.cp_r ver_dir(ver-1)+'/.', '.'
+        # Reconstruct current version
+        Dir.chdir this_dir do
+          FileUtils.cp_r "#{last_dir}/.", '.' if last_dir
           apply_patch patch
         end
 
-        # Check we get what we expected
-        x= digest_dir ver_dir(ver)
-        if to_digest != x
+        # Check after-checksum
+        new_dir_digest= digest_dir(this_dir)
+        if to_digest != new_dir_digest
           raise "After successfully creating patch ver ##{ver}, the contents don't seem to match what was expected."
         end
+
+        last_dir= this_dir
+        last_dir_digest= new_dir_digest
       end
 
       # Migrate
       Dir.chdir(target_dir) do
-        migrate from: 0, to: version
+        migrate from: from_version, to: target_version
       end
     end
   end
 
   protected
 
+  # @param [nil,String] dir
   def get_files_in_dir(dir)
     r= []
     Dir.chdir dir do
@@ -168,13 +184,16 @@ class Migration
           r<< f
         end
       end
-    end
+    end if dir
     r
   end
 
+  # @param [String] relative_filename
+  # @param [nil,String] from_file
+  # @param [nil,String] to_file
   def create_patch(relative_filename, from_file, to_file)
-    from_file= '/dev/null' unless File.exists? from_file
-    to_file= '/dev/null' unless File.exists? to_file
+    from_file= '/dev/null' unless from_file and File.exists? from_file
+    to_file= '/dev/null' unless to_file and File.exists? to_file
     patch= `diff -u #{from_file.inspect} #{to_file.inspect} 2>/dev/null`
     case $?.exitstatus
     when 0
@@ -214,14 +233,16 @@ class Migration
     '%s/%05d.patch' % [migration_dir,ver]
   end
 
-  def get_latest_migration_version(migration_dir)
+  def get_latest_migration_version
     prev_pkg= Dir["#{migration_dir}/[0-9][0-9][0-9][0-9][0-9].patch"].sort.last
     prev_ver= prev_pkg ? prev_pkg.sub(/\D+/,'').to_i : 0
   end
 
+  # @param [nil,String] dir
+  # @return String
   def digest_dir(dir)
     digests= get_files_in_dir(dir){|f| DIGEST.file f}
-    DIGEST.hexdigest digests.join(nil) + '34'
+    DIGEST.hexdigest digests.join(nil)
   end
 
   def read_digest_from_pkg_header(header_lines, title)
