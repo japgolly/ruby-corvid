@@ -90,9 +90,7 @@ class Migration
       end
 
       # Migrate
-      Dir.chdir(target_dir) do
-        migrate from: from_version, to: target_version
-      end
+      migrate from_version, target_version, target_dir
     end
   end
 
@@ -112,58 +110,58 @@ class Migration
     r
   end
 
-  def migrate(options)
-    from_ver = options[:from] || 0
-    to_ver = options[:to]
-    tgt_dir = Dir.pwd
-
-    raise if from_ver < 0
-    raise if to_ver < from_ver
+  def migrate(from_ver, to_ver, target_dir)
+    from_ver ||= 0
+    raise unless from_ver >= 0
+    raise unless to_ver >= from_ver
+    return if from_ver == to_ver
 
     # Build list of files
     filelist= {}
     for v in from_ver..to_ver do
-      unless v == 0
-        src_dir= reconstruction_dir(v)
-        raise unless Dir.exists?(src_dir)
-        get_files_in_dir(src_dir){|f| filelist[f] ||= {} }
-      end
+      next if v == 0
+      src_dir= reconstruction_dir(v)
+      raise unless Dir.exists?(src_dir)
+      get_files_in_dir(src_dir){|f| filelist[f] ||= {} }
     end
 
-    # Create patches
-    patches= {}
-    filelist.each do |f,fv|
-      from_ver2= from_ver
+    Dir.chdir target_dir do
 
-      # Check if deployed is identical to a versioned copy
-      if File.exists?(f)
-        csum= DIGEST.file(f)
-        to_ver.downto(from_ver) do |ver|
-          vf= "#{reconstruction_dir ver}/#{f}"
-          if File.exists?(vf) and csum == DIGEST.file(vf)
-            # Found a match
-            from_ver2= ver
-            break
+      # Create patches
+      patches= {}
+      filelist.each do |f,fv|
+        from_ver2= from_ver
+
+        # Check if deployed is identical to a versioned copy
+        if File.exists?(f)
+          csum= DIGEST.file(f)
+          to_ver.downto(from_ver) do |ver|
+            vf= "#{reconstruction_dir ver}/#{f}"
+            if File.exists?(vf) and csum == DIGEST.file(vf)
+              # Found a match
+              from_ver2= ver
+              break
+            end
           end
         end
+
+        # Do nothing if target is already up-to-date
+        next if from_ver2 == to_ver
+
+        # Create patch
+        from_file,to_file = [from_ver2,to_ver].map{|ver| "#{reconstruction_dir ver}/#{f}" }
+        patch= create_patch f, from_file, to_file
+        patches[f]= patch if patch
       end
 
-      # Do nothing if target is already up-to-date
-      next if from_ver2 == to_ver
+      # Apply patches
+      unless patches.empty?
+        megapatch= patches.values.join($/) + $/
+  #puts '_'*80; puts megapatch; puts '_'*80
+        apply_patch megapatch
+      end
 
-      # Create patch
-      from_file,to_file = [from_ver2,to_ver].map{|ver| "#{reconstruction_dir ver}/#{f}" }
-      patch= create_patch f, from_file, to_file
-      patches[f]= patch if patch
     end
-
-    # Apply patches
-    unless patches.empty?
-      megapatch= patches.values.join($/) + $/
-#puts '_'*80; puts megapatch; puts '_'*80
-      apply_patch megapatch
-    end
-
   end
 
   # @param [String] relative_filename

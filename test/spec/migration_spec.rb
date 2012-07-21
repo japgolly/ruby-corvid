@@ -18,10 +18,10 @@ describe 'corvid template upgrades' do
     FileUtils.cp_r "#{upgrade_dir ver}/.", '.'
   end
 
-  def migrate(options)
+  def migrate(from_ver, to_ver)
     m= Migration.new
     m.send :with_reconstruction_dir, upgrade_dir do
-      m.send :migrate, options
+      m.send :migrate, from_ver, to_ver, Dir.pwd
     end
   end
 
@@ -41,7 +41,7 @@ describe 'corvid template upgrades' do
 
   context 'clean slate' do
     def test_clean_install(ver)
-      migrate from: nil, to: ver
+      migrate nil, ver
       assert_files upgrade_dir(ver)
     end
     it("should install 001"){ test_clean_install 1 }
@@ -52,7 +52,7 @@ describe 'corvid template upgrades' do
   context 'clean upgrading' do
     def test_clean_upgrade(from,to)
       populate_with from
-      migrate from: from, to: to
+      migrate from, to
       assert_files upgrade_dir(to)
     end
     it("should upgrade from 001 to 002"){ test_clean_upgrade 1,2 }
@@ -67,36 +67,36 @@ describe 'corvid template upgrades' do
     end
     it("should upgrade from 000 to 002 - v2 file manually copied"){
       copy_file 2, "stuff/.hehe"
-      migrate from: 0, to: 2
+      migrate 0, 2
       assert_files upgrade_dir(2)
     }
     it("should upgrade from 000 to 002 - v1 file manually copied"){
       copy_file 1, "stuff/.hehe"
-      migrate from: 0, to: 2
+      migrate 0, 2
       assert_files upgrade_dir(2)
     }
     it("should upgrade from 001 to 002 - v1 file edited"){
       populate_with 1
       File.write 'stuff/.hehe', "hehe\n\nawesome"
-      migrate from: 1, to: 2
+      migrate 1, 2
       assert_files upgrade_dir(2), 'stuff/.hehe' => "hehe2\n\nawesome"
     }
     it("should upgrade from 001 to 003 - v2 file manually copied"){
       populate_with 1
       copy_file 2, "stuff/.hehe"
-      migrate from: 1, to: 3
+      migrate 1, 3
       assert_files upgrade_dir(3)
     }
     it("should upgrade from 002 to 003 - file deleted in v3 edited"){
       populate_with 2
       File.write 'v2.txt', "Before\nv2 bro\nAfter"
-      migrate from: 2, to: 3
+      migrate 2, 3
       assert_files upgrade_dir(3), 'v2.txt' => "Before\nAfter"
     }
     #it("should upgrade from 001 to 003 - v2 file edited"){
     #  populate_with 1
     #  File.write 'stuff/.hehe', "hehe2\n\nawesome"
-    #  migrate from: 1, to: 3
+    #  migrate 1, 3
     #  assert_files upgrade_dir(3), 'stuff/.hehe' => "hehe3\n\nawesome"
     #}
   end
