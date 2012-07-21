@@ -19,9 +19,10 @@ describe 'corvid template upgrades' do
   end
 
   def migrate(options)
-    #m= Migration.new migration_dir: options.delete(:migration_dir)
-    #m.migrate options
-    Migration.new.migrate options
+    m= Migration.new
+    m.send :with_reconstruction_dir, upgrade_dir do
+      m.send :migrate, options
+    end
   end
 
   def assert_files(src_dir, exceptions={})
@@ -40,7 +41,7 @@ describe 'corvid template upgrades' do
 
   context 'clean slate' do
     def test_clean_install(ver)
-      migrate from: nil, to: ver, ver_dir: upgrade_dir
+      migrate from: nil, to: ver
       assert_files upgrade_dir(ver)
     end
     it("should install 001"){ test_clean_install 1 }
@@ -51,7 +52,7 @@ describe 'corvid template upgrades' do
   context 'clean upgrading' do
     def test_clean_upgrade(from,to)
       populate_with from
-      migrate from: from, to: to, ver_dir: upgrade_dir
+      migrate from: from, to: to
       assert_files upgrade_dir(to)
     end
     it("should upgrade from 001 to 002"){ test_clean_upgrade 1,2 }
@@ -66,36 +67,36 @@ describe 'corvid template upgrades' do
     end
     it("should upgrade from 000 to 002 - v2 file manually copied"){
       copy_file 2, "stuff/.hehe"
-      migrate from: 0, to: 2, ver_dir: upgrade_dir
+      migrate from: 0, to: 2
       assert_files upgrade_dir(2)
     }
     it("should upgrade from 000 to 002 - v1 file manually copied"){
       copy_file 1, "stuff/.hehe"
-      migrate from: 0, to: 2, ver_dir: upgrade_dir
+      migrate from: 0, to: 2
       assert_files upgrade_dir(2)
     }
     it("should upgrade from 001 to 002 - v1 file edited"){
       populate_with 1
       File.write 'stuff/.hehe', "hehe\n\nawesome"
-      migrate from: 1, to: 2, ver_dir: upgrade_dir
+      migrate from: 1, to: 2
       assert_files upgrade_dir(2), 'stuff/.hehe' => "hehe2\n\nawesome"
     }
     it("should upgrade from 001 to 003 - v2 file manually copied"){
       populate_with 1
       copy_file 2, "stuff/.hehe"
-      migrate from: 1, to: 3, ver_dir: upgrade_dir
+      migrate from: 1, to: 3
       assert_files upgrade_dir(3)
     }
     it("should upgrade from 002 to 003 - file deleted in v3 edited"){
       populate_with 2
       File.write 'v2.txt', "Before\nv2 bro\nAfter"
-      migrate from: 2, to: 3, ver_dir: upgrade_dir
+      migrate from: 2, to: 3
       assert_files upgrade_dir(3), 'v2.txt' => "Before\nAfter"
     }
     #it("should upgrade from 001 to 003 - v2 file edited"){
     #  populate_with 1
     #  File.write 'stuff/.hehe', "hehe2\n\nawesome"
-    #  migrate from: 1, to: 3, ver_dir: upgrade_dir
+    #  migrate from: 1, to: 3
     #  assert_files upgrade_dir(3), 'stuff/.hehe' => "hehe3\n\nawesome"
     #}
   end
@@ -114,13 +115,13 @@ describe 'corvid template upgrades' do
     def create_pkg(options={})
       options[:from] ||= 'a'
       options[:to] ||= 'b'
-      Migration.new(migration_dir: 'mig').create_pkg_file options
+      Migration.new(res_patch_dir: 'mig').create_res_patch options
     end
 
     def deploy_pkg(ver=nil)
       %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
       Dir.mkdir 'r'
-      Migration.new(migration_dir: 'mig').deploy_pkg_file 'r', ver
+      Migration.new(res_patch_dir: 'mig').deploy_res_patch 'r', ver
       if block_given?
         Dir.chdir('r'){ yield }
       end
