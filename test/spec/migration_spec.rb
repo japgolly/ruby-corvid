@@ -100,6 +100,8 @@ describe 'corvid template upgrades' do
     #}
   end
 
+  #---------------------------------------------------------------------------------------------------------------------
+
   context 'Template packages' do
     before :each do |ex|
       %w[a b mig].each{|d| Dir.mkdir d }
@@ -115,18 +117,68 @@ describe 'corvid template upgrades' do
       Migration.new(migration_dir: 'mig').create_pkg_file options
     end
 
-    def deploy_pkg
-      Dir.mkdir 'c'
-      Migration.new(migration_dir: 'mig').deploy_pkg_file 'c'
+    def deploy_pkg(ver=nil)
+      %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
+      Dir.mkdir 'r'
+      Migration.new(migration_dir: 'mig').deploy_pkg_file 'r', ver
+      if block_given?
+        Dir.chdir('r'){ yield }
+      end
     end
 
-    context 'Creation' do
-      it("should create from nothing"){
+    def shuffle
+      FileUtils.rm_r 'a'
+      File.rename 'b', 'a'
+      Dir.mkdir 'b'
+    end
+
+    context 'Creation & deployment' do
+
+      def create_patch_1
         copy_to 1, 'b'
         create_pkg
         Dir['mig/**/*'].should == %w[mig/00001.patch]
-        deploy_pkg
-        Dir.chdir('c'){ assert_files '../b' }
+      end
+      def create_patch_2
+        shuffle
+        copy_to 2, 'b'
+        create_pkg
+        Dir['mig/**/*'].sort.should == %w[mig/00001.patch mig/00002.patch]
+      end
+      def create_patch_3
+        shuffle
+        copy_to 3, 'b'
+        create_pkg
+        Dir['mig/**/*'].sort.should == %w[mig/00001.patch mig/00002.patch mig/00003.patch]
+      end
+
+      it("should create & deploy v1"){
+        create_patch_1
+        deploy_pkg{ assert_files upgrade_dir 1 }
+      }
+
+      it("should create & deploy v1, v2"){
+        create_patch_1
+        create_patch_2
+        deploy_pkg{ assert_files upgrade_dir 2 }
+        deploy_pkg(1){ assert_files upgrade_dir 1 }
+      }
+
+      it("should create & deploy v1, v2, v3"){
+        create_patch_1
+        create_patch_2
+        create_patch_3
+        deploy_pkg{ assert_files upgrade_dir 3 }
+        deploy_pkg(2){ assert_files upgrade_dir 2 }
+        deploy_pkg(1){ assert_files upgrade_dir 1 }
+      }
+
+      it("should not modify patches prior to n-1"){
+        create_patch_1
+        create_patch_2
+        p1= File.read 'mig/00001.patch'
+        create_patch_3
+        File.read('mig/00001.patch').should == p1
       }
     end
   end
