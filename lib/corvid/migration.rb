@@ -44,7 +44,8 @@ class Migration
     raise "Target directory must be empty." unless get_files_in_dir(target_dir).empty?
 
     # Deploy
-    apply_res_patch target_dir, get_latest_res_patch_version
+    latest_version= get_latest_res_patch_version
+    apply_res_patch target_dir, latest_version if latest_version != 0
 
     true
   end

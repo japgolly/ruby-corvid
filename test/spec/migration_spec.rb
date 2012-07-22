@@ -25,14 +25,17 @@ describe 'corvid template upgrades' do
     end
   end
 
+  def get_files
+    Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }.sort
+  end
+
   def assert_files(src_dir, exceptions={})
     filelist= Dir.chdir(src_dir){
       Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }
         #.reject{|f| f =~ /corvid_migration-rename.yml/}
     } + exceptions.keys
     filelist.uniq!
-    Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }
-      .sort.should == filelist.sort
+    get_files.should == filelist.sort
     filelist.each do |f|
       expected= exceptions[f] || File.read("#{src_dir}/#{f}")
       File.read(f).should == expected
@@ -162,6 +165,16 @@ describe 'corvid template upgrades' do
         Dir.chdir @old_dir if @old_dir
         FileUtils.rm_rf @tmp_dir if @tmp_dir
         @old_dir= @tmp_dir= nil
+      end
+
+      context 'no res patches' do
+        before(:all){
+          @old_dir,@tmp_dir = inside_empty_dir
+          Dir.mkdir 'mig'
+        }
+        after(:all){ step_out_of_tmp_dir }
+        it("should do nothing when attemping to deploy latest"){ deploy_latest{ get_files.should be_empty } }
+        it("should do nothing when attemping to deploy v0"){ deploy_pkg{ get_files.should be_empty } }
       end
 
       context '1 res patch' do
