@@ -1,0 +1,13 @@
+Before: a3ec384945f966fd88ea63a40d223114dad9549488523ecfe17c859b02757373
+After: 838b66d1840135c5a59cd7a243d996dae4fe2f306a20ee082d6bdf4b05d583f4
+Patch: 849a3848630f6d2d75fc673ec1d503da0acc02a9fd2b436adf9866c74a3a4204
+--- Rakefile	2012-07-22 20:44:49.435582922 +1000
++++ Rakefile	2012-07-22 21:27:53.136940285 +1000
+@@ -1,6 +1,6 @@
+ raise "Rake must not be run directly. Either run via Bundler (bundle exec rake) or via bin/rake." unless defined?(Bundler)
+ APP_ROOT ||= File.expand_path(File.dirname(__FILE__))
+-require 'corvid/rake/tasks'
++require 'corvid/rake'
+ 
+ # Set default task to test
+ # task :default => :test

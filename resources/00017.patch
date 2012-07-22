@@ -1,0 +1,15 @@
+Before: 2f51a09e8ec364cec8a95acb206c9315cefb0830081c7eb6eb073472e379dc67
+After: 95fe5a83ed2969f958bcc2ee06166ee16f00c6552c33a7b88d37d2003af66318
+Patch: b52a808983ad923141e8f29e5d04d0673665a30a8864ef81fe40169053bf2ecd
+--- Gemfile	2012-07-22 20:44:49.248917603 +1000
++++ Gemfile	2012-07-22 21:28:28.653350682 +1000
+@@ -4,8 +4,5 @@
+ eval File.read(__FILE__ + '.corvid')
+ 
+ # Parser for Markdown documentation
+-group :doc do
+-  gem 'rdiscount', platforms: :mri
+-  gem 'kramdown', platforms: :jruby
+-end
++gem 'rdiscount', group: :doc
+ 

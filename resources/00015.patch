@@ -1,0 +1,14 @@
+Before: f57076598c46742495f30a0e6bb0a6806a961a613304fcb3863b2ea48688d4e6
+After: 4ff4c88cd3fc249ddbe066a7392af5b2764f07149b87aa8bb2a96bb31191f92b
+Patch: 05187a3b2ed1904418645c62d0d466234b277e79a87597ac4eb75919d6a60f7e
+--- Gemfile.corvid	2012-07-22 20:44:49.285584004 +1000
++++ Gemfile.corvid	2012-07-22 21:28:21.980065501 +1000
+@@ -16,7 +16,7 @@
+ group :test_unit do
+   gem 'minitest'
+   gem 'guard-minitest', '>= 0.5.0', require: false
+-  gem 'turn', '>= 0.9.4'
++  gem 'turn'
+ end if Dir.exists?('test/unit')
+ 
+ group :test_spec do

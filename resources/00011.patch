@@ -1,0 +1,11 @@
+Before: 4bbf052716898c468432610b84777d66907d5f48ddfa1652d87305f773efe334
+After: 78f3b619cc8306904e4788b0b9b5eeacff43599c65541c88ee56de368934b490
+Patch: b2d373df88d7287274db47838f73ac08bf36f2c034ce92554cb1ec971df30f8e
+--- Rakefile	2012-07-22 20:44:49.348916880 +1000
++++ Rakefile	2012-07-22 21:28:08.646828372 +1000
+@@ -3,4 +3,4 @@
+ require 'corvid/rake/tasks'
+ 
+ # Set default task to test
+-task :default => :test
++# task :default => :test
