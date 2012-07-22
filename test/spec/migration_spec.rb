@@ -214,5 +214,14 @@ describe 'corvid template upgrades' do
       end
 
     end
+
+    context 'Real packages' do
+      def subject
+        Migration.new res_patch_dir: File.expand_path('../../../resources',__FILE__)
+      end
+      it("should all be deployable"){
+        subject.deploy_res_patches '.', 1
+      }
+    end
   end
 end
