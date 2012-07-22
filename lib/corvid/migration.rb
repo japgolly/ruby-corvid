@@ -12,27 +12,35 @@ class Migration
     options.each{|k,v| public_send :"#{k}=", v }
   end
 
-  def create_res_patch(options)
-    from_dir = options[:from]
-    to_dir = options[:to]
-
-    raise unless Dir.exists?(from_dir)
-    raise unless Dir.exists?(to_dir)
-    raise unless Dir.exists?(res_patch_dir)
+  # Creates a new resource patch.
+  #
+  # @param [String] from_dir The directory containing the contents of the last-packaged resources (i.e. matching the
+  #   latest resource patch.)
+  # @param [String] to_dir The directory containing the latest version of resources that will be the contents of the
+  #   new resource patch.
+  # @return [nil,Fixnum] The version of the new resource patch, else `nil` if there were no changes and one wasn't
+  #   created.
+  def create_res_patch(from_dir, to_dir)
+    raise "From-dir doesn't exist: #{from_dir}" unless Dir.exists?(from_dir)
+    raise "To-dir doesn't exist: #{to_dir}" unless Dir.exists?(to_dir)
+    raise "Resource patch dir doesn't exist: #{res_patch_dir}" unless Dir.exists?(res_patch_dir)
 
     content_backwards= generate_single_res_patch to_dir, from_dir
-    return nil unless content_backwards
-    content_new= generate_single_res_patch nil, to_dir
+    if content_backwards
+      content_new= generate_single_res_patch nil, to_dir
 
-    prev_ver= get_latest_res_patch_version
-    prev_pkg= prev_ver == 0 ? nil : res_patch_filename(prev_ver)
-    this_ver= prev_ver + 1
-    this_pkg= res_patch_filename(this_ver)
+      prev_ver= get_latest_res_patch_version
+      prev_pkg= prev_ver == 0 ? nil : res_patch_filename(prev_ver)
+      this_ver= prev_ver + 1
+      this_pkg= res_patch_filename(this_ver)
 
-    File.write prev_pkg, content_backwards if prev_pkg # TODO encoding
-    File.write this_pkg, content_new # TODO encoding
+      File.write prev_pkg, content_backwards if prev_pkg # TODO encoding
+      File.write this_pkg, content_new # TODO encoding
 
-    true
+      this_ver
+    else
+      nil
+    end
   end
 
   # Deploys the latest version of resources to an empty directory.

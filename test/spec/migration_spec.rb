@@ -111,10 +111,8 @@ describe 'corvid template upgrades' do
       FileUtils.cp_r "#{upgrade_dir ver}/.", dir
     end
 
-    def create_pkg(options={})
-      options[:from] ||= 'a'
-      options[:to] ||= 'b'
-      Migration.new(res_patch_dir: 'mig').create_res_patch options
+    def create_pkg
+      Migration.new(res_patch_dir: 'mig').create_res_patch 'a','b'
     end
 
     def deploy_pkg(ver=nil)
