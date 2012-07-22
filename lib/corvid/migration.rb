@@ -92,6 +92,29 @@ class Migration
     true
   end
 
+  # @param [nil,String] from_dir
+  # @param [String] to_dir
+  # @return String
+  def generate_single_res_patch(from_dir, to_dir, include_header=true)
+    files= get_files_in_dir(from_dir) | get_files_in_dir(to_dir)
+    patch= files.sort
+             .map{|f| create_patch f, from_dir ? "#{from_dir}/#{f}" : nil, "#{to_dir}/#{f}" }
+             .compact
+             .join("\n") + "\n"
+    return nil if /\A\s*\z/ === patch
+
+    if include_header
+      from_digest= digest_dir(from_dir)
+      to_digest= digest_dir(to_dir)
+      patch_digest= DIGEST.hexdigest(patch)
+      header= "Before: #{from_digest}\nAfter: #{to_digest}\nPatch: #{patch_digest}\n"
+
+      header + patch
+    else
+      patch
+    end
+  end
+
   protected
 
   # @param [nil,String] dir
@@ -167,7 +190,7 @@ class Migration
   def create_patch(relative_filename, from_file, to_file)
     from_file= '/dev/null' unless from_file and File.exists? from_file
     to_file= '/dev/null' unless to_file and File.exists? to_file
-    patch= `diff -u #{from_file.inspect} #{to_file.inspect} 2>/dev/null`
+    patch= `diff -u #{from_file.inspect} #{to_file.inspect}`
     case $?.exitstatus
     when 0
       # No differences
@@ -179,7 +202,7 @@ class Migration
       correct_filename_in_patchline! patchlines[1], relative_filename
       patch= patchlines.join($/)
     else
-      raise "Diff failed. #$?"
+      raise "Diff failed with exit status #{$?.exitstatus} trying to compare #{relative_filename}"
     end
   end
 
@@ -223,25 +246,6 @@ class Migration
   def read_digest_from_res_patch_header(header_lines, title)
     v= header_lines.map{|l| l =~ /^#{title}:\s+([0-9a-f]+)\s*$/; $1 ? $1.dup : nil }.compact.first
     v || raise("Checksum '#{title}' not found in patch header.")
-  end
-
-  # @param [nil,String] from_dir
-  # @param [String] to_dir
-  # @return String
-  def generate_single_res_patch(from_dir, to_dir)
-    files= get_files_in_dir(from_dir) | get_files_in_dir(to_dir)
-    patch= files.sort
-             .map{|f| create_patch f, from_dir ? "#{from_dir}/#{f}" : nil, "#{to_dir}/#{f}" }
-             .compact
-             .join("\n") + "\n"
-    return nil if patch.empty?
-
-    from_digest= digest_dir(from_dir)
-    to_digest= digest_dir(to_dir)
-    patch_digest= DIGEST.hexdigest(patch)
-    header= "Before: #{from_digest}\nAfter: #{to_digest}\nPatch: #{patch_digest}\n"
-
-    header + patch
   end
 
   # Will check the patch checksum and raise an error if not correct.
