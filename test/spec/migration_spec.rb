@@ -114,10 +114,18 @@ describe 'corvid template upgrades' do
       Migration.new(res_patch_dir: 'mig').create_res_patch options
     end
 
-    def deploy_res_patches(ver=nil)
+    def deploy_pkg(ver=nil)
       %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
       Dir.mkdir 'r'
       Migration.new(res_patch_dir: 'mig').deploy_res_patches 'r', ver
+      if block_given?
+        Dir.chdir('r'){ yield }
+      end
+    end
+
+    def deploy_latest
+      %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
+      Migration.new(res_patch_dir: 'mig').deploy_latest_res_patch 'r'
       if block_given?
         Dir.chdir('r'){ yield }
       end
@@ -162,7 +170,8 @@ describe 'corvid template upgrades' do
           create_patch_1
         }
         after(:all){ step_out_of_tmp_dir }
-        it("should deploy v1"){ deploy_res_patches{ assert_files upgrade_dir 1 } }
+        it("should deploy v1"){ deploy_pkg{ assert_files upgrade_dir 1 } }
+        it("should deploy latest"){ deploy_latest{ assert_files upgrade_dir 1 } }
       end
 
       context '2 res patches' do
@@ -172,8 +181,9 @@ describe 'corvid template upgrades' do
           create_patch_2
         }
         after(:all){ step_out_of_tmp_dir }
-        it("should deploy v2"){ deploy_res_patches{ assert_files upgrade_dir 2 } }
-        it("should deploy v1"){ deploy_res_patches(1){ assert_files upgrade_dir 1 } }
+        it("should deploy v2"){ deploy_pkg{ assert_files upgrade_dir 2 } }
+        it("should deploy v1"){ deploy_pkg(1){ assert_files upgrade_dir 1 } }
+        it("should deploy latest"){ deploy_latest{ assert_files upgrade_dir 2 } }
       end
 
       context '3 res patches' do
@@ -185,10 +195,11 @@ describe 'corvid template upgrades' do
           create_patch_3
         }
         after(:all){ step_out_of_tmp_dir }
-        it("should deploy v3"){ deploy_res_patches{ assert_files upgrade_dir 3 } }
-        it("should deploy v2"){ deploy_res_patches(2){ assert_files upgrade_dir 2 } }
-        it("should deploy v1"){ deploy_res_patches(1){ assert_files upgrade_dir 1 } }
+        it("should deploy v3"){ deploy_pkg{ assert_files upgrade_dir 3 } }
+        it("should deploy v2"){ deploy_pkg(2){ assert_files upgrade_dir 2 } }
+        it("should deploy v1"){ deploy_pkg(1){ assert_files upgrade_dir 1 } }
         it("should not modify patches prior to n-1"){ File.read('mig/00001.patch').should == @patch_1 }
+        it("should deploy latest"){ deploy_latest{ assert_files upgrade_dir 3 } }
       end
 
     end

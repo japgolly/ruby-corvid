@@ -35,6 +35,20 @@ class Migration
     true
   end
 
+  # Deploys the latest version of resources to an empty directory.
+  #
+  # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will be
+  #   created. If it exists, it must be empty.
+  def deploy_latest_res_patch(target_dir)
+    Dir.mkdir target_dir unless Dir.exists?(target_dir)
+    raise "Target directory must be empty." unless get_files_in_dir(target_dir).empty?
+
+    # Deploy
+    apply_res_patch target_dir, get_latest_res_patch_version
+
+    true
+  end
+
   def deploy_res_patches(target_dir, target_version=nil, from_version=nil)
     latest_version= get_latest_res_patch_version
     target_version ||= latest_version
@@ -50,41 +64,13 @@ class Migration
       last_dir= nil
       last_dir_digest= digest_dir(reconstruction_base_dir) # it contains no files
 
+      # Iterate over versions...
       latest_version.downto(from_version + 1) do |ver|
         this_dir= reconstruction_dir(ver)
         Dir.mkdir this_dir
 
-        # Read migration patch
-        pkg= File.read res_patch_filename(ver) # TODO encoding
-        pkg= pkg.split("\n")
-        header= pkg[0..2]
-        patch= pkg[3..-1].join("\n") + "\n"
-        from_digest= read_digest_from_res_patch_header header, 'Before'
-        to_digest= read_digest_from_res_patch_header header, 'After'
-        patch_digest= read_digest_from_res_patch_header header, 'Patch'
-
-        # Check patch-checksum
-        x= DIGEST.hexdigest patch
-        if patch_digest != x
-          raise "Patch ##{ver} is invalid. The expected patch checksum is #{patch_digest} but the current file's is #{x}."
-        end
-
-        # Check before-checksum
-        if from_digest != last_dir_digest
-          raise "These seems to be a mismatch between patch ver ##{ver-1}, and the parent/base ver of ###{ver}."
-        end
-
-        # Reconstruct current version
-        Dir.chdir this_dir do
-          FileUtils.cp_r "#{last_dir}/.", '.' if last_dir
-          apply_patch patch
-        end
-
-        # Check after-checksum
-        new_dir_digest= digest_dir(this_dir)
-        if to_digest != new_dir_digest
-          raise "After successfully creating patch ver ##{ver}, the contents don't seem to match what was expected."
-        end
+        # Apply res patch for this version
+        new_dir_digest= apply_res_patch this_dir, ver, last_dir_digest, last_dir
 
         last_dir= this_dir
         last_dir_digest= new_dir_digest
@@ -93,6 +79,8 @@ class Migration
       # Migrate
       migrate from_version, target_version, target_dir
     end
+
+    true
   end
 
   protected
@@ -126,10 +114,9 @@ class Migration
       get_files_in_dir(src_dir){|f| filelist[f] ||= {} }
     end
 
+    # Create patches
+    patches= {}
     Dir.chdir target_dir do
-
-      # Create patches
-      patches= {}
       filelist.each do |f,fv|
         from_ver2= from_ver
 
@@ -154,15 +141,15 @@ class Migration
         patch= create_patch f, from_file, to_file
         patches[f]= patch if patch
       end
-
-      # Apply patches
-      unless patches.empty?
-        megapatch= patches.values.join($/) + $/
-  #puts '_'*80; puts megapatch; puts '_'*80
-        apply_patch megapatch
-      end
-
     end
+
+    # Apply patches
+    unless patches.empty?
+      megapatch= patches.values.join($/) + $/
+#puts '_'*80; puts megapatch; puts '_'*80
+      apply_patch target_dir, megapatch
+    end
+
   end
 
   # @param [String] relative_filename
@@ -187,22 +174,24 @@ class Migration
     end
   end
 
-  def apply_patch(patch)
-    tmp= Tempfile.new('corvid-migration')
-    begin
-      tmp.write patch
-      tmp.close
-      `patch -p0 -u -i #{tmp.path.inspect} --no-backup-if-mismatch`
-      # patch's  exit  status  is  0 if all hunks are applied successfully, 1 if some
-      # hunks cannot be applied or there were merge conflicts, and 2 if there is more
-      # serious trouble.  When applying a set of patches in a loop it behooves you to
-      # check this exit status so you don't  apply  a  later  patch  to  a  partially
-      # patched file.
-      # TODO No patch error or conflict handling
-      raise "Patch failed!" unless $?.success?
-    ensure
-      tmp.close
-      tmp.delete
+  def apply_patch(target_dir, patch)
+    Dir.chdir target_dir do
+      tmp= Tempfile.new('corvid-migration')
+      begin
+        tmp.write patch
+        tmp.close
+        `patch -p0 -u -i #{tmp.path.inspect} --no-backup-if-mismatch`
+        # patch's  exit  status  is  0 if all hunks are applied successfully, 1 if some
+        # hunks cannot be applied or there were merge conflicts, and 2 if there is more
+        # serious trouble.  When applying a set of patches in a loop it behooves you to
+        # check this exit status so you don't  apply  a  later  patch  to  a  partially
+        # patched file.
+        # TODO No patch error or conflict handling
+        raise "Patch failed!" unless $?.success?
+      ensure
+        tmp.close
+        tmp.delete
+      end
     end
   end
 
@@ -243,6 +232,72 @@ class Migration
     header= "Before: #{from_digest}\nAfter: #{to_digest}\nPatch: #{patch_digest}\n"
 
     header + patch
+  end
+
+  # Will check the patch checksum and raise an error if not correct.
+  #
+  # @return [Hash] with keys `:patch`, `:digest_before`, `:digest_after`
+  def read_res_patch(ver_or_filename)
+    filename= if ver_or_filename.is_a?(Fixnum)
+                res_patch_filename ver_or_filename
+              else
+                ver_or_filename
+              end
+    r= {}
+
+    # Read migration patch
+    pkg= File.read filename # TODO encoding
+    pkg= pkg.split("\n")
+    header= pkg[0..2]
+    r[:patch]= pkg[3..-1].join("\n") + "\n"
+    r[:digest_before]= read_digest_from_res_patch_header header, 'Before'
+    r[:digest_after] = read_digest_from_res_patch_header header, 'After'
+    r[:digest_patch] = read_digest_from_res_patch_header header, 'Patch'
+
+    # Check patch-checksum
+    x= DIGEST.hexdigest r[:patch]
+    if r[:digest_patch] != x
+      raise "Resource patch #{filename} is invalid. The expected patch checksum is #{r[:digest_patch]} but the file's is #{x}."
+    end
+
+    r
+  end
+
+  # Deploys a specific version of resources.
+  #
+  # @param [String] target_dir The directory where the resources will be deployed to. Must exist.
+  # @param [Fixnum] ver The version of resources to deploy.
+  # @param [nil,String] digest_before The hex digest of the contents of the previous directory. This will be compared to the
+  #   *before* checksum in the resource patch before applying. If `nil` then a digest will be calculated for the target
+  #   directory before applying the patch.
+  # @param [nil,String] prev_ver_dir The directory containing the already-deployed contents of this target version + 1. If
+  #   provided then the contents of the directory will be copied to `target_dir` before applying the patch.
+  def apply_res_patch(target_dir, ver, digest_before=nil, prev_ver_dir=nil)
+
+    # Read migration patch
+    patch_data= read_res_patch(ver)
+
+    # Copy previous version into target directory
+    FileUtils.cp_r "#{prev_ver_dir}/.", target_dir if prev_ver_dir
+
+    # Check before-checksum
+    digest_before ||= digest_dir(target_dir)
+    if patch_data[:digest_before] != digest_before
+      errmsg= "Cannot apply res-patch ##{ver} to #{target_dir}. Its contents do not match those that the patch expects to be applied to."
+      errmsg+= " Ensure that the 'after' checksum of res-patch ##{ver+1} matches the 'before' checksum of #{ver}." unless ver == get_latest_res_patch_version
+      raise errmsg
+    end
+
+    # Reconstruct current version
+    apply_patch target_dir, patch_data[:patch]
+
+    # Check after-checksum
+    new_dir_digest= digest_dir(target_dir)
+    if patch_data[:digest_after] != new_dir_digest
+      raise "After successfully creating patch ver ##{ver}, the contents don't seem to match what was expected."
+    end
+
+    new_dir_digest
   end
 
   private
