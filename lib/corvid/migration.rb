@@ -232,6 +232,7 @@ class Migration
     files= get_files_in_dir(from_dir) | get_files_in_dir(to_dir)
     patch= files.sort
              .map{|f| create_patch f, from_dir ? "#{from_dir}/#{f}" : nil, "#{to_dir}/#{f}" }
+             .compact
              .join("\n") + "\n"
     return nil if patch.empty?
 
