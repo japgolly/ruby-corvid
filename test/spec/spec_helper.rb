@@ -49,10 +49,17 @@ module TestHelpers
   end
 
   def inside_empty_dir
-    Dir.mktmpdir do |dir|
-      Dir.chdir dir do
-        yield dir
+    if block_given?
+      Dir.mktmpdir do |dir|
+        Dir.chdir dir do
+          yield dir
+        end
       end
+    else
+      dir= Dir.mktmpdir
+      old_dir= Dir.pwd
+      Dir.chdir dir
+      [old_dir,dir]
     end
   end
 

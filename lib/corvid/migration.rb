@@ -35,11 +35,12 @@ class Migration
     true
   end
 
-  def deploy_res_patch(target_dir, target_version=nil, from_version=nil)
+  def deploy_res_patches(target_dir, target_version=nil, from_version=nil)
     latest_version= get_latest_res_patch_version
     target_version ||= latest_version
     from_version ||= 0
-    puts "Deploying ver #{target_version}..."
+    return if target_version == 0 and latest_version == 0 and from_version == 0
+    #puts "Deploying ver #{target_version}..."
     raise unless target_version > 0 and target_version <= latest_version
     raise unless from_version  >= 0 and from_version   <= target_version
     return if from_version == target_version

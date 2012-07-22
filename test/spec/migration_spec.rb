@@ -5,7 +5,7 @@ require 'corvid/migration'
 describe 'corvid template upgrades' do
 
   around :each do |ex|
-    inside_empty_dir{ ex.run }
+    @tmp_dir ? ex.run : inside_empty_dir{ ex.run }
   end
 
   def upgrade_dir(ver=nil)
@@ -104,10 +104,6 @@ describe 'corvid template upgrades' do
   #---------------------------------------------------------------------------------------------------------------------
 
   context 'Template packages' do
-    before :each do |ex|
-      %w[a b mig].each{|d| Dir.mkdir d }
-    end
-
     def copy_to(ver, dir)
       FileUtils.cp_r "#{upgrade_dir ver}/.", dir
     end
@@ -118,10 +114,10 @@ describe 'corvid template upgrades' do
       Migration.new(res_patch_dir: 'mig').create_res_patch options
     end
 
-    def deploy_pkg(ver=nil)
+    def deploy_res_patches(ver=nil)
       %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
       Dir.mkdir 'r'
-      Migration.new(res_patch_dir: 'mig').deploy_res_patch 'r', ver
+      Migration.new(res_patch_dir: 'mig').deploy_res_patches 'r', ver
       if block_given?
         Dir.chdir('r'){ yield }
       end
@@ -136,6 +132,7 @@ describe 'corvid template upgrades' do
     context 'Creation & deployment' do
 
       def create_patch_1
+        %w[a b mig].each{|d| Dir.mkdir d unless Dir.exists? d }
         copy_to 1, 'b'
         create_pkg
         Dir['mig/**/*'].should == %w[mig/00001.patch]
@@ -153,36 +150,47 @@ describe 'corvid template upgrades' do
         Dir['mig/**/*'].sort.should == %w[mig/00001.patch mig/00002.patch mig/00003.patch]
       end
 
-      it("should create & deploy v1"){
-        create_patch_1
-        deploy_pkg{ assert_files upgrade_dir 1 }
-      }
+      def step_out_of_tmp_dir
+        Dir.chdir @old_dir if @old_dir
+        FileUtils.rm_rf @tmp_dir if @tmp_dir
+        @old_dir= @tmp_dir= nil
+      end
 
-      it("should create & deploy v1, v2"){
-        create_patch_1
-        create_patch_2
-#puts '_'*80;1.upto(2){|i| puts `cat mig/0000#{i}.patch`;puts '_'*80}
-        deploy_pkg{ assert_files upgrade_dir 2 }
-        deploy_pkg(1){ assert_files upgrade_dir 1 }
-      }
+      context '1 res patch' do
+        before(:all){
+          @old_dir,@tmp_dir = inside_empty_dir
+          create_patch_1
+        }
+        after(:all){ step_out_of_tmp_dir }
+        it("should deploy v1"){ deploy_res_patches{ assert_files upgrade_dir 1 } }
+      end
 
-      it("should create & deploy v1, v2, v3"){
-        create_patch_1
-        create_patch_2
-        create_patch_3
-#puts '_'*80;1.upto(3){|i| puts `cat mig/0000#{i}.patch`;puts '_'*80}
-        deploy_pkg{ assert_files upgrade_dir 3 }
-        deploy_pkg(2){ assert_files upgrade_dir 2 }
-        deploy_pkg(1){ assert_files upgrade_dir 1 }
-      }
+      context '2 res patches' do
+        before(:all){
+          @old_dir,@tmp_dir = inside_empty_dir
+          create_patch_1
+          create_patch_2
+        }
+        after(:all){ step_out_of_tmp_dir }
+        it("should deploy v2"){ deploy_res_patches{ assert_files upgrade_dir 2 } }
+        it("should deploy v1"){ deploy_res_patches(1){ assert_files upgrade_dir 1 } }
+      end
 
-      it("should not modify patches prior to n-1"){
-        create_patch_1
-        create_patch_2
-        p1= File.read 'mig/00001.patch'
-        create_patch_3
-        File.read('mig/00001.patch').should == p1
-      }
+      context '3 res patches' do
+        before(:all){
+          @old_dir,@tmp_dir = inside_empty_dir
+          create_patch_1
+          create_patch_2
+          @patch_1= File.read 'mig/00001.patch'
+          create_patch_3
+        }
+        after(:all){ step_out_of_tmp_dir }
+        it("should deploy v3"){ deploy_res_patches{ assert_files upgrade_dir 3 } }
+        it("should deploy v2"){ deploy_res_patches(2){ assert_files upgrade_dir 2 } }
+        it("should deploy v1"){ deploy_res_patches(1){ assert_files upgrade_dir 1 } }
+        it("should not modify patches prior to n-1"){ File.read('mig/00001.patch').should == @patch_1 }
+      end
+
     end
   end
 end
