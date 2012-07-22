@@ -1,5 +1,0 @@
-source :rubygems
-
-# Load Gemfile.raven
-eval File.read(File.expand_path('../Gemfile.raven',__FILE__))
-

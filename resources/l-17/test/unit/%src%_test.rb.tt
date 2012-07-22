@@ -1,7 +1,0 @@
-# encoding: utf-8
-require_relative '<%= bootstrap %>'
-require '<%= src %>'
-
-class <%= testcase_name %>Test < MiniTest::Unit::TestCase
-  # TODO
-end
