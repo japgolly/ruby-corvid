@@ -26,7 +26,7 @@ namespace :res do
     m= new_m
     Dir.mktmpdir {|latest_dir|
       m.deploy_latest_res_patch(latest_dir)
-      m.create_res_patch from: latest_dir, to: "#{CORVID_ROOT}/resources/latest"
+      m.create_res_patch latest_dir, "#{CORVID_ROOT}/resources/latest"
     }
   end
 end
