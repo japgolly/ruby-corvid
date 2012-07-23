@@ -64,11 +64,17 @@ module TestHelpers
   end
 
   def patch_corvid_gemfile
-    `perl -pi -e '
-       s|^\\s*(gem\\s+.corvid.)\\s*(?:,\\s*path.*)?$|\\1, path: "#{CORVID_ROOT}"|
-     ' Gemfile .corvid/Gemfile`
-    raise 'patch failed' unless $?.success?
+    files= %w[Gemfile Gemfile.corvid]
+    files.select!{|f| File.exists? f}
+    unless files.empty?
+      `perl -pi -e '
+         s|^\\s*(gem\\s+.corvid.)\\s*(?:,\\s*path.*)?$|\\1, path: "#{CORVID_ROOT}"|
+       ' #{files.join ' '}`
+      raise 'patch failed' unless $?.success?
+    end
+    true
   end
+
 end
 
 RSpec.configure do |config|
