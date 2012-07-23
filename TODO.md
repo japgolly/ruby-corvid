@@ -15,7 +15,6 @@ Patches/Migration/Upgrades TODOs
 * Adding new features: add to features.yml, migrate from 0->m
 * Make .corvid/Gemfile static rather than a template
 * Delete templates/
-* rak res:reset and/or res:explode - Restore resources/latest to latest patch
 * Handle merge conflicts
 
 ### Done
@@ -23,3 +22,4 @@ Patches/Migration/Upgrades TODOs
 * rak res:new
 * create real res patches based on git history
 * rak res:diff
+* rak res:latest

@@ -12,6 +12,11 @@ class Migration
     options.each{|k,v| public_send :"#{k}=", v }
   end
 
+  def get_latest_res_patch_version
+    prev_pkg= Dir["#{res_patch_dir}/[0-9][0-9][0-9][0-9][0-9].patch"].sort.last
+    prev_ver= prev_pkg ? prev_pkg.sub(/\D+/,'').to_i : 0
+  end
+
   # Creates a new resource patch.
   #
   # @param [String] from_dir The directory containing the contents of the last-packaged resources (i.e. matching the
@@ -229,11 +234,6 @@ class Migration
 
   def res_patch_filename(ver)
     '%s/%05d.patch' % [res_patch_dir,ver]
-  end
-
-  def get_latest_res_patch_version
-    prev_pkg= Dir["#{res_patch_dir}/[0-9][0-9][0-9][0-9][0-9].patch"].sort.last
-    prev_ver= prev_pkg ? prev_pkg.sub(/\D+/,'').to_i : 0
   end
 
   # @param [nil,String] dir
