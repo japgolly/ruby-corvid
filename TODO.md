@@ -15,8 +15,6 @@ Patches/Migration/Upgrades TODOs
 * Upgrading existing features: migrate each feature from m->n
 * Adding new features: add to features.yml, migrate from 0->m
 
-* Make .corvid/Gemfile static rather than a template
-
 * Handle merge conflicts
 
 * Process doco
@@ -28,3 +26,4 @@ Patches/Migration/Upgrades TODOs
 * create real res patches based on git history
 * rak res:diff
 * rak res:latest
+* Make .corvid/Gemfile static rather than a template
