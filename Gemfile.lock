@@ -10,7 +10,7 @@ PATH
     corvid (0.0.1)
       activesupport
       golly-utils
-      thor
+      thor (~> 0.14.6)
 
 GEM
   remote: http://rubygems.org/
@@ -55,7 +55,7 @@ GEM
       multi_json (~> 1.0)
       simplecov-html (~> 0.5.3)
     simplecov-html (0.5.3)
-    thor (0.15.4)
+    thor (0.14.6)
     yard (0.8.2.1)
 
 PLATFORMS
