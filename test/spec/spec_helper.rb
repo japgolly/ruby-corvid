@@ -13,7 +13,10 @@ BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 module TestHelpers
   def invoke_sh(cmd,env=nil)
     cmd= cmd.map(&:inspect).join ' ' if cmd.kind_of?(Array)
-    system env || {}, cmd
+    env ||= {}
+    env['BUNDLE_GEMFILE'] ||= nil
+    env['RUBYOPT'] ||= nil
+    system env, cmd
     $?.success?
   end
   def invoke_sh!(args,env=nil)
@@ -68,11 +71,24 @@ module TestHelpers
     Dir.mktmpdir {|dir|
       FileUtils.cp_r "#{CORVID_ROOT}/test/fixtures/#{fixture_name}", dir
       Dir.chdir "#{dir}/#{fixture_name}" do
-        `sed -i 's|\.\./\.\./\.\.|#{CORVID_ROOT}|g; s/0\.0\.1/#{Corvid::VERSION}/' Gem*`
+        patch_corvid_gemfile
         yield
       end
     }
   end
+
+  def patch_corvid_gemfile
+    files= %w[Gemfile Gemfile.corvid]
+    files.select!{|f| File.exists? f}
+    unless files.empty?
+      `perl -pi -e '
+         s|^\\s*(gem\\s+.corvid.)\\s*(?:,\\s*path.*)?$|\\1, path: "#{CORVID_ROOT}"|
+       ' #{files.join ' '}`
+      raise 'patch failed' unless $?.success?
+    end
+    true
+  end
+
 end
 
 RSpec.configure do |config|

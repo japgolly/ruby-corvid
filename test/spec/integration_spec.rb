@@ -25,7 +25,10 @@ describe 'Integration test' do
   end
 
   it("should initialise project"){
-    invoke_corvid! 'init:project --no-use_corvid_gem --test-unit --test-spec'
+    invoke_corvid! "init:project --no-#{RUN_BUNDLE} --test-unit --test-spec"
+    patch_corvid_gemfile
+    invoke_sh! 'bundle install'
+    File.exist?('Gemfile.lock').should == true
     invoke_sh! 'echo "class Hehe; def num; 123 end end" > lib/hehe.rb'
   }
 

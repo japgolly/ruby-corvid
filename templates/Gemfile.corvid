@@ -1,6 +1,6 @@
 # vim:ft=ruby et ts=2 sw=2:
 
-gem 'corvid', ">= #{::Corvid::VERSION}"
+gem 'corvid'
 
 gem 'rake', group: :rake
 
