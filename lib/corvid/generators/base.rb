@@ -6,8 +6,10 @@ require 'active_support/inflections'
 
 module Corvid
   module Generator
+
     class Base < Thor
       include Thor::Actions
+      RUN_BUNDLE= :'run_bundle'
 
       def self.source_root
         "#{CORVID_ROOT}/templates"
@@ -20,6 +22,17 @@ module Corvid
       end
 
       protected
+
+      def self.run_bundle_option(t)
+        t.method_option RUN_BUNDLE => true
+      end
+
+      def run_bundle
+        if options[RUN_BUNDLE] and !$corvid_bundle_install_at_exit_installed
+          $corvid_bundle_install_at_exit_installed= true
+          at_exit{ run "bundle install" }
+        end
+      end
 
       def copy_file_unless_exists(src, tgt=nil, options={})
         tgt ||= src

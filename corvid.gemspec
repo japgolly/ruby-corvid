@@ -11,9 +11,9 @@ Gem::Specification.new do |gem|
   gem.email         = ["japgolly@gmail.com"]
   gem.homepage      = "https://github.com/japgolly/corvid"
 
-  gem.add_dependency 'golly-utils'
-  gem.add_dependency 'activesupport'
-  gem.add_dependency 'thor'
+  gem.add_runtime_dependency 'golly-utils'
+  gem.add_runtime_dependency 'activesupport'
+  gem.add_runtime_dependency 'thor', '~> 0.14.6'
   gem.add_development_dependency 'rspec'
   gem.add_development_dependency 'rake'
 
