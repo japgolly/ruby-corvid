@@ -20,25 +20,25 @@ namespace :res do
   LATEST_DIR     = "#{CORVID_ROOT}/resources/latest"
   LATEST_DIR_REL = relative_to_corvid_root LATEST_DIR
 
-  def new_m
-    require 'corvid/res_patch_manager'
-    Migration.new res_patch_dir: RES_PATCH_DIR
+  def rpm
+    @rpm ||= (
+      require 'corvid/res_patch_manager'
+      Corvid::ResPatchManager.new res_patch_dir: RES_PATCH_DIR
+    )
   end
 
   def diff_latest_dir
-    m= new_m
     Dir.mktmpdir {|tmpdir|
-      m.deploy_latest_res_patch(tmpdir)
-      return m.generate_single_res_patch tmpdir, LATEST_DIR, false
+      rpm.deploy_latest_res_patch(tmpdir)
+      return rpm.generate_single_res_patch tmpdir, LATEST_DIR, false
     }
   end
 
   desc 'Create a new resource patch.'
   task :new do
-    m= new_m
     Dir.mktmpdir {|latest_dir|
-      m.deploy_latest_res_patch(latest_dir)
-      m.create_res_patch latest_dir, LATEST_DIR
+      rpm.deploy_latest_res_patch(latest_dir)
+      rpm.create_res_patch latest_dir, LATEST_DIR
     }
   end
 
@@ -84,8 +84,7 @@ namespace :res do
       FileUtils.mkdir_p LATEST_DIR
 
       # Deploy latest
-      m= new_m
-      m.deploy_latest_res_patch(LATEST_DIR)
+      rpm.deploy_latest_res_patch(LATEST_DIR)
       puts "Deployed v#{m.get_latest_res_patch_version}."
     end
   end

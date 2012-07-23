@@ -2,7 +2,8 @@
 require_relative 'spec_helper'
 require 'corvid/res_patch_manager'
 
-describe 'corvid template upgrades' do
+describe Corvid::ResPatchManager do
+  ResPatchManager= Corvid::ResPatchManager
 
   around :each do |ex|
     @tmp_dir ? ex.run : inside_empty_dir{ ex.run }
@@ -19,9 +20,9 @@ describe 'corvid template upgrades' do
   end
 
   def migrate(from_ver, to_ver)
-    m= Migration.new
-    m.send :with_reconstruction_dir, upgrade_dir do
-      m.send :migrate, from_ver, to_ver, Dir.pwd
+    rpm= ResPatchManager.new
+    rpm.send :with_reconstruction_dir, upgrade_dir do
+      rpm.send :migrate, from_ver, to_ver, Dir.pwd
     end
   end
 
@@ -112,13 +113,13 @@ describe 'corvid template upgrades' do
     end
 
     def create_pkg
-      Migration.new(res_patch_dir: 'mig').create_res_patch 'a','b'
+      ResPatchManager.new(res_patch_dir: 'mig').create_res_patch 'a','b'
     end
 
     def deploy_pkg(ver=nil)
       %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
       Dir.mkdir 'r'
-      Migration.new(res_patch_dir: 'mig').deploy_res_patches 'r', ver
+      ResPatchManager.new(res_patch_dir: 'mig').deploy_res_patches 'r', ver
       if block_given?
         Dir.chdir('r'){ yield }
       end
@@ -126,7 +127,7 @@ describe 'corvid template upgrades' do
 
     def deploy_latest
       %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
-      Migration.new(res_patch_dir: 'mig').deploy_latest_res_patch 'r'
+      ResPatchManager.new(res_patch_dir: 'mig').deploy_latest_res_patch 'r'
       if block_given?
         Dir.chdir('r'){ yield }
       end
@@ -217,7 +218,7 @@ describe 'corvid template upgrades' do
 
     context 'Real packages' do
       def subject
-        Migration.new res_patch_dir: File.expand_path('../../../resources',__FILE__)
+        ResPatchManager.new res_patch_dir: File.expand_path('../../../resources',__FILE__)
       end
       it("should all be deployable"){
         subject.deploy_res_patches '.', 1
