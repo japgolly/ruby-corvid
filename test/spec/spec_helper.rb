@@ -75,7 +75,7 @@ module TestHelpers
   end
 
   def patch_corvid_gemfile
-    files= %w[Gemfile Gemfile.corvid]
+    files= %w[Gemfile .corvid/Gemfile]
     files.select!{|f| File.exists? f}
     unless files.empty?
       `perl -pi -e '
