@@ -1,6 +1,6 @@
 # encoding: utf-8
 require_relative 'spec_helper'
-require 'corvid/migration'
+require 'corvid/res_patch_manager'
 
 describe 'corvid template upgrades' do
 

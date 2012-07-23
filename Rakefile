@@ -20,13 +20,8 @@ namespace :res do
   LATEST_DIR     = "#{CORVID_ROOT}/resources/latest"
   LATEST_DIR_REL = relative_to_corvid_root LATEST_DIR
 
-  def setup
-    require_relative 'lib/corvid/environment'
-    require 'corvid/migration'
-  end
-
   def new_m
-    setup
+    require 'corvid/res_patch_manager'
     Migration.new res_patch_dir: RES_PATCH_DIR
   end
 
