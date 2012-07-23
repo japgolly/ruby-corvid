@@ -5,6 +5,7 @@ require_relative '../../lib/corvid/environment'
 require 'tmpdir'
 require 'fileutils'
 
+RUN_BUNDLE= 'run_bundle'
 BOOTSTRAP_ALL= 'test/bootstrap/all.rb'
 BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
