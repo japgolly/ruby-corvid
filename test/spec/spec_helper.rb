@@ -57,12 +57,7 @@ module TestHelpers
       FileUtils.cp_r "#{CORVID_ROOT}/templates/.", dir, dereference_root: true if copy_templates
       FileUtils.cp_r "#{CORVID_ROOT}/test/fixtures/#{fixture_name}/.", dir
       Dir.chdir dir do
-        # TODO remove this
-        `perl -pi -e '
-          s|(?<=['"'"'"])\\.\\.(?:/\\.\\.){2,}|#{CORVID_ROOT}|g;
-          s/0\\.0\\.1/#{Corvid::VERSION}/;
-         ' Gemfile* .corvid/Gemfile`
-         patch_corvid_gemfile
+        patch_corvid_gemfile
         yield
       end
     }
