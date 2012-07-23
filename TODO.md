@@ -6,16 +6,21 @@ TODO
 
 Patches/Migration/Upgrades TODOs
 ================================
-* Process doco
-* Clean up code - refactor, rename, doc, proper error msgs
-* Features stored in .corvid/features.yml
+* Make init:project use res patches
+* Delete templates/
 * Version specified in .corvid/version.yml
+
 * Code like in generators stored in templated corvid_migration-{feature}.rb which defines (void*)(version)
+* Features stored in .corvid/features.yml
 * Upgrading existing features: migrate each feature from m->n
 * Adding new features: add to features.yml, migrate from 0->m
+
 * Make .corvid/Gemfile static rather than a template
-* Delete templates/
+
 * Handle merge conflicts
+
+* Process doco
+* Clean up code - refactor, rename, doc, proper error msgs
 
 ### Done
 * When exploding, apply patch for 0-n then apply n-1, n-2, etc.
