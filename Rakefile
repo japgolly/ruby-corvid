@@ -85,7 +85,7 @@ namespace :res do
 
       # Deploy latest
       rpm.deploy_latest_res_patch(LATEST_DIR)
-      puts "Deployed v#{m.get_latest_res_patch_version}."
+      puts "Deployed v#{rpm.get_latest_res_patch_version}."
     end
   end
 end
