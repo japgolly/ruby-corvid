@@ -1,7 +1,9 @@
 # encoding: utf-8
 require_relative '../spec_helper'
+require 'corvid/generators/init'
 
 describe 'corvid init' do
+  TestGenerator= Corvid::Generator::Init::Test
 
   around :each do |ex|
     inside_fixture('bare'){ ex.run }
@@ -9,7 +11,7 @@ describe 'corvid init' do
 
   context 'init:test:unit' do
     it("should initalise unit test support"){
-      invoke_corvid! "init:test:unit --no-#{RUN_BUNDLE}"
+      TestGenerator.start ["unit", "--no-#{RUN_BUNDLE}"]
       test_bootstraps true, true, false
       Dir.exists?('test/unit').should == true
     }
@@ -17,7 +19,7 @@ describe 'corvid init' do
     it("should preserve the common bootstrap"){
       FileUtils.mkdir_p File.dirname(BOOTSTRAP_ALL)
       File.write BOOTSTRAP_ALL, '123'
-      invoke_corvid! "init:test:unit --no-#{RUN_BUNDLE}"
+      TestGenerator.start ["unit", "--no-#{RUN_BUNDLE}"]
       File.read(BOOTSTRAP_ALL).should == '123'
       test_bootstraps nil, true, false
       Dir.exists?('test/unit').should == true
@@ -26,7 +28,7 @@ describe 'corvid init' do
 
   context 'init:test:spec' do
     it("should initalise spec test support"){
-      invoke_corvid! "init:test:spec --no-#{RUN_BUNDLE}"
+      TestGenerator.start ["spec", "--no-#{RUN_BUNDLE}"]
       test_bootstraps true, false, true
       Dir.exists?('test/spec').should == true
     }
@@ -34,7 +36,7 @@ describe 'corvid init' do
     it("should preserve the common bootstrap"){
       FileUtils.mkdir_p File.dirname(BOOTSTRAP_ALL)
       File.write BOOTSTRAP_ALL, '123'
-      invoke_corvid! "init:test:spec --no-#{RUN_BUNDLE}"
+      TestGenerator.start ["spec", "--no-#{RUN_BUNDLE}"]
       File.read(BOOTSTRAP_ALL).should == '123'
       test_bootstraps nil, false, true
       Dir.exists?('test/spec').should == true
@@ -56,5 +58,4 @@ describe 'corvid init' do
       c.send spec ? :should : :should_not, include('spec')
     end
   end
-
 end
