@@ -16,30 +16,27 @@ task :test do
 end
 
 namespace :res do
-  RES_PATCH_DIR  = "#{CORVID_ROOT}/resources"
   LATEST_DIR     = "#{CORVID_ROOT}/resources/latest"
   LATEST_DIR_REL = relative_to_corvid_root LATEST_DIR
 
   def rpm
     @rpm ||= (
       require 'corvid/res_patch_manager'
-      Corvid::ResPatchManager.new res_patch_dir: RES_PATCH_DIR
+      Corvid::ResPatchManager.new
     )
   end
 
   def diff_latest_dir
-    Dir.mktmpdir {|tmpdir|
-      rpm.deploy_latest_res_patch(tmpdir)
-      return rpm.generate_single_res_patch tmpdir, LATEST_DIR, false
-    }
+    rpm.with_latest_resources do |dir|
+      return rpm.generate_single_res_patch dir, LATEST_DIR, false
+    end
   end
 
   desc 'Create a new resource patch.'
   task :new do
-    Dir.mktmpdir {|latest_dir|
-      rpm.deploy_latest_res_patch(latest_dir)
-      rpm.create_res_patch latest_dir, LATEST_DIR
-    }
+    rpm.with_latest_resources do |dir|
+      rpm.create_res_patch dir, LATEST_DIR
+    end
   end
 
   desc "Shows the differences between the latest resource patch and #{LATEST_DIR_REL}."

@@ -6,11 +6,16 @@ require 'digest/sha2'
 module Corvid
   class ResPatchManager
 
+    def self.default_res_patch_dir
+      require 'corvid/environment' unless defined?(CORVID_ROOT)
+      res_patch_dir= "#{CORVID_ROOT}/resources"
+    end
+
     # The directory where resource patches are located.
     attr_accessor :res_patch_dir
 
-    def initialize(options={})
-      options.each{|k,v| public_send :"#{k}=", v }
+    def initialize(res_patch_dir = self.class.default_res_patch_dir)
+      self.res_patch_dir= res_patch_dir
     end
 
     def get_latest_res_patch_version
@@ -62,6 +67,13 @@ module Corvid
       apply_res_patch target_dir, latest_version if latest_version != 0
 
       true
+    end
+
+    def with_latest_resources(&block)
+      Dir.mktmpdir {|tmpdir|
+        deploy_latest_res_patch(tmpdir)
+        return block.call(tmpdir)
+      }
     end
 
     def deploy_res_patches(target_dir, target_version=nil, from_version=nil)

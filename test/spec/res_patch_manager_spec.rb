@@ -20,7 +20,7 @@ describe Corvid::ResPatchManager do
   end
 
   def migrate(from_ver, to_ver)
-    rpm= ResPatchManager.new
+    rpm= ResPatchManager.new '/whatever'
     rpm.send :with_reconstruction_dir, upgrade_dir do
       rpm.send :migrate, from_ver, to_ver, Dir.pwd
     end
@@ -113,13 +113,13 @@ describe Corvid::ResPatchManager do
     end
 
     def create_pkg
-      ResPatchManager.new(res_patch_dir: 'mig').create_res_patch 'a','b'
+      ResPatchManager.new('mig').create_res_patch 'a','b'
     end
 
     def deploy_pkg(ver=nil)
       %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
       Dir.mkdir 'r'
-      ResPatchManager.new(res_patch_dir: 'mig').deploy_res_patches 'r', ver
+      ResPatchManager.new('mig').deploy_res_patches 'r', ver
       if block_given?
         Dir.chdir('r'){ yield }
       end
@@ -127,7 +127,7 @@ describe Corvid::ResPatchManager do
 
     def deploy_latest
       %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
-      ResPatchManager.new(res_patch_dir: 'mig').deploy_latest_res_patch 'r'
+      ResPatchManager.new('mig').deploy_latest_res_patch 'r'
       if block_given?
         Dir.chdir('r'){ yield }
       end
@@ -217,9 +217,6 @@ describe Corvid::ResPatchManager do
     end
 
     context 'Real packages' do
-      def subject
-        ResPatchManager.new res_patch_dir: File.expand_path('../../../resources',__FILE__)
-      end
       it("should all be deployable"){
         subject.deploy_res_patches '.', 1
       }
