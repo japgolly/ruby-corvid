@@ -1,4 +1,5 @@
 require 'corvid/generators/base'
+require 'yaml'
 
 class Corvid::Generator::Init < Corvid::Generator::Base
 
@@ -24,6 +25,8 @@ class Corvid::Generator::Init < Corvid::Generator::Base
       copy_executable 'bin/yri'
       empty_directory 'lib'
 
+      add_feature 'corvid'
+
       invoke 'init:test:unit', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
       invoke 'init:test:spec', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'
 
@@ -43,6 +46,7 @@ class Corvid::Generator::Init < Corvid::Generator::Base
         copy_file_unless_exists 'test/bootstrap/all.rb'
         copy_file               'test/bootstrap/unit.rb'
         empty_directory         'test/unit'
+        add_feature 'test_unit'
         run_bundle
       end
     end
@@ -57,6 +61,7 @@ class Corvid::Generator::Init < Corvid::Generator::Base
         copy_file_unless_exists 'test/bootstrap/all.rb'
         copy_file               'test/bootstrap/spec.rb'
         empty_directory         'test/spec'
+        add_feature 'test_spec'
         run_bundle
       end
     end

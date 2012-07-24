@@ -11,6 +11,7 @@ module Corvid
     class Base < Thor
       include Thor::Actions
       RUN_BUNDLE= :'run_bundle'
+      FEATURES_FILE= '.corvid/features.yml'
 
       class << self
         attr_accessor :source_root
@@ -72,6 +73,33 @@ module Corvid
         copy_file name, *extra_args
         chmod name, 0755, *extra_args
       end
+
+      def get_installed_features
+        if File.exists? FEATURES_FILE
+          v= YAML.load_file FEATURES_FILE
+          raise "Invalid #{FEATURES_FILE}. Array expected but got #{v.class}." unless v.is_a?(Array)
+          v
+        else
+          nil
+        end
+      end
+
+      def add_features(*features)
+        # Read currently installed features
+        installed= get_installed_features || []
+        size_before= installed.size
+
+        # Add features
+        features.flatten.each do |feature|
+          installed<< feature unless installed.include?(feature)
+        end
+
+        # Write back to disk
+        if installed.size != size_before
+          create_file FEATURES_FILE, installed.to_yaml, force: true
+        end
+      end
+      alias :add_feature :add_features
     end
   end
 end

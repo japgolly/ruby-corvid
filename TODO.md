@@ -7,7 +7,6 @@ TODO
 Patches/Migration/Upgrades TODOs
 ================================
 * Code like in generators stored in templated corvid_migration-{feature}.rb which defines (void*)(version)
-* Features stored in .corvid/features.yml
 * Upgrading existing features: migrate each feature from m->n
 * Adding new features: add to features.yml, migrate from 0->m
 
@@ -26,3 +25,4 @@ Patches/Migration/Upgrades TODOs
 * Delete templates/
 * Make generators use res patches
 * Version specified in .corvid/version.yml
+* Features stored in .corvid/features.yml

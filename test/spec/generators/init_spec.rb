@@ -14,11 +14,22 @@ describe Corvid::Generator::Init do
     end
 
     context 'in an empty directory' do
-      around_all_in_empty_dir{
-        described_class.start "project --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec".split(/ /)
-      }
-      it("should create Gemfile"){ File.exists?('Gemfile').should == true }
-      it("should store the resource version"){ assert_corvid_version_is_latest }
+      context 'with args: --no-test-unit --no-test-spec' do
+        around_all_in_empty_dir{
+          described_class.start "project --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec".split(/ /)
+        }
+        it("should create Gemfile"){ File.exists?('Gemfile').should == true }
+        it("should store the resource version"){ assert_corvid_version_is_latest }
+        it("should store the corvid feature"){ assert_corvid_features 'corvid' }
+      end
+      context 'with args: --test-unit --test-spec' do
+        around_all_in_empty_dir{
+          described_class.start "project --no-#{RUN_BUNDLE} --test-unit --test-spec".split(/ /)
+        }
+        it("should create Gemfile"){ File.exists?('Gemfile').should == true }
+        it("should store the resource version"){ assert_corvid_version_is_latest }
+        it("should store the corvid and test features"){ assert_corvid_features %w[corvid test_unit test_spec] }
+      end
     end
 
     it("should overwrite the resource version when it exists"){
@@ -43,6 +54,7 @@ describe Corvid::Generator::Init::Test do
       described_class.start ["unit", "--no-#{RUN_BUNDLE}"]
       test_bootstraps true, true, false
       Dir.exists?('test/unit').should == true
+      assert_corvid_features %w[corvid test_unit]
     }
 
     it("should preserve the common bootstrap"){
@@ -60,6 +72,7 @@ describe Corvid::Generator::Init::Test do
       described_class.start ["spec", "--no-#{RUN_BUNDLE}"]
       test_bootstraps true, false, true
       Dir.exists?('test/spec').should == true
+      assert_corvid_features %w[corvid test_spec]
     }
 
     it("should preserve the common bootstrap"){

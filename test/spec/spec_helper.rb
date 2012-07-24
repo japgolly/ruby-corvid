@@ -12,6 +12,12 @@ BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 
 module TestHelpers
+  def assert_corvid_features(*expected)
+    f= YAML.load_file('.corvid/features.yml')
+    f.should be_kind_of(Array)
+    f.should == expected.flatten
+  end
+
   def invoke_sh(cmd,env=nil)
     cmd= cmd.map(&:inspect).join ' ' if cmd.kind_of?(Array)
     env ||= {}
