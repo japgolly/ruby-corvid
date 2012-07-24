@@ -85,6 +85,34 @@ module TestHelpers
     true
   end
 
+  # To be used in conjunction with [#inside_empty_dir].
+  # @see ClassMethods#around_all_in_empty_dir
+  def step_out_of_tmp_dir
+    Dir.chdir @old_dir if @old_dir
+    FileUtils.rm_rf @tmp_dir if @tmp_dir
+    @old_dir= @tmp_dir= nil
+  end
+
+  def self.included(base)
+    base.extend ClassMethods
+  end
+
+  module ClassMethods
+    def around_all_in_empty_dir(&block)
+      @@around_all_in_empty_dir_count ||= 0
+      @@around_all_in_empty_dir_count += 1
+      block_name= :"@@around_all_in_empty_dir_#@@around_all_in_empty_dir_count"
+      ::TestHelpers::ClassMethods.class_variable_set block_name, block
+      eval <<-EOB
+        before(:all){
+          @old_dir,@tmp_dir = inside_empty_dir
+          block= ::TestHelpers::ClassMethods.class_variable_get(:"#{block_name}")
+          instance_exec &block
+        }
+        after(:all){ step_out_of_tmp_dir }
+      EOB
+    end
+  end
 end
 
 RSpec.configure do |config|

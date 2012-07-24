@@ -160,53 +160,39 @@ describe Corvid::ResPatchManager do
         Dir['mig/**/*'].sort.should == %w[mig/00001.patch mig/00002.patch mig/00003.patch]
       end
 
-      def step_out_of_tmp_dir
-        Dir.chdir @old_dir if @old_dir
-        FileUtils.rm_rf @tmp_dir if @tmp_dir
-        @old_dir= @tmp_dir= nil
-      end
-
       context 'no res patches' do
-        before(:all){
-          @old_dir,@tmp_dir = inside_empty_dir
+        around_all_in_empty_dir {
           Dir.mkdir 'mig'
         }
-        after(:all){ step_out_of_tmp_dir }
         it("should do nothing when attemping to deploy latest"){ deploy_latest{ get_files.should be_empty } }
         it("should do nothing when attemping to deploy v0"){ deploy_pkg{ get_files.should be_empty } }
       end
 
       context '1 res patch' do
-        before(:all){
-          @old_dir,@tmp_dir = inside_empty_dir
+        around_all_in_empty_dir {
           create_patch_1
         }
-        after(:all){ step_out_of_tmp_dir }
         it("should deploy v1"){ deploy_pkg{ assert_files upgrade_dir 1 } }
         it("should deploy latest"){ deploy_latest{ assert_files upgrade_dir 1 } }
       end
 
       context '2 res patches' do
-        before(:all){
-          @old_dir,@tmp_dir = inside_empty_dir
+        around_all_in_empty_dir {
           create_patch_1
           create_patch_2
         }
-        after(:all){ step_out_of_tmp_dir }
         it("should deploy v2"){ deploy_pkg{ assert_files upgrade_dir 2 } }
         it("should deploy v1"){ deploy_pkg(1){ assert_files upgrade_dir 1 } }
         it("should deploy latest"){ deploy_latest{ assert_files upgrade_dir 2 } }
       end
 
       context '3 res patches' do
-        before(:all){
-          @old_dir,@tmp_dir = inside_empty_dir
+        around_all_in_empty_dir {
           create_patch_1
           create_patch_2
           @patch_1= File.read 'mig/00001.patch'
           create_patch_3
         }
-        after(:all){ step_out_of_tmp_dir }
         it("should deploy v3"){ deploy_pkg{ assert_files upgrade_dir 3 } }
         it("should deploy v2"){ deploy_pkg(2){ assert_files upgrade_dir 2 } }
         it("should deploy v1"){ deploy_pkg(1){ assert_files upgrade_dir 1 } }
