@@ -29,14 +29,21 @@ module Corvid
         @rpm ||= Corvid::ResPatchManager.new
       end
 
+      @@latest_resource_depth= 0
       def with_latest_resources(&block)
-        # TODO make reentrant
-        rpm.with_latest_resources do |resdir|
-          Corvid::Generator::Base.source_root= resdir
-          return block.call
+        @@latest_resource_depth += 1
+        begin
+          if @@latest_resource_depth > 1
+            return block.call
+          end
+          rpm.with_latest_resources do |resdir|
+            Corvid::Generator::Base.source_root= resdir
+            return block.call
+          end
+        ensure
+          @@latest_resource_depth -= 1
+          Corvid::Generator::Base.source_root= nil if @@latest_resource_depth == 0
         end
-      ensure
-        Corvid::Generator::Base.source_root= nil
       end
 
       def self.run_bundle_option(t)
