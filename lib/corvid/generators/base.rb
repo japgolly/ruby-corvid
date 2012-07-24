@@ -33,12 +33,13 @@ module Corvid
       def with_latest_resources(&block)
         @@latest_resource_depth += 1
         begin
+          ver= rpm.get_latest_res_patch_version
           if @@latest_resource_depth > 1
-            return block.call
+            return block.call(ver)
           end
           rpm.with_latest_resources do |resdir|
             Corvid::Generator::Base.source_root= resdir
-            return block.call
+            return block.call(ver)
           end
         ensure
           @@latest_resource_depth -= 1

@@ -1,7 +1,8 @@
 # encoding: utf-8
 
-require_relative '../../lib/corvid/environment'
+STDIN.close
 
+require_relative '../../lib/corvid/environment'
 require 'tmpdir'
 require 'fileutils'
 
@@ -118,4 +119,3 @@ end
 RSpec.configure do |config|
   config.include TestHelpers
 end
-

@@ -7,7 +7,8 @@ class Corvid::Generator::Init < Corvid::Generator::Base
   method_option :'test-spec', type: :boolean
   run_bundle_option(self)
   def project
-    with_latest_resources do
+    with_latest_resources do |ver|
+      empty_directory '.corvid'
       copy_file       '.gitignore'
       copy_file       '.simplecov'
       copy_file       '.yardopts'
@@ -25,6 +26,9 @@ class Corvid::Generator::Init < Corvid::Generator::Base
 
       invoke 'init:test:unit', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
       invoke 'init:test:spec', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'
+
+      create_file '.corvid/version.yml', ver.to_s, force: true
+
       run_bundle
     end
   end
