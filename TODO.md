@@ -7,6 +7,8 @@ TODO
 Patches/Migration/Upgrades TODOs
 ================================
 * Make init:project use res patches
+* Make init:test:* use res patches
+* Make new:test:* use res patches
 * Delete templates/
 * Version specified in .corvid/version.yml
 
