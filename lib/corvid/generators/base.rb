@@ -1,4 +1,5 @@
 require 'corvid/environment'
+require 'corvid/res_patch_manager'
 
 require 'thor'
 require 'active_support/core_ext/string/inflections'
@@ -11,9 +12,14 @@ module Corvid
       include Thor::Actions
       RUN_BUNDLE= :'run_bundle'
 
+      # TODO try attr_accessor
       def self.source_root
-        "#{CORVID_ROOT}/templates"
+        @source_root
       end
+      def self.source_root=(v)
+        @source_root= v
+      end
+
       def self.inherited(c)
         c.class_eval <<-EOB
           def self.source_root; ::#{self}.source_root end
@@ -22,6 +28,20 @@ module Corvid
       end
 
       protected
+
+      def rpm
+        @rpm ||= Corvid::ResPatchManager.new
+      end
+
+      def with_latest_resources(&block)
+        # TODO make reentrant
+        rpm.with_latest_resources do |resdir|
+          Corvid::Generator::Base.source_root= resdir
+          return block.call
+        end
+      ensure
+        Corvid::Generator::Base.source_root= nil
+      end
 
       def self.run_bundle_option(t)
         t.method_option RUN_BUNDLE => true

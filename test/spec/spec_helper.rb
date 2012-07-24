@@ -48,10 +48,6 @@ module TestHelpers
     @dirs ||= Dir['**/*'].select{|f| File.directory? f}.sort
   end
 
-  def file_should_match_template(f, src=nil)
-    File.read(f).should == File.read("#{CORVID_ROOT}/templates/#{src || f}")
-  end
-
   def inside_empty_dir
     if block_given?
       Dir.mktmpdir do |dir|

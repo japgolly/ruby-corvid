@@ -6,10 +6,6 @@ TODO
 
 Patches/Migration/Upgrades TODOs
 ================================
-* Make init:project use res patches
-* Make init:test:* use res patches
-* Make new:test:* use res patches
-* Delete templates/
 * Version specified in .corvid/version.yml
 
 * Code like in generators stored in templated corvid_migration-{feature}.rb which defines (void*)(version)
@@ -29,3 +25,5 @@ Patches/Migration/Upgrades TODOs
 * rak res:diff
 * rak res:latest
 * Make .corvid/Gemfile static rather than a template
+* Delete templates/
+* Make generators use res patches
