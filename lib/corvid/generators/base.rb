@@ -12,19 +12,15 @@ module Corvid
       include Thor::Actions
       RUN_BUNDLE= :'run_bundle'
 
-      # TODO try attr_accessor
-      def self.source_root
-        @source_root
-      end
-      def self.source_root=(v)
-        @source_root= v
-      end
+      class << self
+        attr_accessor :source_root
 
-      def self.inherited(c)
-        c.class_eval <<-EOB
-          def self.source_root; ::#{self}.source_root end
-          namespace ::Thor::Util.namespace_from_thor_class(self).sub(/^corvid:generator:/,'')
-        EOB
+        def inherited(c)
+          c.class_eval <<-EOB
+            def self.source_root; ::#{self}.source_root end
+            namespace ::Thor::Util.namespace_from_thor_class(self).sub(/^corvid:generator:/,'')
+          EOB
+        end
       end
 
       protected
