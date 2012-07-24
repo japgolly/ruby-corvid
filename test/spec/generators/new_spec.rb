@@ -2,16 +2,14 @@
 require_relative '../spec_helper'
 require 'corvid/generators/new'
 
-describe 'corvid new' do
-  TestGenerator= Corvid::Generator::New::Test
-
+describe Corvid::Generator::New::Test do
   around :each do |ex|
     inside_fixture('bare'){ ex.run }
   end
 
   context 'new:test:unit' do
     it("simplest case"){
-      TestGenerator.start %w[unit hehe]
+      described_class.start %w[unit hehe]
       File.read('test/unit/hehe_test.rb').should == <<-EOB
 # encoding: utf-8
 require_relative '../bootstrap/unit'
@@ -24,7 +22,7 @@ end
     }
 
     it("with leading slash, subdir, module and file ext"){
-      TestGenerator.start %w[unit /what/say::good.rb]
+      described_class.start %w[unit /what/say::good.rb]
       File.read('test/unit/what/say/good_test.rb').should == <<-EOB
 # encoding: utf-8
 require_relative '../../../bootstrap/unit'
@@ -39,7 +37,7 @@ end
 
   context 'new:test:spec' do
     it("simplest case"){
-      TestGenerator.start %w[spec hehe]
+      described_class.start %w[spec hehe]
       File.read('test/spec/hehe_spec.rb').should == <<-EOB
 # encoding: utf-8
 require_relative '../bootstrap/spec'
@@ -52,7 +50,7 @@ end
     }
 
     it("with leading slash, subdir, module and file ext"){
-      TestGenerator.start %w[spec /what/say::good.rb]
+      described_class.start %w[spec /what/say::good.rb]
       File.read('test/spec/what/say/good_spec.rb').should == <<-EOB
 # encoding: utf-8
 require_relative '../../../bootstrap/spec'
