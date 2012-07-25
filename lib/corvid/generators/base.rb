@@ -1,9 +1,10 @@
 require 'corvid/environment'
 require 'corvid/res_patch_manager'
 
-require 'thor'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/inflections'
+require 'golly-utils/delegator'
+require 'thor'
 
 module Corvid
   module Generator
@@ -100,6 +101,18 @@ module Corvid
         end
       end
       alias :add_feature :add_features
+
+      def res_dir
+        self.class.source_root || raise("Resources haven't been deployed yet. Call with_latest_resources() first.")
+      end
+
+      def feature_installer(feature)
+        code= File.read("#{res_dir}/corvid-features/#{feature}.rb")
+        d= GollyUtils::Delegator.new self, allow_protected: true
+        d.instance_eval code
+        d
+      end
+
     end
   end
 end
