@@ -9,26 +9,23 @@ require 'thor'
 module Corvid
   module Generator
 
+    # @abstract
     class Base < Thor
       include Thor::Actions
       RUN_BUNDLE= :'run_bundle'
       FEATURES_FILE= '.corvid/features.yml'
 
-      class << self
-        attr_accessor :source_root
-
-        def inherited(c)
-          c.class_eval <<-EOB
-            def self.source_root; ::#{self}.source_root end
-            namespace ::Thor::Util.namespace_from_thor_class(self).sub(/^corvid:generator:/,'')
-          EOB
-        end
+      def self.inherited(c)
+        c.class_eval <<-EOB
+          def self.source_root; $corvid_global_thor_source_root end
+          namespace ::Thor::Util.namespace_from_thor_class(self).sub(/^corvid:generator:/,'')
+        EOB
       end
 
       protected
 
       def rpm
-        @rpm ||= Corvid::ResPatchManager.new
+        @rpm ||= ::Corvid::ResPatchManager.new
       end
 
       @@latest_resource_depth= 0
@@ -40,12 +37,12 @@ module Corvid
             return block.call(ver)
           end
           rpm.with_latest_resources do |resdir|
-            Corvid::Generator::Base.source_root= resdir
+            $corvid_global_thor_source_root= resdir
             return block.call(ver)
           end
         ensure
           @@latest_resource_depth -= 1
-          Corvid::Generator::Base.source_root= nil if @@latest_resource_depth == 0
+          $corvid_global_thor_source_root= nil if @@latest_resource_depth == 0
         end
       end
 
@@ -103,7 +100,7 @@ module Corvid
       alias :add_feature :add_features
 
       def res_dir
-        self.class.source_root || raise("Resources haven't been deployed yet. Call with_latest_resources() first.")
+        $corvid_global_thor_source_root || raise("Resources haven't been deployed yet. Call with_latest_resources() first.")
       end
 
       def feature_installer(feature)

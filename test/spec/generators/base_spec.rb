@@ -3,6 +3,7 @@ require_relative '../spec_helper'
 require 'corvid/generators/base'
 
 describe Corvid::Generator::Base do
+  def source_root; $corvid_global_thor_source_root; end
 
   class X < Corvid::Generator::Base
     no_tasks {
@@ -54,13 +55,13 @@ describe Corvid::Generator::Base do
     it("should reset the templates directory when done"){
       Base= Corvid::Generator::Base
       X.new.with_latest_resources {
-        Base.source_root.should_not be_nil
+        source_root.should_not be_nil
         X.new.with_latest_resources {
-          Base.source_root.should_not be_nil
+          source_root.should_not be_nil
         }
-        Base.source_root.should_not be_nil
+        source_root.should_not be_nil
       }
-      Base.source_root.should be_nil
+      source_root.should be_nil
     }
 
   end
