@@ -28,6 +28,10 @@ module Corvid
         @rpm ||= ::Corvid::ResPatchManager.new
       end
 
+      def res_dir
+        $corvid_global_thor_source_root || raise("Resources haven't been deployed yet. Call with_latest_resources() first.")
+      end
+
       @@latest_resource_depth= 0
       def with_latest_resources(&block)
         @@latest_resource_depth += 1
@@ -98,10 +102,6 @@ module Corvid
         end
       end
       alias :add_feature :add_features
-
-      def res_dir
-        $corvid_global_thor_source_root || raise("Resources haven't been deployed yet. Call with_latest_resources() first.")
-      end
 
       def feature_installer(feature)
         code= File.read("#{res_dir}/corvid-features/#{feature}.rb")
