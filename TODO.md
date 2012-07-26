@@ -10,6 +10,7 @@ Patches/Migration/Upgrades TODOs
 * Upgrading existing features: migrate each feature from m->n
 * Adding new features: add to features.yml, migrate from 0->m
 
+* Do 3-way diffs
 * Handle merge conflicts
 
 * Process doco
