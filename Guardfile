@@ -14,5 +14,9 @@ group :spec do
     # Lib
     watch(%r'^lib/(.+)\.rb$')             {|m| "test/spec/#{m[1]}_spec.rb"}
     watch(%r'^lib/corvid/(.+)\.rb$')      {|m| "test/spec/#{m[1]}_spec.rb"}
+
+    # Fixtures
+    watch(%r'^test/fixtures/migration/.+$')  {"test/spec/res_patch_manager_spec.rb"}
+    watch(%r'^test/fixtures/upgrading/.+$')  {"test/spec/generators/init_spec.rb"}
   end
 end

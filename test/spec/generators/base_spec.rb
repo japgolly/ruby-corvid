@@ -27,7 +27,7 @@ describe Corvid::Generator::Base do
       [x,y].each do |t|
         t.rpm.instance_eval do
           def count; @count; end
-          def with_latest_resources
+          def with_resources(ver)
             @count ||= 0
             @count += 1
             yield

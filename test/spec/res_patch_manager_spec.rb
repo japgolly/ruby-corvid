@@ -99,13 +99,13 @@ describe Corvid::ResPatchManager do
       ResPatchManager.new('mig').create_res_patch 'a','b'
     end
 
-    def deploy_pkg(ver=nil)
-      %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
-      Dir.mkdir 'r'
-      ResPatchManager.new('mig').deploy_res_patches 'r', ver
-      if block_given?
-        Dir.chdir('r'){ yield }
-      end
+    def deploy_pkg(ver=:latest)
+      %w[a b].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
+      ResPatchManager.new('mig').with_resources(ver){|dir|
+        Dir.chdir(dir){
+          yield
+        }
+      }
     end
 
     def deploy_latest

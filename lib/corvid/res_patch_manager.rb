@@ -20,7 +20,15 @@ module Corvid
 
     def get_latest_res_patch_version
       prev_pkg= Dir["#{res_patch_dir}/[0-9][0-9][0-9][0-9][0-9].patch"].sort.last
-      prev_ver= prev_pkg ? prev_pkg.sub(/\D+/,'').to_i : 0
+      if prev_pkg
+        File.basename(prev_pkg).sub(/\D+/,'').to_i
+      else
+        0
+      end
+    end
+
+    def latest?(version)
+      version == get_latest_res_patch_version
     end
 
     # Creates a new resource patch.
@@ -59,24 +67,49 @@ module Corvid
     # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will be
     #   created. If it exists, it must be empty.
     def deploy_latest_res_patch(target_dir)
+      deploy_res_patch target_dir, :latest
+    end
+
+    # Deploys a specified version of resources to an empty directory.
+    #
+    # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will be
+    #   created. If it exists, it must be empty.
+    # @param [Fixnum,:latest] ver The version of resources to deploy.
+    def deploy_res_patch(target_dir, ver)
+
+      # Check version
+      ver= get_latest_res_patch_version if ver == :latest
+      raise "Invalid version: #{ver.inspect}. Provide a number or :latest." unless ver.is_a?(Fixnum)
+      raise "Invalid version: #{ver.inspect}. It must be between 0 and #{get_latest_res_patch_version}." unless ver >=0 and ver <= get_latest_res_patch_version
+
+      # Ensure we have an empty target directory
       Dir.mkdir target_dir unless Dir.exists?(target_dir)
       raise "Target directory must be empty." unless get_files_in_dir(target_dir).empty?
 
       # Deploy
-      latest_version= get_latest_res_patch_version
-      apply_res_patch target_dir, latest_version if latest_version != 0
+      if ver > 0
+        get_latest_res_patch_version.downto(ver) do |v|
+          apply_res_patch target_dir, v
+        end
+      end
 
-      true
+      self
     end
 
     def with_latest_resources(&block)
+      with_resources :latest, &block
+    end
+
+    def with_resources(ver, &block)
       Dir.mktmpdir {|tmpdir|
-        deploy_latest_res_patch(tmpdir)
+        deploy_res_patch tmpdir, ver
         return block.call(tmpdir)
       }
     end
 
     def deploy_res_patches(target_dir, target_version=nil, from_version=nil)
+      # TODO migrate should not be here right?
+      # TODO remove this when cached
       latest_version= get_latest_res_patch_version
       target_version ||= latest_version
       from_version ||= 0

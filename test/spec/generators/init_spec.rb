@@ -103,3 +103,134 @@ describe Corvid::Generator::Init::Test do
     end
   end
 end
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+describe 'Installing features' do
+
+  def fixture_dir(ver)
+    "#{CORVID_ROOT}/test/fixtures/upgrading/r#{ver}"
+  end
+
+  def create_patches(upto_version)
+    # Create res-patch dir
+    res_dir= "res_patches_when_#{upto_version}_was_the_latest"
+    Dir.mkdir res_dir
+
+    # Create first patch
+    rpm= Corvid::ResPatchManager.new("#{Dir.pwd}/#{res_dir}")
+    Dir.mkdir 'empty' unless Dir.exists?('empty')
+    rpm.create_res_patch 'empty', fixture_dir(1)
+    get_files(res_dir).should == %w[00001.patch]
+
+    # Create subsequent patches
+    2.upto(upto_version) do |v|
+      rpm.create_res_patch fixture_dir(v-1), fixture_dir(v)
+      get_files(res_dir).size.should == v
+    end
+
+    rpm
+  end
+
+  def assert_installation(corvid_ver, test_ver)
+    assert_file "corvid.A", 1, corvid_ver
+    assert_file "corvid.B", 2, corvid_ver
+    assert_file "corvid.C", 3, corvid_ver
+    Dir.exists?("lib.1").should == (corvid_ver >= 1)
+    Dir.exists?("lib.2").should == (corvid_ver >= 2)
+    Dir.exists?("lib.3").should == (corvid_ver >= 3)
+
+    assert_file "test.A", 1, test_ver
+    assert_file "test.B", 2, test_ver
+    assert_file "test.C", 3, test_ver
+    Dir.exists?("test.1").should == (test_ver >= 1)
+    Dir.exists?("test.2").should == (test_ver >= 2)
+    Dir.exists?("test.3").should == (test_ver >= 3)
+  end
+
+  def assert_file(file, active_ver_range, ver)
+    expected= case active_ver_range
+              when Range then active_ver_range.member?(ver)
+              when Fixnum then ver >= active_ver_range
+              else raise "What? #{active_ver_range.inspect}"
+              end
+    File.exists?(file).should == expected
+    if expected
+      File.read(file).should == File.read("#{fixture_dir ver}/#{file}")
+    end
+  end
+
+  #----------------------------------------------------------------
+  # Create res-patches and fake installations before starting tests
+  around_all_in_empty_dir {
+
+    # Turn the r?? fixture directories into res-patches
+    @rpms= [nil]
+    @rpms<< create_patches(1)
+    @rpms<< create_patches(2)
+    @rpms<< create_patches(3)
+
+    # Create installations of the corvid feature at various versions
+    1.upto(@rpms.size - 1) do |i|
+      dir= "base.#{i}"
+      Dir.mkdir dir
+      Dir.chdir(dir){
+        @rpm= @rpms[i]
+        run_generator Corvid::Generator::Init, "project --no-test-unit --no-test-spec"
+        File.exists?('Gemfile').should == false # Make sure it's not using real res-patches
+        assert_installation i, 0
+      }
+    end
+  }
+
+  def self.test_feature_installation(max_version_available)
+    1.upto(max_version_available) do |inst_ver|
+      eval <<-EOB
+        context 'feature installed on top of v#{inst_ver}' do
+          before :all do
+            FileUtils.rm_rf 'sandbox'
+            FileUtils.cp_r 'base.#{inst_ver}', 'sandbox'
+            Dir.chdir('sandbox') do
+              run_generator Corvid::Generator::Init::Test, 'unit'
+              @features= Corvid::Generator::Base.new.get_installed_features
+            end
+          end
+          around :each do |ex|
+            Dir.chdir('sandbox'){ ex.call }
+          end
+          it("should install v#{inst_ver} of the feature"){
+            assert_installation #{inst_ver}, #{inst_ver}
+          }
+          it("should preserve the existing features in the registry"){
+            @features.should include('corvid')
+          }
+          it("should register the new feature"){
+            @features.should include('test_unit')
+          }
+        end
+      EOB
+    end
+  end
+
+  context 'latest version available in corvid is 1' do
+    before(:all){ @rpm= @rpms[1] }
+    after(:all){ @rpm= nil }
+    test_feature_installation 1
+  end
+
+  context 'latest version available in corvid is 2' do
+    before(:all){ @rpm= @rpms[2] }
+    after(:all){ @rpm= nil }
+    test_feature_installation 2
+  end
+
+  context 'latest version available in corvid is 3' do
+    before(:all){ @rpm= @rpms[3] }
+    after(:all){ @rpm= nil }
+    test_feature_installation 3
+  end
+
+  # TODO confirm failure when corvid not installed
+  # TODO confirm does nothing when feature already installed
+
+end

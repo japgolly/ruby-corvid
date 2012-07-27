@@ -11,8 +11,6 @@ Patches/Migration/Upgrades TODOs
 ** Migrate installed files
 ** Perform migration steps
 
-* Adding new features: add to features.yml, migrate from 0->m
-
 * Do 3-way diffs
 * Handle merge conflicts
 
@@ -31,3 +29,4 @@ Patches/Migration/Upgrades TODOs
 * Version specified in .corvid/version.yml
 * Features stored in .corvid/features.yml
 * Code for features stored in resources under corvid-features/-{feature}.rb which defines install()
+* Adding new features: add to features.yml, migrate from 0->m
