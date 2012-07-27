@@ -15,23 +15,6 @@ describe Corvid::ResPatchManager do
     d
   end
 
-  def get_files
-    Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }.sort
-  end
-
-  def assert_files(src_dir, exceptions={})
-    filelist= Dir.chdir(src_dir){
-      Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }
-        #.reject{|f| f =~ /corvid_migration-rename.yml/}
-    } + exceptions.keys
-    filelist.uniq!
-    get_files.should == filelist.sort
-    filelist.each do |f|
-      expected= exceptions[f] || File.read("#{src_dir}/#{f}")
-      File.read(f).should == expected
-    end
-  end
-
   #---------------------------------------------------------------------------------------------------------------------
 
   context 'File migration (using reconstructed resources)' do

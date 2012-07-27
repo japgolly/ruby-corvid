@@ -100,6 +100,26 @@ module TestHelpers
     @old_dir= @tmp_dir= nil
   end
 
+  def get_files(dir=nil)
+    if dir
+      Dir.chdir(dir){ get_files }
+    else
+      Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }.sort
+    end
+  end
+
+  def assert_files(src_dir, exceptions={})
+    filelist= Dir.chdir(src_dir){
+      Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }
+    } + exceptions.keys
+    filelist.uniq!
+    get_files.should == filelist.sort
+    filelist.each do |f|
+      expected= exceptions[f] || File.read("#{src_dir}/#{f}")
+      File.read(f).should == expected
+    end
+  end
+
   def run_generator(generator_class, args, no_bundle=true, quiet=true)
     args= args.split(/\s+/) unless args.is_a?(Array)
     args<< "--no-#{RUN_BUNDLE}" if no_bundle
