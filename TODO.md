@@ -6,8 +6,11 @@ TODO
 
 Patches/Migration/Upgrades TODOs
 ================================
-* Code for features stored in resources under corvid-features/-{feature}.rb which defines upgrade(from,to)
 * Upgrading existing features: migrate each feature from m->n
+** Expand versions m->n
+** Migrate installed files
+** Perform migration steps
+
 * Adding new features: add to features.yml, migrate from 0->m
 
 * Do 3-way diffs
