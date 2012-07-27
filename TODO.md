@@ -3,6 +3,7 @@ TODO
 * Is there a point for `environment.rb`?
 * Is there a point for `CORVID_ROOT`?
 * Check `APP_ROOT` reliance
+* Fix up `corvid --help messages`
 
 Patches/Migration/Upgrades TODOs
 ================================
@@ -14,8 +15,10 @@ Patches/Migration/Upgrades TODOs
 * Do 3-way diffs
 * Handle merge conflicts
 
+* Make `get_latest_res_patch_version()` cache
 * Process doco
 * Clean up code - refactor, rename, doc, proper error msgs
+* Check all TODOs
 
 ### Done
 * When exploding, apply patch for 0-n then apply n-1, n-2, etc.
