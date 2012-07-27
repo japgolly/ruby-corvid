@@ -99,6 +99,7 @@ module TestHelpers
     config= {}
     config[:shell] ||= Thor::Base.shell.new
     if quiet
+      config[:shell].instance_eval 'def say(*) end'
       config[:shell].instance_eval 'def quiet?; true; end'
       #config[:shell].instance_variable_set :@mute, true
     end

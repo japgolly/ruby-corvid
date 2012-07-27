@@ -44,14 +44,18 @@ class Corvid::Generator::Init < Corvid::Generator::Base
         raise "File not found: #{Corvid::Generator::Base::VERSION_FILE}\nYou must install Corvid proper before you can install the #{name} feature. Try corvid init:project."
       end
 
-      # Install feature
-      with_resources(ver) {|ver|
-        feature_installer(name).install
-        add_feature name
-        yield ver if block_given?
-        run_bundle() if run_bundle
-      }
-
+      # Corvid installation confirmed - now check if feature already installed
+      if get_installed_features().include? name
+        say "Feature '#{name}' already installed."
+      else
+        # Install feature
+        with_resources(ver) {|ver|
+          feature_installer(name).install
+          add_feature name
+          yield ver if block_given?
+          run_bundle() if run_bundle
+        }
+      end
     end
 
   end # class Init::Test

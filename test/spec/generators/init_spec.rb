@@ -134,6 +134,14 @@ describe 'Installing features' do
     rpm
   end
 
+  def with_sandbox_copy_of(inst_ver)
+    FileUtils.rm_rf 'sandbox'
+    FileUtils.cp_r "base.#{inst_ver}", 'sandbox'
+    Dir.chdir('sandbox') do
+      yield
+    end
+  end
+
   def assert_installation(corvid_ver, test_ver)
     assert_file "corvid.A", 1, corvid_ver
     assert_file "corvid.B", 2, corvid_ver
@@ -192,9 +200,7 @@ describe 'Installing features' do
       eval <<-EOB
         context 'feature installed on top of v#{inst_ver}' do
           before :all do
-            FileUtils.rm_rf 'sandbox'
-            FileUtils.cp_r 'base.#{inst_ver}', 'sandbox'
-            Dir.chdir('sandbox') do
+            with_sandbox_copy_of(#{inst_ver}) do
               run_generator Corvid::Generator::Init::Test, 'unit'
               @features= Corvid::Generator::Base.new.get_installed_features
             end
@@ -226,6 +232,15 @@ describe 'Installing features' do
     before(:all){ @rpm= @rpms[2] }
     after(:all){ @rpm= nil }
     test_feature_installation 2
+
+    it("should do nothing if feature already installed"){
+      with_sandbox_copy_of(2) do
+        f= YAML.load_file('.corvid/features.yml') + ['test_unit']
+        File.write '.corvid/features.yml', f.to_yaml
+        run_generator Corvid::Generator::Init::Test, 'unit'
+        assert_installation 2, 0
+      end
+    }
   end
 
   context 'latest version available in corvid is 3' do
@@ -234,7 +249,14 @@ describe 'Installing features' do
     test_feature_installation 3
   end
 
-  # TODO confirm failure when corvid not installed
-  # TODO confirm does nothing when feature already installed
-
+  context 'Corvid not installed' do
+    it("should refuse feature installation"){
+      inside_empty_dir {
+        expect {
+          run_generator Corvid::Generator::Init::Test, 'unit'
+        }.to raise_error
+        get_files().should be_empty
+      }
+    }
+  end
 end
