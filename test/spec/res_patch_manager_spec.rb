@@ -9,19 +9,19 @@ describe Corvid::ResPatchManager do
     @tmp_dir ? ex.run : inside_empty_dir{ ex.run }
   end
 
-  def upgrade_dir(ver=nil)
-    d= "#{CORVID_ROOT}/test/fixtures/upgrades"
+  def migration_dir(ver=nil)
+    d= "#{CORVID_ROOT}/test/fixtures/migration"
     d+= '/%d' % [ver] if ver
     d
   end
 
   def populate_with(ver)
-    FileUtils.cp_r "#{upgrade_dir ver}/.", '.'
+    FileUtils.cp_r "#{migration_dir ver}/.", '.'
   end
 
   def migrate(from_ver, to_ver)
     rpm= ResPatchManager.new '/whatever'
-    rpm.send :with_reconstruction_dir, upgrade_dir do
+    rpm.send :with_reconstruction_dir, migration_dir do
       rpm.send :migrate, from_ver, to_ver, Dir.pwd
     end
   end
@@ -46,7 +46,7 @@ describe Corvid::ResPatchManager do
   context 'clean slate' do
     def test_clean_install(ver)
       migrate nil, ver
-      assert_files upgrade_dir(ver)
+      assert_files migration_dir(ver)
     end
     it("should install 001"){ test_clean_install 1 }
     it("should install 002"){ test_clean_install 2 }
@@ -57,7 +57,7 @@ describe Corvid::ResPatchManager do
     def test_clean_upgrade(from,to)
       populate_with from
       migrate from, to
-      assert_files upgrade_dir(to)
+      assert_files migration_dir(to)
     end
     it("should upgrade from 001 to 002"){ test_clean_upgrade 1,2 }
     it("should upgrade from 001 to 003"){ test_clean_upgrade 1,3 }
@@ -67,41 +67,41 @@ describe Corvid::ResPatchManager do
   context 'dirty upgrading' do
     def copy_file(ver, filename)
       FileUtils.mkdir_p File.dirname(filename)
-      FileUtils.cp "#{upgrade_dir ver}/#{filename}", filename
+      FileUtils.cp "#{migration_dir ver}/#{filename}", filename
     end
     it("should upgrade from 000 to 002 - v2 file manually copied"){
       copy_file 2, "stuff/.hehe"
       migrate 0, 2
-      assert_files upgrade_dir(2)
+      assert_files migration_dir(2)
     }
     it("should upgrade from 000 to 002 - v1 file manually copied"){
       copy_file 1, "stuff/.hehe"
       migrate 0, 2
-      assert_files upgrade_dir(2)
+      assert_files migration_dir(2)
     }
     it("should upgrade from 001 to 002 - v1 file edited"){
       populate_with 1
       File.write 'stuff/.hehe', "hehe\n\nawesome"
       migrate 1, 2
-      assert_files upgrade_dir(2), 'stuff/.hehe' => "hehe2\n\nawesome"
+      assert_files migration_dir(2), 'stuff/.hehe' => "hehe2\n\nawesome"
     }
     it("should upgrade from 001 to 003 - v2 file manually copied"){
       populate_with 1
       copy_file 2, "stuff/.hehe"
       migrate 1, 3
-      assert_files upgrade_dir(3)
+      assert_files migration_dir(3)
     }
     it("should upgrade from 002 to 003 - file deleted in v3 edited"){
       populate_with 2
       File.write 'v2.txt', "Before\nv2 bro\nAfter"
       migrate 2, 3
-      assert_files upgrade_dir(3), 'v2.txt' => "Before\nAfter"
+      assert_files migration_dir(3), 'v2.txt' => "Before\nAfter"
     }
     #it("should upgrade from 001 to 003 - v2 file edited"){
     #  populate_with 1
     #  File.write 'stuff/.hehe', "hehe2\n\nawesome"
     #  migrate 1, 3
-    #  assert_files upgrade_dir(3), 'stuff/.hehe' => "hehe3\n\nawesome"
+    #  assert_files migration_dir(3), 'stuff/.hehe' => "hehe3\n\nawesome"
     #}
   end
 
@@ -109,7 +109,7 @@ describe Corvid::ResPatchManager do
 
   context 'Template packages' do
     def copy_to(ver, dir)
-      FileUtils.cp_r "#{upgrade_dir ver}/.", dir
+      FileUtils.cp_r "#{migration_dir ver}/.", dir
     end
 
     def create_pkg
@@ -172,8 +172,8 @@ describe Corvid::ResPatchManager do
         around_all_in_empty_dir {
           create_patch_1
         }
-        it("should deploy v1"){ deploy_pkg{ assert_files upgrade_dir 1 } }
-        it("should deploy latest"){ deploy_latest{ assert_files upgrade_dir 1 } }
+        it("should deploy v1"){ deploy_pkg{ assert_files migration_dir 1 } }
+        it("should deploy latest"){ deploy_latest{ assert_files migration_dir 1 } }
       end
 
       context '2 res patches' do
@@ -181,9 +181,9 @@ describe Corvid::ResPatchManager do
           create_patch_1
           create_patch_2
         }
-        it("should deploy v2"){ deploy_pkg{ assert_files upgrade_dir 2 } }
-        it("should deploy v1"){ deploy_pkg(1){ assert_files upgrade_dir 1 } }
-        it("should deploy latest"){ deploy_latest{ assert_files upgrade_dir 2 } }
+        it("should deploy v2"){ deploy_pkg{ assert_files migration_dir 2 } }
+        it("should deploy v1"){ deploy_pkg(1){ assert_files migration_dir 1 } }
+        it("should deploy latest"){ deploy_latest{ assert_files migration_dir 2 } }
       end
 
       context '3 res patches' do
@@ -193,11 +193,11 @@ describe Corvid::ResPatchManager do
           @patch_1= File.read 'mig/00001.patch'
           create_patch_3
         }
-        it("should deploy v3"){ deploy_pkg{ assert_files upgrade_dir 3 } }
-        it("should deploy v2"){ deploy_pkg(2){ assert_files upgrade_dir 2 } }
-        it("should deploy v1"){ deploy_pkg(1){ assert_files upgrade_dir 1 } }
+        it("should deploy v3"){ deploy_pkg{ assert_files migration_dir 3 } }
+        it("should deploy v2"){ deploy_pkg(2){ assert_files migration_dir 2 } }
+        it("should deploy v1"){ deploy_pkg(1){ assert_files migration_dir 1 } }
         it("should not modify patches prior to n-1"){ File.read('mig/00001.patch').should == @patch_1 }
-        it("should deploy latest"){ deploy_latest{ assert_files upgrade_dir 3 } }
+        it("should deploy latest"){ deploy_latest{ assert_files migration_dir 3 } }
       end
 
     end
