@@ -9,7 +9,7 @@ describe Corvid::Generator::New::Test do
 
   context 'new:test:unit' do
     it("simplest case"){
-      described_class.start %w[unit hehe]
+      run_generator described_class, 'unit hehe'
       File.read('test/unit/hehe_test.rb').should == <<-EOB
 # encoding: utf-8
 require_relative '../bootstrap/unit'
@@ -22,7 +22,7 @@ end
     }
 
     it("with leading slash, subdir, module and file ext"){
-      described_class.start %w[unit /what/say::good.rb]
+      run_generator described_class, 'unit /what/say::good.rb'
       File.read('test/unit/what/say/good_test.rb').should == <<-EOB
 # encoding: utf-8
 require_relative '../../../bootstrap/unit'
@@ -37,7 +37,7 @@ end
 
   context 'new:test:spec' do
     it("simplest case"){
-      described_class.start %w[spec hehe]
+      run_generator described_class, 'spec hehe'
       File.read('test/spec/hehe_spec.rb').should == <<-EOB
 # encoding: utf-8
 require_relative '../bootstrap/spec'
@@ -50,7 +50,7 @@ end
     }
 
     it("with leading slash, subdir, module and file ext"){
-      described_class.start %w[spec /what/say::good.rb]
+      run_generator described_class, 'spec /what/say::good.rb'
       File.read('test/spec/what/say/good_spec.rb').should == <<-EOB
 # encoding: utf-8
 require_relative '../../../bootstrap/spec'

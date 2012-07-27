@@ -100,6 +100,32 @@ module TestHelpers
     @old_dir= @tmp_dir= nil
   end
 
+  def run_generator(generator_class, args, no_bundle=true, quiet=true)
+    args= args.split(/\s+/) unless args.is_a?(Array)
+    args<< "--no-#{RUN_BUNDLE}" if no_bundle
+
+    # Quiet stdout - how the hell else are you supposed to do this???
+    config= {}
+    config[:shell] ||= Thor::Base.shell.new
+    if quiet
+      config[:shell].instance_eval 'def quiet?; true; end'
+      #config[:shell].instance_variable_set :@mute, true
+    end
+
+    # Do horrible stupid Thor-internal crap to instantiate a generator
+    task= generator_class.tasks[args.shift]
+    args, opts = Thor::Options.split(args)
+    config.merge!(:current_task => task, :task_options => task.options)
+    g= generator_class.new(args, opts, config)
+
+    # Use a test res-patch manager if available
+    g.rpm= @rpm if @rpm
+
+    g.invoke_task task
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
   def self.included(base)
     base.extend ClassMethods
   end

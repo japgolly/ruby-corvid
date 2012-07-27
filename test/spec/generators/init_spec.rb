@@ -14,17 +14,17 @@ describe Corvid::Generator::Init do
     end
 
     context 'in an empty directory' do
-      context 'with args: --no-test-unit --no-test-spec' do
+      context 'base feature only' do
         around_all_in_empty_dir{
-          described_class.start "project --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec".split(/ /)
+          run_generator described_class, "project --no-test-unit --no-test-spec"
         }
         it("should create Gemfile"){ File.exists?('Gemfile').should == true }
         it("should store the resource version"){ assert_corvid_version_is_latest }
         it("should store the corvid feature"){ assert_corvid_features 'corvid' }
       end
-      context 'with args: --test-unit --test-spec' do
+      context 'with additional features' do
         around_all_in_empty_dir{
-          described_class.start "project --no-#{RUN_BUNDLE} --test-unit --test-spec".split(/ /)
+          run_generator described_class, "project --test-unit --test-spec"
         }
         it("should create Gemfile"){ File.exists?('Gemfile').should == true }
         it("should store the resource version"){ assert_corvid_version_is_latest }
@@ -36,13 +36,15 @@ describe Corvid::Generator::Init do
       inside_empty_dir {
         Dir.mkdir '.corvid'
         File.write '.corvid/version.yml', '0'
-        described_class.start "project --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec".split(/ /)
+        run_generator described_class, "project --no-test-unit --no-test-spec"
         assert_corvid_version_is_latest
       }
     }
 
   end
 end
+
+#-----------------------------------------------------------------------------------------------------------------------
 
 describe Corvid::Generator::Init::Test do
   around :each do |ex|
@@ -51,7 +53,7 @@ describe Corvid::Generator::Init::Test do
 
   context 'init:test:unit' do
     it("should initalise unit test support"){
-      described_class.start ["unit", "--no-#{RUN_BUNDLE}"]
+      run_generator described_class, "unit"
       test_bootstraps true, true, false
       Dir.exists?('test/unit').should == true
       assert_corvid_features %w[corvid test_unit]
@@ -60,7 +62,7 @@ describe Corvid::Generator::Init::Test do
     it("should preserve the common bootstrap"){
       FileUtils.mkdir_p File.dirname(BOOTSTRAP_ALL)
       File.write BOOTSTRAP_ALL, '123'
-      described_class.start ["unit", "--no-#{RUN_BUNDLE}"]
+      run_generator described_class, "unit"
       File.read(BOOTSTRAP_ALL).should == '123'
       test_bootstraps nil, true, false
       Dir.exists?('test/unit').should == true
@@ -69,7 +71,7 @@ describe Corvid::Generator::Init::Test do
 
   context 'init:test:spec' do
     it("should initalise spec test support"){
-      described_class.start ["spec", "--no-#{RUN_BUNDLE}"]
+      run_generator described_class, "spec"
       test_bootstraps true, false, true
       Dir.exists?('test/spec').should == true
       assert_corvid_features %w[corvid test_spec]
@@ -78,7 +80,7 @@ describe Corvid::Generator::Init::Test do
     it("should preserve the common bootstrap"){
       FileUtils.mkdir_p File.dirname(BOOTSTRAP_ALL)
       File.write BOOTSTRAP_ALL, '123'
-      described_class.start ["spec", "--no-#{RUN_BUNDLE}"]
+      run_generator described_class, "spec"
       File.read(BOOTSTRAP_ALL).should == '123'
       test_bootstraps nil, false, true
       Dir.exists?('test/spec').should == true
