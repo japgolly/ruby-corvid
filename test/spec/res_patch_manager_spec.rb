@@ -142,7 +142,7 @@ describe Corvid::ResPatchManager do
     end
 
     context 'no res patches' do
-      around_all_in_empty_dir {
+      run_all_in_empty_dir {
         Dir.mkdir 'mig'
       }
       it("should do nothing when attemping to deploy latest"){ deploy_latest{ get_files.should be_empty } }
@@ -150,7 +150,7 @@ describe Corvid::ResPatchManager do
     end
 
     context '1 res patch' do
-      around_all_in_empty_dir {
+      run_all_in_empty_dir {
         create_patch_1
       }
       it("should deploy v1"){ deploy_pkg{ assert_files migration_dir 1 } }
@@ -158,7 +158,7 @@ describe Corvid::ResPatchManager do
     end
 
     context '2 res patches' do
-      around_all_in_empty_dir {
+      run_all_in_empty_dir {
         create_patch_1
         create_patch_2
       }
@@ -168,7 +168,7 @@ describe Corvid::ResPatchManager do
     end
 
     context '3 res patches' do
-      around_all_in_empty_dir {
+      run_all_in_empty_dir {
         create_patch_1
         create_patch_2
         @patch_1= File.read 'mig/00001.patch'

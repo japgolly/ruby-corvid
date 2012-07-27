@@ -15,18 +15,18 @@ describe Corvid::Generator::Init do
 
     context 'in an empty directory' do
       context 'base feature only' do
-        around_all_in_empty_dir{
+        run_all_in_empty_dir {
           run_generator described_class, "project --no-test-unit --no-test-spec"
         }
-        it("should create Gemfile"){ File.exists?('Gemfile').should == true }
+        it("should create Gemfile"){ 'Gemfile'.should exist_as_a_file }
         it("should store the resource version"){ assert_corvid_version_is_latest }
         it("should store the corvid feature"){ assert_corvid_features 'corvid' }
       end
       context 'with additional features' do
-        around_all_in_empty_dir{
+        run_all_in_empty_dir {
           run_generator described_class, "project --test-unit --test-spec"
         }
-        it("should create Gemfile"){ File.exists?('Gemfile').should == true }
+        it("should create Gemfile"){ 'Gemfile'.should exist_as_a_file }
         it("should store the resource version"){ assert_corvid_version_is_latest }
         it("should store the corvid and test features"){ assert_corvid_features %w[corvid test_unit test_spec] }
       end
@@ -94,12 +94,14 @@ describe Corvid::Generator::Init::Test do
   end
 
   def test_bootstrap(file, expected, all, unit, spec)
-    File.exists?(file).should == expected
     if expected
+      file.should exist_as_a_file
       c= File.read(file)
       c.send all  ? :should : :should_not, include('corvid/test/bootstrap/all')
       c.send unit ? :should : :should_not, include('unit')
       c.send spec ? :should : :should_not, include('spec')
+    else
+      file.should_not exist_as_a_file
     end
   end
 end
@@ -136,16 +138,16 @@ describe 'Installing features' do
     assert_file "corvid.A", 1, corvid_ver
     assert_file "corvid.B", 2, corvid_ver
     assert_file "corvid.C", 3, corvid_ver
-    Dir.exists?("lib.1").should == (corvid_ver >= 1)
-    Dir.exists?("lib.2").should == (corvid_ver >= 2)
-    Dir.exists?("lib.3").should == (corvid_ver >= 3)
+    "lib.1".send corvid_ver >= 1 ? :should : :should_not, exist_as_dir
+    "lib.2".send corvid_ver >= 2 ? :should : :should_not, exist_as_dir
+    "lib.3".send corvid_ver >= 3 ? :should : :should_not, exist_as_dir
 
     assert_file "test.A", 1, test_ver
     assert_file "test.B", 2, test_ver
     assert_file "test.C", 3, test_ver
-    Dir.exists?("test.1").should == (test_ver >= 1)
-    Dir.exists?("test.2").should == (test_ver >= 2)
-    Dir.exists?("test.3").should == (test_ver >= 3)
+    "test.1".send test_ver >= 1 ? :should : :should_not, exist_as_dir
+    "test.2".send test_ver >= 2 ? :should : :should_not, exist_as_dir
+    "test.3".send test_ver >= 3 ? :should : :should_not, exist_as_dir
   end
 
   def assert_file(file, active_ver_range, ver)
@@ -154,15 +156,17 @@ describe 'Installing features' do
               when Fixnum then ver >= active_ver_range
               else raise "What? #{active_ver_range.inspect}"
               end
-    File.exists?(file).should == expected
     if expected
+      file.should exist_as_a_file
       File.read(file).should == File.read("#{fixture_dir ver}/#{file}")
+    else
+      file.should_not exist_as_a_file
     end
   end
 
   #----------------------------------------------------------------
   # Create res-patches and fake installations before starting tests
-  around_all_in_empty_dir {
+  run_all_in_empty_dir {
 
     # Turn the r?? fixture directories into res-patches
     @rpms= [nil]
@@ -177,7 +181,7 @@ describe 'Installing features' do
       Dir.chdir(dir){
         @rpm= @rpms[i]
         run_generator Corvid::Generator::Init, "project --no-test-unit --no-test-spec"
-        File.exists?('Gemfile').should == false # Make sure it's not using real res-patches
+        'Gemfile'.should_not exist_as_a_file # Make sure it's not using real res-patches
         assert_installation i, 0
       }
     end

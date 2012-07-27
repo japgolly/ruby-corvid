@@ -3,6 +3,7 @@
 STDIN.close
 
 require_relative '../../lib/corvid/environment'
+require 'golly-utils/test/spec/files'
 require 'tmpdir'
 require 'fileutils'
 
@@ -12,6 +13,7 @@ BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 
 module TestHelpers
+
   def assert_corvid_features(*expected)
     f= YAML.load_file('.corvid/features.yml')
     f.should be_kind_of(Array)
@@ -55,21 +57,6 @@ module TestHelpers
     @dirs ||= Dir['**/*'].select{|f| File.directory? f}.sort
   end
 
-  def inside_empty_dir
-    if block_given?
-      Dir.mktmpdir do |dir|
-        Dir.chdir dir do
-          yield dir
-        end
-      end
-    else
-      dir= Dir.mktmpdir
-      old_dir= Dir.pwd
-      Dir.chdir dir
-      [old_dir,dir]
-    end
-  end
-
   def inside_fixture(fixture_name)
     Dir.mktmpdir {|dir|
       FileUtils.cp_r "#{CORVID_ROOT}/test/fixtures/#{fixture_name}", dir
@@ -90,22 +77,6 @@ module TestHelpers
       raise 'patch failed' unless $?.success?
     end
     true
-  end
-
-  # To be used in conjunction with [#inside_empty_dir].
-  # @see ClassMethods#around_all_in_empty_dir
-  def step_out_of_tmp_dir
-    Dir.chdir @old_dir if @old_dir
-    FileUtils.rm_rf @tmp_dir if @tmp_dir
-    @old_dir= @tmp_dir= nil
-  end
-
-  def get_files(dir=nil)
-    if dir
-      Dir.chdir(dir){ get_files }
-    else
-      Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }.sort
-    end
   end
 
   def assert_files(src_dir, exceptions={})
@@ -142,29 +113,6 @@ module TestHelpers
     g.rpm= @rpm if @rpm
 
     g.invoke_task task
-  end
-
-  #---------------------------------------------------------------------------------------------------------------------
-
-  def self.included(base)
-    base.extend ClassMethods
-  end
-
-  module ClassMethods
-    def around_all_in_empty_dir(&block)
-      @@around_all_in_empty_dir_count ||= 0
-      @@around_all_in_empty_dir_count += 1
-      block_name= :"@@around_all_in_empty_dir_#@@around_all_in_empty_dir_count"
-      ::TestHelpers::ClassMethods.class_variable_set block_name, block
-      eval <<-EOB
-        before(:all){
-          @old_dir,@tmp_dir = inside_empty_dir
-          block= ::TestHelpers::ClassMethods.class_variable_get(:"#{block_name}")
-          instance_exec &block
-        }
-        after(:all){ step_out_of_tmp_dir }
-      EOB
-    end
   end
 end
 
