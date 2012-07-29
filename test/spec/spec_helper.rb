@@ -3,7 +3,7 @@
 STDIN.close
 
 require_relative '../../lib/corvid/environment'
-require 'golly-utils/test/spec/files'
+require 'golly-utils/testing/rspec/files'
 require 'tmpdir'
 require 'fileutils'
 
