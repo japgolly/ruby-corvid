@@ -4,13 +4,14 @@ TODO
 * Is there a point for `CORVID_ROOT`?
 * Check `APP_ROOT` reliance
 * Fix up `corvid --help messages`
+* Allow different dir structure than default
 
 Patches/Migration/Upgrades TODOs
 ================================
 * Upgrading existing features: migrate each feature from m->n
-** Expand versions m->n
-** Migrate installed files
-** Perform migration steps
+  * Expand versions m->n
+  * Migrate installed files
+  * Perform migration steps
 
 * Do 3-way diffs
 * Handle merge conflicts
