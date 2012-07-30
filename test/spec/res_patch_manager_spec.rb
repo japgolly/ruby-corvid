@@ -4,10 +4,7 @@ require 'corvid/res_patch_manager'
 
 describe Corvid::ResPatchManager do
   ResPatchManager= Corvid::ResPatchManager
-
-  around :each do |ex|
-    @tmp_dir ? ex.run : inside_empty_dir{ ex.run }
-  end
+  run_each_in_empty_dir_unless_in_one_already
 
   def migration_dir(ver=nil)
     d= "#{CORVID_ROOT}/test/fixtures/migration"
