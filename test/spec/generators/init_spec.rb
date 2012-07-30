@@ -121,13 +121,17 @@ describe 'Installing features' do
     end
   }
 
+  def run_init_test_unit_task
+    run_generator Corvid::Generator::Init::Test, 'unit'
+  end
+
   def self.test_feature_installation(max_version_available)
     1.upto(max_version_available) do |inst_ver|
       eval <<-EOB
         context 'feature installed on top of v#{inst_ver}' do
           before :all do
             with_sandbox_copy_of(#{inst_ver}) do
-              run_generator Corvid::Generator::Init::Test, 'unit'
+              run_init_test_unit_task
               @features= Corvid::Generator::Base.new.get_installed_features
             end
           end
@@ -161,7 +165,7 @@ describe 'Installing features' do
       with_sandbox_copy_of(2) do
         f= YAML.load_file('.corvid/features.yml') + ['test_unit']
         File.write '.corvid/features.yml', f.to_yaml
-        run_generator Corvid::Generator::Init::Test, 'unit'
+        run_init_test_unit_task
         assert_installation 2, 0
       end
     }
@@ -173,13 +177,11 @@ describe 'Installing features' do
   end
 
   context 'Corvid not installed' do
+    run_each_in_empty_dir
+
     it("should refuse feature installation"){
-      inside_empty_dir {
-        expect {
-          run_generator Corvid::Generator::Init::Test, 'unit'
-        }.to raise_error
-        get_files().should be_empty
-      }
+      expect { run_init_test_unit_task }.to raise_error
+      get_files().should be_empty
     }
   end
 end
