@@ -95,7 +95,7 @@ module Corvid
 
         # Check args
         raise "Block required." unless block
-        ver= rpm.get_latest_res_patch_version if ver == :latest
+        ver= rpm.latest_version if ver == :latest
         raise "Invalid version: #{ver.inspect}" unless ver.is_a?(String) or ver.is_a?(Fixnum)
         raise "Directory doesn't exist: #{ver}" if ver.is_a?(String) and !Dir.exists?(ver)
         if @@with_resource_version and ver != @@with_resource_version

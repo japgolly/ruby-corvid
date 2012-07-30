@@ -66,7 +66,7 @@ namespace :res do
 
       # Deploy latest
       rpm.deploy_latest_res_patch(LATEST_DIR)
-      puts "Deployed v#{rpm.get_latest_res_patch_version} to #{LATEST_DIR_REL}."
+      puts "Deployed v#{rpm.latest_version} to #{LATEST_DIR_REL}."
     end
   end
 end

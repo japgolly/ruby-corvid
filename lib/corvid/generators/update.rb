@@ -15,7 +15,7 @@ class Corvid::Generator::Update < Corvid::Generator::Base
     else
       # Perform upgrade
       from= ver
-      to= rpm.get_latest_res_patch_version
+      to= rpm.latest_version
       say "Upgrading from v#{from} to v#{to}..."
       upgrade! from, to, features
     end

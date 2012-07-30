@@ -11,7 +11,7 @@ describe Corvid::Generator::Init do
     def assert_corvid_version_is_latest
       v= YAML.load_file('.corvid/version.yml')
       v.should be_kind_of(Fixnum)
-      v.should == Corvid::ResPatchManager.new.get_latest_res_patch_version
+      v.should == Corvid::ResPatchManager.new.latest_version
     end
 
     context 'in an empty directory' do

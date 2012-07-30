@@ -19,12 +19,12 @@ module Corvid
     end
 
     def res_patch_dir=(res_patch_dir)
-      @latest_version_available= nil
+      @latest_version= nil
       @res_patch_dir= res_patch_dir
     end
 
-    def get_latest_res_patch_version
-      @latest_version_available ||= \
+    def latest_version
+      @latest_version ||= \
         if prev_pkg= Dir["#{res_patch_dir}/[0-9][0-9][0-9][0-9][0-9].patch"].sort.last
           File.basename(prev_pkg).sub(/\D+/,'').to_i
         else
@@ -33,7 +33,7 @@ module Corvid
     end
 
     def latest?(version)
-      version == get_latest_res_patch_version
+      version == latest_version
     end
 
     # Creates a new resource patch.
@@ -53,7 +53,7 @@ module Corvid
       if content_backwards
         content_new= generate_single_res_patch nil, to_dir
 
-        prev_ver= get_latest_res_patch_version
+        prev_ver= latest_version
         prev_pkg= prev_ver == 0 ? nil : res_patch_filename(prev_ver)
         this_ver= prev_ver + 1
         this_pkg= res_patch_filename(this_ver)
@@ -61,7 +61,7 @@ module Corvid
         File.write prev_pkg, content_backwards if prev_pkg # TODO encoding
         File.write this_pkg, content_new # TODO encoding
 
-        @latest_version_available= nil
+        @latest_version= nil
 
         this_ver
       else
@@ -85,7 +85,7 @@ module Corvid
     def deploy_res_patch(target_dir, ver)
 
       # Check version
-      ver= get_latest_res_patch_version if ver == :latest
+      ver= latest_version if ver == :latest
       validate_version! ver, 0
 
       # Ensure we have an empty target directory
@@ -94,7 +94,7 @@ module Corvid
 
       # Deploy
       if ver > 0
-        get_latest_res_patch_version.downto(ver) do |v|
+        latest_version.downto(ver) do |v|
           apply_res_patch target_dir, v
         end
       end
@@ -119,11 +119,11 @@ module Corvid
       unless ver.is_a?(Fixnum)
         raise "#{invalid_msg}. #{ver.inspect} is not a valid integer."
       end
-      if min > get_latest_res_patch_version
-        raise "Something's not right, the minimum required version for #{name} is #{min} but the latest available is #{get_latest_res_patch_version}."
+      if min > latest_version
+        raise "Something's not right, the minimum required version for #{name} is #{min} but the latest available is #{latest_version}."
       end
-      unless ver >= min and ver <= get_latest_res_patch_version
-        raise "#{invalid_msg}. #{name} must be between #{min} and #{get_latest_res_patch_version} (inclusive)."
+      unless ver >= min and ver <= latest_version
+        raise "#{invalid_msg}. #{name} must be between #{min} and #{latest_version} (inclusive)."
       end
       true
     end
@@ -134,7 +134,7 @@ module Corvid
       raise "Block not provided." unless block
 
       # Validate version args
-      to_ver ||= get_latest_res_patch_version
+      to_ver ||= latest_version
       validate_version! from_ver, 1, 'From-version'
       validate_version! to_ver, from_ver, 'To-version'
 
@@ -377,7 +377,7 @@ module Corvid
       digest_before ||= digest_dir(target_dir)
       if patch_data[:digest_before] != digest_before
         errmsg= "Cannot apply res-patch ##{ver} to #{target_dir}. Its contents do not match those that the patch expects to be applied to."
-        errmsg+= " Ensure that the 'after' checksum of res-patch ##{ver+1} matches the 'before' checksum of #{ver}." unless ver == get_latest_res_patch_version
+        errmsg+= " Ensure that the 'after' checksum of res-patch ##{ver+1} matches the 'before' checksum of #{ver}." unless ver == latest_version
         raise errmsg
       end
 
