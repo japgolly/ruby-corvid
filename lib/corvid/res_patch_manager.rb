@@ -12,19 +12,24 @@ module Corvid
     end
 
     # The directory where resource patches are located.
-    attr_accessor :res_patch_dir
+    attr_reader :res_patch_dir
 
     def initialize(res_patch_dir = self.class.default_res_patch_dir)
       self.res_patch_dir= res_patch_dir
     end
 
+    def res_patch_dir=(res_patch_dir)
+      @latest_version_available= nil
+      @res_patch_dir= res_patch_dir
+    end
+
     def get_latest_res_patch_version
-      prev_pkg= Dir["#{res_patch_dir}/[0-9][0-9][0-9][0-9][0-9].patch"].sort.last
-      if prev_pkg
-        File.basename(prev_pkg).sub(/\D+/,'').to_i
-      else
-        0
-      end
+      @latest_version_available ||= \
+        if prev_pkg= Dir["#{res_patch_dir}/[0-9][0-9][0-9][0-9][0-9].patch"].sort.last
+          File.basename(prev_pkg).sub(/\D+/,'').to_i
+        else
+          0
+        end
     end
 
     def latest?(version)
@@ -55,6 +60,8 @@ module Corvid
 
         File.write prev_pkg, content_backwards if prev_pkg # TODO encoding
         File.write this_pkg, content_new # TODO encoding
+
+        @latest_version_available= nil
 
         this_ver
       else
