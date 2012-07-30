@@ -7,6 +7,11 @@ rspec_cli= File.read(File.expand_path('../.rspec',__FILE__))
 
 group :spec do
   guard 'rspec', binstubs: true, spec_paths: ['test/spec'], cli: rspec_cli, all_on_start: false, all_after_pass: false, keep_failed: false do
+    #watch(%r{^(.+)$}) { |m| puts "------------------------------------------> #{m[1]} modified" }
+
+    # Ignore Vim swap files
+    ignore /~$/
+    ignore /^(?:.*[\\\/])?\.[^\\\/]+\.sw[p-z]$/
 
     # Each spec
     watch(%r'^test/spec/.+_spec\.rb$')
