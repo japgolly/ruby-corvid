@@ -12,6 +12,13 @@ BOOTSTRAP_ALL= 'test/bootstrap/all.rb'
 BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 
+# Add test/ to lib path
+$:<< "#{CORVID_ROOT}/test"
+
+module Fixtures
+  FIXTURE_ROOT= "#{CORVID_ROOT}/test/fixtures"
+end
+
 module TestHelpers
 
   def assert_corvid_features(*expected)

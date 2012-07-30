@@ -7,8 +7,8 @@ describe Corvid::ResPatchManager do
   run_each_in_empty_dir_unless_in_one_already
 
   def migration_dir(ver=nil)
-    d= "#{CORVID_ROOT}/test/fixtures/migration"
-    d+= '/%d' % [ver] if ver
+    d= "#{Fixtures::FIXTURE_ROOT}/migration"
+    d+= "/#{ver}" if ver
     d
   end
 
