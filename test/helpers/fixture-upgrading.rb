@@ -1,6 +1,7 @@
 require 'corvid/res_patch_manager'
 
 module Fixtures::Upgrading
+  MAX_VER= 3
 
   def fixture_dir(ver)
     "#{Fixtures::FIXTURE_ROOT}/upgrading/r#{ver}"
@@ -9,16 +10,16 @@ module Fixtures::Upgrading
   # Turn the r?? fixture directories into res-patches
   def prepare_res_patches
     @rpms= [nil]
-    @rpms<< create_patches(1)
-    @rpms<< create_patches(2)
-    @rpms<< create_patches(3)
+    1.upto(MAX_VER) do |v|
+      @rpms<< create_patches(v)
+    end
   end
 
   # Create client installations at various versions.
   #
   # @yield [Fixnum] latest_ver The latest version available to the mock Corvid res-patch set.
   def prepare_base_dirs
-    1.upto(@rpms.size - 1) do |i|
+    1.upto(MAX_VER) do |i|
       dir= "base.#{i}"
       Dir.mkdir dir
       Dir.chdir(dir){
@@ -80,7 +81,18 @@ module Fixtures::Upgrading
       EOB
     end
 
-  end
+    def run_all_in_sandbox_copy_of(ver, &block)
+      before :all do
+        with_sandbox_copy_of(ver) do
+          instance_exec &block if block
+        end
+      end
+      around :each do |ex|
+        Dir.chdir('sandbox'){ ex.call }
+      end
+    end
+
+  end # ClassMethods
 
   private
 

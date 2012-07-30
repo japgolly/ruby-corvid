@@ -129,15 +129,11 @@ describe 'Installing features' do
     1.upto(max_version_available) do |inst_ver|
       eval <<-EOB
         context 'feature installed on top of v#{inst_ver}' do
-          before :all do
-            with_sandbox_copy_of(#{inst_ver}) do
-              run_init_test_unit_task
-              @features= Corvid::Generator::Base.new.get_installed_features
-            end
+          run_all_in_sandbox_copy_of(#{inst_ver}) do
+            run_init_test_unit_task
+            @features= Corvid::Generator::Base.new.get_installed_features
           end
-          around :each do |ex|
-            Dir.chdir('sandbox'){ ex.call }
-          end
+
           it("should install v#{inst_ver} of the feature"){
             assert_installation #{inst_ver}, #{inst_ver}
           }
