@@ -79,8 +79,7 @@ module Corvid
 
       # Check version
       ver= get_latest_res_patch_version if ver == :latest
-      raise "Invalid version: #{ver.inspect}. Provide a number or :latest." unless ver.is_a?(Fixnum)
-      raise "Invalid version: #{ver.inspect}. It must be between 0 and #{get_latest_res_patch_version}." unless ver >=0 and ver <= get_latest_res_patch_version
+      validate_version! ver, 0
 
       # Ensure we have an empty target directory
       Dir.mkdir target_dir unless Dir.exists?(target_dir)
@@ -107,41 +106,61 @@ module Corvid
       }
     end
 
-    def deploy_res_patches(target_dir, target_version=nil, from_version=nil)
-      # TODO migrate should not be here right?
-      # TODO remove this when cached
-      latest_version= get_latest_res_patch_version
-      target_version ||= latest_version
-      from_version ||= 0
-      return if target_version == 0 and latest_version == 0 and from_version == 0
-      #puts "Deploying ver #{target_version}..."
-      raise unless target_version > 0 and target_version <= latest_version
-      raise unless from_version  >= 0 and from_version   <= target_version
-      return if from_version == target_version
+    def validate_version!(ver, min, name=nil)
+      def invalid_msg; "Invalid version" + name ? " for #{name}" : ''; end
 
-      # Explode each ver into its own directory
-      with_reconstruction_dir do |reconstruction_base_dir|
+      unless ver.is_a?(Fixnum)
+        raise "#{invalid_msg}. #{ver.inspect} is not a valid integer."
+      end
+      if min > get_latest_res_patch_version
+        raise "Something's not right, the minimum required version for #{name} is #{min} but the latest available is #{get_latest_res_patch_version}."
+      end
+      unless ver >= min and ver <= get_latest_res_patch_version
+        raise "#{invalid_msg}. #{name} must be between #{min} and #{get_latest_res_patch_version} (inclusive)."
+      end
+      true
+    end
+
+    # @yield [String] dir
+    # @return [true]
+    def with_resource_versions(from_ver, to_ver=nil, &block)
+      raise "Block not provided." unless block
+
+      # Validate version args
+      to_ver ||= get_latest_res_patch_version
+      validate_version! from_ver, 1, 'From-version'
+      validate_version! to_ver, from_ver, 'To-version'
+
+      # Explode patches into tmp dir
+      with_reconstruction_dir do |base_dir|
         last_dir= nil
-        last_dir_digest= digest_dir(reconstruction_base_dir) # it contains no files
+        last_dir_digest= digest_dir(base_dir) # it contains no files
 
         # Iterate over versions...
-        latest_version.downto(from_version + 1) do |ver|
+        to_ver.downto(from_ver) do |ver|
           this_dir= reconstruction_dir(ver)
           Dir.mkdir this_dir
 
           # Apply res patch for this version
           new_dir_digest= apply_res_patch this_dir, ver, last_dir_digest, last_dir
 
+          # Prepare for next iteration
           last_dir= this_dir
           last_dir_digest= new_dir_digest
         end
 
-        # Migrate
-        migrate from_version, target_version, target_dir
-      end
+        # Done. Yield control.
+        block.call base_dir
 
+      end
       true
     end
+
+    def reconstruction_dir(ver)
+      raise "Reconstruction dir not yet defined." unless @reconstruction_dir
+      "#{@reconstruction_dir}/#{ver}"
+    end
+    alias :ver_dir :reconstruction_dir
 
     # @param [nil,String] from_dir
     # @param [String] to_dir
@@ -166,23 +185,8 @@ module Corvid
       end
     end
 
-    protected
-
-    # @param [nil,String] dir
-    def get_files_in_dir(dir)
-      r= []
-      Dir.chdir dir do
-        Dir.glob("**/*", File::FNM_DOTMATCH).sort.each do |f|
-          if File.file?(f)
-            f= yield f if block_given?
-            r<< f
-          end
-        end
-      end if dir
-      r
-    end
-
-    def migrate(from_ver, to_ver, target_dir)
+    # TODO shit
+    def migrate(from_ver, to_ver, target_dir, files_whitelist=nil)
       from_ver ||= 0
       raise unless from_ver >= 0
       raise unless to_ver >= from_ver
@@ -190,11 +194,15 @@ module Corvid
 
       # Build list of files
       filelist= {}
-      for v in from_ver..to_ver do
-        next if v == 0
-        src_dir= reconstruction_dir(v)
-        raise unless Dir.exists?(src_dir)
-        get_files_in_dir(src_dir){|f| filelist[f] ||= {} }
+      if files_whitelist
+        files_whitelist.each{|f| filelist[f] ||= {} }
+      else
+        for v in from_ver..to_ver do
+          next if v == 0
+          src_dir= reconstruction_dir(v)
+          raise "Reconstruction dir for v#{v} not found: #{src_dir}" unless Dir.exists?(src_dir)
+          get_files_in_dir(src_dir){|f| filelist[f] ||= {} }
+        end
       end
 
       # Create patches
@@ -235,6 +243,22 @@ module Corvid
 
     end
 
+    protected
+
+    # @param [nil,String] dir
+    def get_files_in_dir(dir)
+      r= []
+      Dir.chdir dir do
+        Dir.glob("**/*", File::FNM_DOTMATCH).sort.each do |f|
+          if File.file?(f)
+            f= yield f if block_given?
+            r<< f
+          end
+        end
+      end if dir
+      r
+    end
+
     # @param [String] relative_filename
     # @param [nil,String] from_file
     # @param [nil,String] to_file
@@ -264,6 +288,8 @@ module Corvid
           tmp.write patch
           tmp.close
           `patch -p0 -u -i #{tmp.path.inspect} --no-backup-if-mismatch`
+          # system "patch -p0 -u -i #{tmp.path.inspect} --no-backup-if-mismatch </dev/null"
+
           # patch's  exit  status  is  0 if all hunks are applied successfully, 1 if some
           # hunks cannot be applied or there were merge conflicts, and 2 if there is more
           # serious trouble.  When applying a set of patches in a loop it behooves you to
@@ -367,6 +393,7 @@ module Corvid
       if dir.nil?
         Dir.mktmpdir {|d| with_reconstruction_dir d, &block }
       else
+        raise "Reconstruction dir already set. Nesting not supported." if @reconstruction_dir
         raise "Invalid reconstruction dir; it doesn't exist: #{dir}" unless Dir.exists?(dir)
         begin
           @reconstruction_dir= dir
@@ -375,11 +402,6 @@ module Corvid
           @reconstruction_dir= nil
         end
       end
-    end
-
-    def reconstruction_dir(ver)
-      raise "Call with_reconstruction_dir() first." unless @reconstruction_dir
-      "#{@reconstruction_dir}/#{ver}"
     end
 
     def correct_filename_in_patchline!(line, filename)

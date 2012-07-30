@@ -8,10 +8,8 @@ TODO
 
 Patches/Migration/Upgrades TODOs
 ================================
-* Upgrading existing features: migrate each feature from m->n
-  * Expand versions m->n
-  * Migrate installed files
-  * Perform migration steps
+* Make corvid-features use callbacks
+* Add tests that ensure upgrades from 1..latest == same as latest install
 
 * Do 3-way diffs
 * Handle merge conflicts
@@ -34,3 +32,8 @@ Patches/Migration/Upgrades TODOs
 * Features stored in .corvid/features.yml
 * Code for features stored in resources under corvid-features/-{feature}.rb which defines install()
 * Adding new features: add to features.yml, migrate from 0->m
+* Upgrading existing features: migrate each feature from m->n
+  * Expand versions m->n
+  * Migrate installed files
+  * Perform migration steps
+

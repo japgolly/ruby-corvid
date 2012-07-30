@@ -184,7 +184,9 @@ describe Corvid::ResPatchManager do
 
   context 'Actual resource patches' do
     it("should all be deployable"){
-      subject.deploy_res_patches '.', 1
+      subject.with_resource_versions 1 do |dir|
+        "#{dir}/1/Gemfile".should exist_as_file
+      end
     }
   end
 

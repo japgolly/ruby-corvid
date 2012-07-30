@@ -22,7 +22,8 @@ group :spec do
 
     # Fixtures
     watch(%r'^test/fixtures/migration/.+$')  {"test/spec/res_patch_manager_spec.rb"}
-    watch(%r'^test/fixtures/upgrading/.+$')   {"test/spec/generators/init_spec.rb"}
-    watch('test/helpers/fixture-upgrading.rb'){"test/spec/generators/init_spec.rb"}
+    upgrading= %w[test/spec/generators/init_spec.rb test/spec/generators/update_spec.rb]
+    watch(%r'^test/fixtures/upgrading/.+$')   {upgrading}
+    watch('test/helpers/fixture-upgrading.rb'){upgrading}
   end
 end
