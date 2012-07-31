@@ -12,6 +12,8 @@ module Fixtures::Upgrading
     @rpms= [nil]
     1.upto(MAX_VER) do |v|
       @rpms<< create_patches(v)
+      # Make patching quiet for tests
+      @rpms.last.patch_exe += ' --quiet'
     end
   end
 
