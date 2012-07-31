@@ -77,23 +77,17 @@ describe Corvid::Generator::Update do
     EOB
   end
 
-  context 'latest version available in corvid is v1' do
-    run_all_with_corvid_resources_version 1
-    test_upgrade_capability 1
-  end
-
-  context 'latest version available in corvid is v2' do
-    run_all_with_corvid_resources_version 2
-    test_upgrade_capability 2
-  end
-
-  context 'latest version available in corvid is v3' do
-    run_all_with_corvid_resources_version 3
-    test_upgrade_capability 3
+  1.upto(Fixtures::Upgrading::MAX_VER) do |v|
+    eval <<-EOB
+      context 'latest version available in corvid is v#{v}' do
+        run_all_with_corvid_resources_version #{v}
+        test_upgrade_capability #{v}
+      end
+    EOB
   end
 
   context '#extract_deployable_files' do
-    Corvid::Generator::Update::DeployableFileExtractor::KEYWORDS.each do |keyword|
+    Corvid::Generator::Update::KEYWORDS_TO_PATCH_UPGRADE.each do |keyword|
       it("should understand #{keyword}"){
         filename= "xxx.#$$"
         c= "def install\n  #{keyword} '#{filename}'\nend"

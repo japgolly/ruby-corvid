@@ -60,11 +60,11 @@ describe "Actual resource patches" do
 
     it("should fail when update() has an extra step that's not in install()"){
       @rpm= Corvid::ResPatchManager.new "#{Fixtures::FIXTURE_ROOT}/invalid_res_patch-extra_update_step"
-      expect{ test 'corvid' }.to raise_error /bootstrap.spec/
+      expect{ test 'corvid' }.to raise_error /wtfff/
     }
     it("should fail when update() is missing a step that's in install()"){
       @rpm= Corvid::ResPatchManager.new "#{Fixtures::FIXTURE_ROOT}/invalid_res_patch-missing_update_step"
-      expect{ test 'corvid' }.to raise_error /bootstrap.spec/
+      expect{ test 'corvid' }.to raise_error /wtfff/
     }
 
     %w[corvid test_unit test_spec].each do |feature|

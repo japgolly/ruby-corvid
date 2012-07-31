@@ -172,6 +172,11 @@ describe 'Installing features' do
     test_feature_installation 3
   end
 
+  context 'latest version available in corvid is 4' do
+    run_all_with_corvid_resources_version 4
+    test_feature_installation 4
+  end
+
   context 'Corvid not installed' do
     run_each_in_empty_dir
 

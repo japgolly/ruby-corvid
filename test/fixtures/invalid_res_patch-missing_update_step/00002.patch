@@ -1,8 +1,8 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: e49f80d4439c7519b395fe454cbac543ed5a6bff9052110e17bc3bba73f8c458
-Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
+After: cb0062142ce60f9264066ea4861df137eb1b2e5021e91317dd558d5544791e5f
+Patch: e44bc2ce13f494d078886f008c12878b8c2269aeda03291c41a338cb2e3f4036
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ .corvid/Gemfile	2012-07-27 10:49:11.006485831 +1000
++++ .corvid/Gemfile	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,30 @@
 +# vim:ft=ruby et ts=2 sw=2:
 +
@@ -35,7 +35,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +end
 +
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ .gitignore	2012-07-27 10:49:11.006485831 +1000
++++ .gitignore	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,17 @@
 +~*
 +.~*
@@ -55,7 +55,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +target
 +sloccount.sc
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ .rspec	2012-07-27 10:49:11.006485831 +1000
++++ .rspec	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,8 @@
 +--color
 +
@@ -66,7 +66,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +--format documentation
 +
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ .simplecov	2012-07-27 10:49:11.006485831 +1000
++++ .simplecov	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,14 @@
 +SimpleCov.start do
 +  # project_name 'My Awesome Project'
@@ -83,7 +83,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +
 +# vim:ft=ruby et ts=2 sw=2:
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ .yardopts	2012-07-27 10:49:11.006485831 +1000
++++ .yardopts	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,6 @@
 +--db         target/yardoc.db
 +--output-dir target/doc
@@ -92,7 +92,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +--files      CHANGELOG.md
 +{app,lib}/**/*.rb
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ CHANGELOG.md	2012-07-27 10:49:11.006485831 +1000
++++ CHANGELOG.md	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,6 @@
 +My Project: Changelog
 +=====================
@@ -101,7 +101,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +
 +Initial version.
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ Gemfile	2012-07-27 10:49:11.006485831 +1000
++++ Gemfile	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,11 @@
 +source :rubygems
 +
@@ -115,7 +115,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +end
 +
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ Guardfile	2012-07-27 10:49:11.006485831 +1000
++++ Guardfile	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,44 @@
 +require 'corvid/guard'
 +
@@ -162,7 +162,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +  end
 +end if Dir.exists?('test/spec')
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ README.md	2012-07-27 10:49:11.006485831 +1000
++++ README.md	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,6 @@
 +# My Project [![Build Status](https://secure.travis-ci.org/myusername/myproject.png?branch=master)](http://travis-ci.org/myusername/myproject) [![Dependency Status](https://gemnasium.com/myusername/myproject.png)](https://gemnasium.com/myusername/myproject)
 +
@@ -171,7 +171,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +* `myproject` with your project's name on Github.
 +
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ Rakefile	2012-07-27 10:49:11.006485831 +1000
++++ Rakefile	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,6 @@
 +raise "Rake must not be run directly. Either run via Bundler (bundle exec rake) or via bin/rake." unless defined?(Bundler)
 +APP_ROOT ||= File.expand_path(File.dirname(__FILE__))
@@ -180,7 +180,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +# Set default task to test
 +task :default => :test
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ bin/guard	2012-07-27 10:49:11.009819187 +1000
++++ bin/guard	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,16 @@
 +#!/usr/bin/env ruby
 +#
@@ -199,7 +199,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +
 +load Gem.bin_path('guard', 'guard')
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ bin/rake	2012-07-27 10:49:11.009819187 +1000
++++ bin/rake	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,16 @@
 +#!/usr/bin/env ruby
 +#
@@ -218,7 +218,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +
 +load Gem.bin_path('rake', 'rake')
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ bin/rspec	2012-07-27 10:49:11.009819187 +1000
++++ bin/rspec	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,16 @@
 +#!/usr/bin/env ruby
 +#
@@ -237,7 +237,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +
 +load Gem.bin_path('rspec-core', 'rspec')
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ bin/yard	2012-07-27 10:49:11.009819187 +1000
++++ bin/yard	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,16 @@
 +#!/usr/bin/env ruby
 +#
@@ -256,7 +256,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +
 +load Gem.bin_path('yard', 'yard')
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ bin/yardoc	2012-07-27 10:49:11.009819187 +1000
++++ bin/yardoc	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,16 @@
 +#!/usr/bin/env ruby
 +#
@@ -275,7 +275,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +
 +load Gem.bin_path('yard', 'yardoc')
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ bin/yri	2012-07-27 10:49:11.009819187 +1000
++++ bin/yri	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,16 @@
 +#!/usr/bin/env ruby
 +#
@@ -294,7 +294,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +
 +load Gem.bin_path('yard', 'yri')
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ corvid-features/corvid.rb	2012-07-31 12:12:41.531940245 +1000
++++ corvid-features/corvid.rb	2012-07-31 15:40:15.121630066 +1000
 @@ -0,0 +1,24 @@
 +def install
 +  empty_directory '.corvid'
@@ -312,16 +312,16 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +  copy_executable 'bin/yardoc'
 +  copy_executable 'bin/yri'
 +  empty_directory 'lib'
-+
-+    copy_file               'test/bootstrap/spec.rb'
++  empty_directory 'wtffff'
 +end
-+
 +
 +def update(ver)
-+  # Oops I forgot to add test/bootstrap/spec.rb here
++  if ver == 2
++    #empty_directory 'wtffff'
++  end
 +end
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ corvid-features/test_spec.rb	2012-07-27 10:49:11.009819187 +1000
++++ corvid-features/test_spec.rb	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,8 @@
 +def install
 +  copy_file               '.rspec'
@@ -332,7 +332,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +  empty_directory         'test/spec'
 +end
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ corvid-features/test_unit.rb	2012-07-27 10:49:11.009819187 +1000
++++ corvid-features/test_unit.rb	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,6 @@
 +def install
 +  copy_executable         'bin/guard'
@@ -341,7 +341,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +  empty_directory         'test/unit'
 +end
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/bootstrap/all.rb	2012-07-27 10:49:11.009819187 +1000
++++ test/bootstrap/all.rb	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,11 @@
 +# encoding: utf-8
 +APP_ROOT = File.expand_path('../../..',__FILE__)
@@ -355,7 +355,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +Dir.glob("#{APP_ROOT}/test/helpers/**/*.rb") {|f| require f}
 +
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/bootstrap/spec.rb	2012-07-27 10:49:11.009819187 +1000
++++ test/bootstrap/spec.rb	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,5 @@
 +# encoding: utf-8
 +$coverage_name = 'specs'
@@ -363,14 +363,14 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +require 'corvid/test/bootstrap/spec'
 +
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/bootstrap/unit.rb	2012-07-27 10:49:11.009819187 +1000
++++ test/bootstrap/unit.rb	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,4 @@
 +# encoding: utf-8
 +$coverage_name = 'unit tests'
 +require_relative 'all'
 +require 'corvid/test/bootstrap/unit'
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/spec/%src%_spec.rb.tt	2012-07-27 10:49:11.009819187 +1000
++++ test/spec/%src%_spec.rb.tt	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,7 @@
 +# encoding: utf-8
 +require_relative '<%= bootstrap_dir %>/spec'
@@ -380,7 +380,7 @@ Patch: 2e21243c00be72597f26ec2ca91867928a78f8b5536a2e0c3d21f39bff3761a1
 +  # TODO
 +end
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/unit/%src%_test.rb.tt	2012-07-27 10:49:11.009819187 +1000
++++ test/unit/%src%_test.rb.tt	2012-07-31 15:38:18.471046350 +1000
 @@ -0,0 +1,7 @@
 +# encoding: utf-8
 +require_relative '<%= bootstrap_dir %>/unit'

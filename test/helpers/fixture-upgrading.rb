@@ -1,7 +1,7 @@
 require 'corvid/res_patch_manager'
 
 module Fixtures::Upgrading
-  MAX_VER= 3
+  MAX_VER= 4
 
   def fixture_dir(ver)
     "#{Fixtures::FIXTURE_ROOT}/upgrading/r#{ver}"
@@ -40,14 +40,14 @@ module Fixtures::Upgrading
 
   def assert_installation(corvid_ver, test_ver)
     assert_file "corvid.A", 1, corvid_ver
-    assert_file "corvid.B", 2, corvid_ver
+    assert_file "corvid.B", 2..3, corvid_ver
     assert_file "corvid.C", 3, corvid_ver
     "lib.1".send corvid_ver >= 1 ? :should : :should_not, exist_as_dir
     "lib.2".send corvid_ver >= 2 ? :should : :should_not, exist_as_dir
     "lib.3".send corvid_ver >= 3 ? :should : :should_not, exist_as_dir
 
     assert_file "test.A", 1, test_ver
-    assert_file "test.B", 2, test_ver
+    assert_file "test.B", 2..3, test_ver
     assert_file "test.C", 3, test_ver
     "test.1".send test_ver >= 1 ? :should : :should_not, exist_as_dir
     "test.2".send test_ver >= 2 ? :should : :should_not, exist_as_dir

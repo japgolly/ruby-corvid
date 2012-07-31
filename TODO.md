@@ -8,7 +8,7 @@ TODO
 
 Patches/Migration/Upgrades TODOs
 ================================
-* Add upgrade deletion tests
+* Is update() really needed? Currently it needs increments of install() - the copy_file stuff. That's stupid...
 * Make corvid-features use callbacks ??
 * Do 3-way diffs
 * Handle merge conflicts
@@ -36,4 +36,4 @@ Patches/Migration/Upgrades TODOs
   * Migrate installed files
   * Perform migration steps
 * Add tests that ensure upgrades from 1..latest == same as latest install
-
+* Add upgrade deletion tests

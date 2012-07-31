@@ -36,7 +36,8 @@ class Corvid::Generator::Update < Corvid::Generator::Base
         features.each {|f|
           if code= feature_installer_code(rpm.ver_dir(v), f)
             deployable_files.concat extract_deployable_files(code, f, v)
-            installers[v][f]= dynamic_installer(code, f, v)
+            installer= dynamic_installer(code, f, v)
+            installers[v][f]= installer if installer.respond_to?(:update)
           end
         }
         deployable_files.sort!.uniq!
@@ -51,8 +52,13 @@ class Corvid::Generator::Update < Corvid::Generator::Base
         with_resources rpm.ver_dir(ver) do
           grp.each do |feature,installer|
 
+            # So that it doesn't overwrite a file being patched, disable commands that patching is taking care of
+            # TODO copy_executable should chmod if file exists
+            installer.instance_eval KEYWORDS_TO_PATCH_UPGRADE.map{|m| "def #{m}(*) end"}.join(';')
+
             # Call update() in the installer
-            installer.update ver if installer.respond_to?(:update)
+            installer.update ver
+
           end
         end
       end
@@ -72,18 +78,19 @@ class Corvid::Generator::Update < Corvid::Generator::Base
 
   private
 
+  KEYWORDS_TO_PATCH_UPGRADE= %w[
+    copy_file
+    copy_file_unless_exists
+    copy_executable
+  ].map(&:to_sym).freeze
+
   # @!visibility private
   class DeployableFileExtractor
-    KEYWORDS= %w[
-      copy_file
-      copy_executable
-      copy_file_unless_exists
-    ].map(&:to_sym).freeze
 
     attr_reader :files
     def initialize; @files= [] end
     def method_missing(method,*args)
-      if KEYWORDS.include? method
+      if KEYWORDS_TO_PATCH_UPGRADE.include? method
         raise "One argument expected for #{method} but received #{args.inspect}" unless args.size == 1
         files<< args[0]
       end

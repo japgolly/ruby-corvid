@@ -1,17 +1,17 @@
-Before: e49f80d4439c7519b395fe454cbac543ed5a6bff9052110e17bc3bba73f8c458
+Before: cb0062142ce60f9264066ea4861df137eb1b2e5021e91317dd558d5544791e5f
 After: ecb07501b873ab031a49801b6b9f9237a53a2b3d9a70dec2d1bb3521975247ea
-Patch: 7282a3f7e27caeeaa9cba196aaa05ed049a0371ac96f6479b8971bb716ca32f3
---- corvid-features/corvid.rb	2012-07-31 12:12:41.531940245 +1000
-+++ corvid-features/corvid.rb	2012-07-31 12:12:53.815322809 +1000
+Patch: 7d6a0caa0aa9c2d281269a291d7451fde5e372597a182ace2f227a05a03d9eb2
+--- corvid-features/corvid.rb	2012-07-31 15:40:15.121630066 +1000
++++ corvid-features/corvid.rb	2012-07-31 15:40:46.491786914 +1000
 @@ -14,11 +14,4 @@
    copy_executable 'bin/yardoc'
    copy_executable 'bin/yri'
    empty_directory 'lib'
--
--    copy_file               'test/bootstrap/spec.rb'
+-  empty_directory 'wtffff'
 -end
 -
--
 -def update(ver)
--  # Oops I forgot to add test/bootstrap/spec.rb here
+-  if ver == 2
+-    #empty_directory 'wtffff'
+-  end
  end
