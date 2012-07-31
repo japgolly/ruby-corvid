@@ -4,6 +4,7 @@ STDIN.close
 
 require_relative '../../lib/corvid/environment'
 require 'golly-utils/testing/rspec/files'
+require 'golly-utils/testing/rspec/arrays'
 require 'tmpdir'
 require 'fileutils'
 
@@ -98,10 +99,7 @@ module TestHelpers
     end
   end
 
-  def run_generator(generator_class, args, no_bundle=true, quiet=true)
-    args= args.split(/\s+/) unless args.is_a?(Array)
-    args<< "--no-#{RUN_BUNDLE}" if no_bundle
-
+  def generator_config(quiet)
     # Quiet stdout - how the hell else are you supposed to do this???
     config= {}
     config[:shell] ||= Thor::Base.shell.new
@@ -110,6 +108,26 @@ module TestHelpers
       config[:shell].instance_eval 'def quiet?; true; end'
       #config[:shell].instance_variable_set :@mute, true
     end
+    config
+  end
+
+  def quiet_generator(generator_class)
+    config= generator_config(true)
+    g= generator_class.new([], [], config)
+    decorate_generator g
+  end
+
+  def decorate_generator(g)
+    # Use a test res-patch manager if available
+    g.rpm= @rpm if @rpm
+    g
+  end
+
+  def run_generator(generator_class, args, no_bundle=true, quiet=true)
+    args= args.split(/\s+/) unless args.is_a?(Array)
+    args<< "--no-#{RUN_BUNDLE}" if no_bundle
+
+    config= generator_config(quiet)
 
     # Do horrible stupid Thor-internal crap to instantiate a generator
     task= generator_class.tasks[args.shift]
@@ -117,9 +135,7 @@ module TestHelpers
     config.merge!(:current_task => task, :task_options => task.options)
     g= generator_class.new(args, opts, config)
 
-    # Use a test res-patch manager if available
-    g.rpm= @rpm if @rpm
-
+    decorate_generator g
     g.invoke_task task
   end
 end

@@ -52,7 +52,7 @@ class Corvid::Generator::Update < Corvid::Generator::Base
           grp.each do |feature,installer|
 
             # Call update() in the installer
-            installer.update ver
+            installer.update ver if installer.respond_to?(:update)
           end
         end
       end
