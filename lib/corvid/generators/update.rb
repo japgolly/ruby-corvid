@@ -1,6 +1,6 @@
 require 'corvid/generators/base'
 
-class Corvid::Generator::Update < Corvid::Generator::Base
+class ::Corvid::Generator::Update < ::Corvid::Generator::Base
 
   desc 'installed', 'Updates all installed Corvid features.'
   def installed
@@ -79,7 +79,7 @@ class Corvid::Generator::Update < Corvid::Generator::Base
 
   # @!visibility private
   class DeployableFileExtractor
-    include Corvid::Generator::ActionExtentions
+    include ::Corvid::Generator::ActionExtentions
 
     attr_reader :files
     def initialize; @files= [] end

@@ -1,7 +1,7 @@
 require 'corvid/generators/base'
 
-module Corvid::Generator::New
-  class Test < Corvid::Generator::Base
+module ::Corvid::Generator::New
+  class Test < ::Corvid::Generator::Base
     argument :name, type: :string
 
     desc 'unit', 'Generates a new unit test.'

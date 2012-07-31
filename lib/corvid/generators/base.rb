@@ -143,13 +143,17 @@ module Corvid
       end
 
       def self.run_bundle_option(t)
-        t.method_option RUN_BUNDLE => true
+        t.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
       end
 
       def run_bundle
         if options[RUN_BUNDLE] and !$corvid_bundle_install_at_exit_installed
           $corvid_bundle_install_at_exit_installed= true
-          at_exit{ run "bundle install" }
+          at_exit {
+            ENV['BUNDLE_GEMFILE']= nil
+            ENV['RUBYOPT']= nil
+            run "bundle install"
+          }
         end
       end
 

@@ -1,7 +1,7 @@
 require 'corvid/generators/base'
 require 'yaml'
 
-class Corvid::Generator::Init < Corvid::Generator::Base
+class ::Corvid::Generator::Init < ::Corvid::Generator::Base
 
   desc 'project', 'Creates a new Corvid project in the current directory.'
   method_option :'test-unit', type: :boolean
@@ -20,7 +20,7 @@ class Corvid::Generator::Init < Corvid::Generator::Base
     }
   end
 
-  class Test < Corvid::Generator::Base
+  class Test < ::Corvid::Generator::Base
 
     desc 'unit', 'Adds support for unit tests.'
     run_bundle_option(self)
