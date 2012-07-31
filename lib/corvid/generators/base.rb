@@ -1,5 +1,6 @@
 require 'corvid/environment'
 require 'corvid/res_patch_manager'
+require 'corvid/generators/actions'
 
 require 'active_support/core_ext/string/inflections'
 require 'active_support/inflections'
@@ -13,6 +14,8 @@ module Corvid
     # @abstract
     class Base < Thor
       include Thor::Actions
+      include ActionExtentions
+
       RUN_BUNDLE= :'run_bundle'
       VERSION_FILE= '.corvid/version.yml'
       FEATURES_FILE= '.corvid/features.yml'
@@ -148,21 +151,6 @@ module Corvid
           $corvid_bundle_install_at_exit_installed= true
           at_exit{ run "bundle install" }
         end
-      end
-
-      def copy_file_unless_exists(src, tgt=nil, options={})
-        tgt ||= src
-        copy_file src, tgt, options unless File.exists?(tgt)
-      end
-
-      def boolean_specified_or_ask(option_name, question)
-        v= options[option_name.to_sym]
-        v or v.nil? && yes?(question + ' [yn]')
-      end
-
-      def copy_executable(name, *extra_args)
-        copy_file name, *extra_args
-        chmod name, 0755, *extra_args
       end
 
       def add_features(*features)

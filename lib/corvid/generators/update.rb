@@ -53,8 +53,7 @@ class Corvid::Generator::Update < Corvid::Generator::Base
           grp.each do |feature,installer|
 
             # So that it doesn't overwrite a file being patched, disable commands that patching is taking care of
-            # TODO copy_executable should chmod if file exists
-            installer.instance_eval KEYWORDS_TO_PATCH_UPGRADE.map{|m| "def #{m}(*) end"}.join(';')
+            installer.instance_eval "def copy_file(*) end"
 
             # Call update() in the installer
             installer.update ver
@@ -78,22 +77,24 @@ class Corvid::Generator::Update < Corvid::Generator::Base
 
   private
 
-  KEYWORDS_TO_PATCH_UPGRADE= %w[
-    copy_file
-    copy_file_unless_exists
-    copy_executable
-  ].map(&:to_sym).freeze
-
   # @!visibility private
   class DeployableFileExtractor
+    include Corvid::Generator::ActionExtentions
 
     attr_reader :files
     def initialize; @files= [] end
+
+    def copy_file(file, rename=nil, options={})
+      raise "copy_file(): Renaming unsupported." if rename and rename != file
+      raise "copy_file(): Options not supported." if options and !options.empty?
+      files<< file
+    end
+    def copy_file_unless_exists(src, tgt=nil, options={})
+      copy_file src, tgt, options
+    end
+
     def method_missing(method,*args)
-      if KEYWORDS_TO_PATCH_UPGRADE.include? method
-        raise "One argument expected for #{method} but received #{args.inspect}" unless args.size == 1
-        files<< args[0]
-      end
+      # Ignore
     end
   end
 

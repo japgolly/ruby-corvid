@@ -87,7 +87,11 @@ describe Corvid::Generator::Update do
   end
 
   context '#extract_deployable_files' do
-    Corvid::Generator::Update::KEYWORDS_TO_PATCH_UPGRADE.each do |keyword|
+    %w[
+      copy_file
+      copy_file_unless_exists
+      copy_executable
+    ].each do |keyword|
       it("should understand #{keyword}"){
         filename= "xxx.#$$"
         c= "def install\n  #{keyword} '#{filename}'\nend"
