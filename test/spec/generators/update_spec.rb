@@ -32,18 +32,18 @@ describe Corvid::Generator::Update do
   # not installed               - Done
   # up-to-date
   #      - without local mods   - Done
-  #      - with local mods      - Ignore
+  #      - with local mods      - Done
   # out-of-date
   #      - without local mods   - Ignore
   #      - with local mods
   #        - non-conflicting    - Done
-  #        - mergable           - TODO
+  #        - mergable           - Done
   #        - non-mergable       - Ignore
 
   def self.test_upgrade_capability(max_ver)
     1.upto(max_ver - 1) do |inst_ver|
       eval <<-EOB
-        context 'upgrading from v#{inst_ver}' do
+        context 'clean upgrading from v#{inst_ver}' do
           run_all_in_sandbox_copy_of(#{inst_ver}) do
             File.write @ignore_file= 'local.txt', @ignore_msg= 'leave me alone'
             run_update_task
@@ -65,25 +65,52 @@ describe Corvid::Generator::Update do
     eval <<-EOB
       context 'upgrading when client is up-to-date' do
         run_all_in_sandbox_copy_of(#{max_ver}) do
-          @files_before= get_files()
+          @files_before= get_dir_entries()
+          File.write 'corvid.A', 'whatever'
           run_update_task
         end
 
-        it("should not change any files"){
-          get_files().should == @files_before
-          assert_installation #{max_ver}, #{max_ver}
-        }
+        it("should not change dirty files"){ File.read('corvid.A').should == 'whatever' }
+        it("should not change up-to-date files"){ assert_installation #{max_ver}, #{max_ver}, %w[corvid.A] }
+        it("should not change add or remove any files"){ get_dir_entries().should == @files_before }
       end
     EOB
   end
 
-  1.upto(Fixtures::Upgrading::MAX_VER) do |v|
-    eval <<-EOB
-      context 'latest version available in corvid is v#{v}' do
-        run_all_with_corvid_resources_version #{v}
-        test_upgrade_capability #{v}
+  context 'latest version available in corvid is v1' do
+    run_all_with_corvid_resources_version 1
+    test_upgrade_capability 1
+  end
+
+  context 'latest version available in corvid is v2' do
+    run_all_with_corvid_resources_version 2
+    test_upgrade_capability 2
+  end
+
+  context 'latest version available in corvid is v3' do
+    run_all_with_corvid_resources_version 3
+    test_upgrade_capability 3
+  end
+
+  context 'latest version available in corvid is v4' do
+    run_all_with_corvid_resources_version 4
+    test_upgrade_capability 4
+
+    context 'dirty upgrading' do
+      run_all_in_sandbox_copy_of(1) do
+        File.write 'corvid.A', "--- sweet ---\ncorvid A made in v1\n"
+        run_update_task
       end
-    EOB
+      it("should patch dirty files"){
+        File.read('corvid.A').should == "--- sweet ---\ncorvid A made in v1\nand in v2\nupdated in v3\n"
+      }
+      it("should upgrade other files normally"){
+        assert_installation 4, 4, %w[corvid.A]
+      }
+      it("should update the client's version number"){
+        Corvid::Generator::Base.new.read_deployed_corvid_version.should == 4
+      }
+    end
   end
 
   context '#extract_deployable_files' do
