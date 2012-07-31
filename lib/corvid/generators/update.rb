@@ -44,7 +44,16 @@ class ::Corvid::Generator::Update < ::Corvid::Generator::Base
       }
 
       # Patch & migrate installed files
-      rpm.migrate from, to, '.', deployable_files unless deployable_files.empty?
+      unless deployable_files.empty?
+        rpm.allow_interactive_patching do
+          say_status 'patch', "Patching installed files...", :cyan
+          if rpm.migrate from, to, '.', deployable_files
+            say_status 'patch', 'Applied but with merge conflicts.', :red
+          else
+            say_status 'patch', 'Applied cleanly.', :green
+          end
+        end
+      end
 
       # Perform migration steps
       (from + 1).upto(to) do |ver|

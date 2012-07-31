@@ -192,6 +192,19 @@ module Corvid
       end
     end
 
+    def interactive_patching?
+      @interactive_patching
+    end
+    def allow_interactive_patching
+      before= @interactive_patching
+      begin
+        @interactive_patching= true
+        yield
+      ensure
+        @interactive_patching= before
+      end
+    end
+
     # TODO shit
     def migrate(from_ver, to_ver, target_dir, files_whitelist=nil)
       from_ver ||= 0
@@ -242,12 +255,14 @@ module Corvid
       end
 
       # Apply patches
+      merge_conflicts= false
       unless patches.empty?
-        megapatch= patches.values.join($/) + $/
-  #puts '_'*80; puts megapatch; puts '_'*80
-        apply_patch target_dir, megapatch
+        megapatch= patches.keys.sort.map{|f| patches[f]}.join($/) + $/
+#puts '_'*80; puts megapatch; puts '_'*80
+        merge_conflicts= apply_patch target_dir, megapatch
       end
 
+      merge_conflicts
     end
 
     protected
@@ -294,16 +309,32 @@ module Corvid
         begin
           tmp.write patch
           tmp.close
-          `patch -p0 -u -i #{tmp.path.inspect} --no-backup-if-mismatch`
-          # system "patch -p0 -u -i #{tmp.path.inspect} --no-backup-if-mismatch </dev/null"
+
+          merge_conflict= false
 
           # patch's  exit  status  is  0 if all hunks are applied successfully, 1 if some
           # hunks cannot be applied or there were merge conflicts, and 2 if there is more
           # serious trouble.  When applying a set of patches in a loop it behooves you to
           # check this exit status so you don't  apply  a  later  patch  to  a  partially
           # patched file.
-          # TODO No patch error or conflict handling
-          raise "Patch failed!" unless $?.success?
+
+          cmd= "patch -p0 --unified -i #{tmp.path.inspect}"
+          if interactive_patching?
+            system "#{cmd} --backup-if-mismatch --merge"
+            case $?.exitstatus
+            when 0
+              # Great!
+            when 1
+              merge_conflict= true
+            else
+              raise "Problem occured applying patches. Exit status = #{$?.exitstatus}."
+            end
+          else
+            `#{cmd} --batch`
+            raise "Failed to apply patch. Exit status = #{$?.exitstatus}." unless $?.success?
+          end
+
+          return merge_conflict
         ensure
           tmp.close
           tmp.delete

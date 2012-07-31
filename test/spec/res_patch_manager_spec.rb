@@ -79,6 +79,7 @@ describe Corvid::ResPatchManager do
         populate_with 2
         File.write 'v2.txt', "Before\nv2 bro\nAfter"
         migrate 2, 3
+        File.delete "v2.txt.orig" if File.exists?('v2.txt.orig')
         assert_files migration_dir(3), 'v2.txt' => "Before\nAfter"
       }
     end
