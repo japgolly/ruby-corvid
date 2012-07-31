@@ -13,7 +13,6 @@ Patches/Migration/Upgrades TODOs
 * Do 3-way diffs
 * Handle merge conflicts
 
-* Make `get_latest_res_patch_version()` cache
 * Process doco
 * Clean up code - refactor, rename, doc, proper error msgs
 * Check all TODOs
