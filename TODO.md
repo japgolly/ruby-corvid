@@ -8,9 +8,8 @@ TODO
 
 Patches/Migration/Upgrades TODOs
 ================================
-* Make corvid-features use callbacks
-* Add tests that ensure upgrades from 1..latest == same as latest install
-
+* Add upgrade deletion tests
+* Make corvid-features use callbacks ??
 * Do 3-way diffs
 * Handle merge conflicts
 
@@ -36,4 +35,5 @@ Patches/Migration/Upgrades TODOs
   * Expand versions m->n
   * Migrate installed files
   * Perform migration steps
+* Add tests that ensure upgrades from 1..latest == same as latest install
 
