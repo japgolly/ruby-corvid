@@ -6,12 +6,12 @@ class ::Corvid::Generator::Init < ::Corvid::Generator::Base
   desc 'project', 'Creates a new Corvid project in the current directory.'
   method_option :'test-unit', type: :boolean
   method_option :'test-spec', type: :boolean
-  run_bundle_option(self)
+  declare_option_to_run_bundle(self)
   def project
     with_latest_resources {|ver|
       feature_installer!('corvid').install
       add_feature 'corvid'
-      write_version ver
+      write_client_version ver
 
       invoke 'init:test:unit', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
       invoke 'init:test:spec', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'
@@ -23,13 +23,13 @@ class ::Corvid::Generator::Init < ::Corvid::Generator::Base
   class Test < ::Corvid::Generator::Base
 
     desc 'unit', 'Adds support for unit tests.'
-    run_bundle_option(self)
+    declare_option_to_run_bundle(self)
     def unit
       install_feature 'test_unit'
     end
 
     desc 'spec', 'Adds support for specifications.'
-    run_bundle_option(self)
+    declare_option_to_run_bundle(self)
     def spec
       install_feature 'test_spec'
     end
@@ -39,8 +39,8 @@ class ::Corvid::Generator::Init < ::Corvid::Generator::Base
     def install_feature(name, run_bundle=true)
 
       # Read installation details
-      ver= read_deployed_corvid_version!
-      features= get_installed_features!
+      ver= read_client_version!
+      features= read_client_features!
 
       # Corvid installation confirmed - now check if feature already installed
       if features.include? name

@@ -131,7 +131,7 @@ describe 'Installing features' do
         context 'feature installed on top of v#{inst_ver}' do
           run_all_in_sandbox_copy_of(#{inst_ver}) do
             run_init_test_unit_task
-            @features= Corvid::Generator::Base.new.get_installed_features
+            @features= Corvid::Generator::Base.new.read_client_features
           end
 
           it("should install v#{inst_ver} of the feature"){

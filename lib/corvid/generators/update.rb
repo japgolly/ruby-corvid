@@ -6,8 +6,8 @@ class ::Corvid::Generator::Update < ::Corvid::Generator::Base
   def project
 
     # Read installation details
-    ver= read_deployed_corvid_version!
-    features= get_installed_features!
+    ver= read_client_version!
+    features= read_client_features!
 
     # Corvid installation confirmed - now check if already up-to-date
     if rpm.latest? ver
@@ -72,7 +72,7 @@ class ::Corvid::Generator::Update < ::Corvid::Generator::Base
       end
 
       # Update version.yml
-      write_version to
+      write_client_version to
     end
   end
 

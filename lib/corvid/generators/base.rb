@@ -33,9 +33,7 @@ module Corvid
         def rpm=(rpm) @rpm= rpm end
         def rpm()     @rpm ||= ::Corvid::ResPatchManager.new end
 
-        # TODO Get vs read
-        # TODO Installed vs deployed
-        def get_installed_features
+        def read_client_features
           if File.exists? FEATURES_FILE
             v= YAML.load_file FEATURES_FILE
             raise "Invalid #{FEATURES_FILE}. Array expected but got #{v.class}." unless v.is_a?(Array)
@@ -46,8 +44,8 @@ module Corvid
           end
         end
 
-        def get_installed_features!
-          features= get_installed_features
+        def read_client_features!
+          features= read_client_features
           raise "File not found: #{FEATURES_FILE}\nYou must install Corvid first. Try corvid init:project." if features.nil?
           features
         end
@@ -56,7 +54,7 @@ module Corvid
         #
         # @return [Fixnum, nil] The version number or `nil` if Corvid isn't installed yet.
         # @raise If Corvid is installed but the version file is not in the expected format.
-        def read_deployed_corvid_version
+        def read_client_version
           if File.exists?(VERSION_FILE)
             v= YAML.load_file(VERSION_FILE)
             raise "Invalid version: #{v.inspect}\nNumber expected. Check your #{VERSION_FILE}." unless v.is_a? Fixnum
@@ -70,8 +68,8 @@ module Corvid
         #
         # @return [Fixnum] The version number. Will never return `nil`.
         # @raise If Corvid is not installed.
-        def read_deployed_corvid_version!
-          ver= read_deployed_corvid_version
+        def read_client_version!
+          ver= read_client_version
           raise "File not found: #{VERSION_FILE}\nYou must install Corvid first. Try corvid init:project." if ver.nil?
           ver
         end
@@ -142,7 +140,7 @@ module Corvid
         end
       end
 
-      def self.run_bundle_option(t)
+      def self.declare_option_to_run_bundle(t)
         t.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
       end
 
@@ -159,7 +157,7 @@ module Corvid
 
       def add_features(*features)
         # Read currently installed features
-        installed= get_installed_features || []
+        installed= read_client_features || []
         size_before= installed.size
 
         # Add features
@@ -169,7 +167,7 @@ module Corvid
 
         # Write back to disk
         if installed.size != size_before
-          create_file FEATURES_FILE, installed.to_yaml, force: true
+          write_client_features installed
         end
       end
       alias :add_feature :add_features
@@ -235,9 +233,14 @@ module Corvid
         obj
       end
 
-      def write_version(ver)
+      def write_client_version(ver)
         rpm.validate_version! ver, 1
         create_file VERSION_FILE, ver.to_s, force: true
+      end
+
+      def write_client_features(features)
+        raise "Invalid features. Array expected. Got: #{features.inspect}" unless features.is_a?(Array)
+        create_file FEATURES_FILE, features.to_yaml, force: true
       end
 
       private
