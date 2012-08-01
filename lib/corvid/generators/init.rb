@@ -38,7 +38,7 @@ class ::Corvid::Generator::Init < ::Corvid::Generator::Base
 
     def install_feature(name, run_bundle=true)
 
-      # Read installation details
+      # Read client details
       ver= read_client_version!
       features= read_client_features!
 

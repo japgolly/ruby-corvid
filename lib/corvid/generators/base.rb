@@ -11,15 +11,23 @@ require 'yaml'
 module Corvid
   module Generator
 
+    # Abstract Thor generator that adds support for Corvid specific functionality.
+    #
     # @abstract
     class Base < Thor
       include Thor::Actions
       include ActionExtentions
 
+      # Name of the option that users can use on the CLI to opt-out of Bundler being run at the end of certain tasks.
       RUN_BUNDLE= :'run_bundle'
+
+      # Filename of the client-side file that stores the version of Corvid resources last deployed.
       VERSION_FILE= '.corvid/version.yml'
+
+      # Filename of the client-side file that stores the Corvid features that are enabled in the client's project.
       FEATURES_FILE= '.corvid/features.yml'
 
+      # @!visibility private
       def self.inherited(c)
         c.class_eval <<-EOB
           def self.source_root; $corvid_global_thor_source_root end
@@ -30,9 +38,22 @@ module Corvid
       # This stops Thor thinking the public methods below are tasks
       no_tasks {
 
-        def rpm=(rpm) @rpm= rpm end
-        def rpm()     @rpm ||= ::Corvid::ResPatchManager.new end
+        # Sets the {Corvid::ResPatchManager} that the generator will use.
+        # @param [Corvid::ResPatchManager] rpm
+        # @return [Corvid::ResPatchManager]
+        def rpm=(rpm)
+          @rpm= rpm
+        end
 
+        # Gets the {Corvid::ResPatchManager} that the generator will use.
+        # @return [Corvid::ResPatchManager]
+        def rpm()
+          @rpm ||= ::Corvid::ResPatchManager.new
+        end
+
+        # Reads and parses the contents of the client's {FEATURES_FILE} if it exists.
+        #
+        # @return [nil,Array<String>] A list of features or `nil` if the file wasn't found.
         def read_client_features
           if File.exists? FEATURES_FILE
             v= YAML.load_file FEATURES_FILE
@@ -44,16 +65,20 @@ module Corvid
           end
         end
 
+        # Reads and parses the contents of the client's {FEATURES_FILE}.
+        #
+        # @return [Array<String>] A list of features.
+        # @raise If file not found.
+        # @see #read_client_features
         def read_client_features!
           features= read_client_features
           raise "File not found: #{FEATURES_FILE}\nYou must install Corvid first. Try corvid init:project." if features.nil?
           features
         end
 
-        # Reads the version of deployed Corvid resources.
+        # Reads and parses the contents of the client's {VERSION_FILE} if it exists.
         #
-        # @return [Fixnum, nil] The version number or `nil` if Corvid isn't installed yet.
-        # @raise If Corvid is installed but the version file is not in the expected format.
+        # @return [nil,Fixnum] The version number or `nil` if the file wasn't found.
         def read_client_version
           if File.exists?(VERSION_FILE)
             v= YAML.load_file(VERSION_FILE)
@@ -64,10 +89,11 @@ module Corvid
           end
         end
 
-        # Reads the version of deployed Corvid resources.
+        # Reads and parses the contents of the client's {VERSION_FILE} if it exists.
         #
-        # @return [Fixnum] The version number. Will never return `nil`.
-        # @raise If Corvid is not installed.
+        # @return [Fixnum] The version number.
+        # @raise If file not found.
+        # @see read_client_version
         def read_client_version!
           ver= read_client_version
           raise "File not found: #{VERSION_FILE}\nYou must install Corvid first. Try corvid init:project." if ver.nil?
@@ -77,15 +103,33 @@ module Corvid
 
       protected
 
+      # The resource directory that contains the appropriate version (as specified by {#with_resources}) of Corvid
+      # resources.
+      #
+      # @return [String]
+      # @raise If resources aren't available.
+      # @see #with_latest_resources
+      # @see #with_resources
       def res_dir
-        $corvid_global_thor_source_root || raise("Resources haven't been deployed yet. Call with_latest_resources() first.")
+        $corvid_global_thor_source_root || raise("Resources not available. Call with_resources() first.")
       end
 
+      # Makes available to generators the latest version of Corvid resources.
+      #
+      # @yieldparam [Fixnum] ver The version of the resources being used.
+      # @return The return result of `block`.
+      # @see #with_resources
       def with_latest_resources(&block)
         with_resources :latest, &block
       end
 
-      # TODO confirm this doco
+      # Works with {ResPatchManager} to provide generators with an specified version of Corvid resources.
+      #
+      # @note Only one version of resources can be made available at one time. Nested calls to this method requesting
+      #   the same version (reentrancy) will be allowed, but a nested call for a differing version will fail.
+      # @raise If resources of a different version are already available.
+      #
+      # @return The return result of `block`.
       # @overload with_resources(dir, &block)
       #   @param [String] dir The directory where the resources can be found.
       #   @yieldparam [void]
@@ -140,10 +184,20 @@ module Corvid
         end
       end
 
+      # Declares a Thor option that allows users to opt-out of Bundler being run at the end of certain tasks.
+      #
+      # @param [Base] t The calling generator.
+      # @return [void]
+      # @see RUN_BUNDLE
+      # @see #run_bundle
       def self.declare_option_to_run_bundle(t)
         t.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
       end
 
+      # Unless the option to disable this specifies otherwise, asynchronously sets up `bundle install` to run in the
+      # client's project after all generators have completed.
+      #
+      # @return [void]
       def run_bundle
         if options[RUN_BUNDLE] and !$corvid_bundle_install_at_exit_installed
           $corvid_bundle_install_at_exit_installed= true
@@ -155,6 +209,13 @@ module Corvid
         end
       end
 
+      # Adds features to the client's {FEATURES_FILE}.
+      #
+      # Only features not already in the file will be added, and {FEATURES_FILE} will only be updated if there are new
+      # features to add.
+      #
+      # @param [Array<String>] features
+      # @return [Boolean] `true` if new features were added to the client's features, else `false`.
       def add_features(*features)
         # Read currently installed features
         installed= read_client_features || []
@@ -168,6 +229,9 @@ module Corvid
         # Write back to disk
         if installed.size != size_before
           write_client_features installed
+          true
+        else
+          false
         end
       end
       alias :add_feature :add_features
@@ -205,11 +269,26 @@ module Corvid
         )
       end
 
+      # Turns given code into an object that delegates all undefined methods to this generator.
+      #
+      # @param [String] code The Ruby code to evaluate.
+      # @param [String] feature The name of the feature that the code belongs to (for generating clear error-messages).
+      # @param [nil,Fixnum] ver The version of the resources that the code belongs to (for generating clear
+      #   error-messages).
+      # @return [GollyUtils::Delegator<Base>] A delegator with the provided code on top.
       def dynamic_installer(code, feature, ver=nil)
         d= GollyUtils::Delegator.new self, allow_protected: true
         add_dynamic_code! d, code, feature, ver
       end
 
+      # Mixes given code into an existing object, and wraps each new public method with decorated error-messages when
+      # things go wrong.
+      #
+      # @param [Object] obj The object to embelish with given code.
+      # @param [String] code The Ruby code to evaluate.
+      # @param [String] feature The name of the feature that the code belongs to.
+      # @param [nil,Fixnum] ver The version of the resources that the code belongs to.
+      # @return the same object that was provided in `obj`.
       def add_dynamic_code!(obj, code, feature, ver=nil)
         orig_methods= obj.public_methods
         obj.instance_eval code
@@ -233,14 +312,24 @@ module Corvid
         obj
       end
 
+      # Creates or replaces the client's {VERSION_FILE}.
+      #
+      # @param [Fixnum] ver The version to write to the file.
+      # @return [self]
       def write_client_version(ver)
         rpm.validate_version! ver, 1
         create_file VERSION_FILE, ver.to_s, force: true
+        self
       end
 
+      # Creates or replaces the client's {FEATURES_FILE}.
+      #
+      # @param [Array<String>] features The features to write to the file
+      # @return [self]
       def write_client_features(features)
         raise "Invalid features. Array expected. Got: #{features.inspect}" unless features.is_a?(Array)
         create_file FEATURES_FILE, features.to_yaml, force: true
+        self
       end
 
       private

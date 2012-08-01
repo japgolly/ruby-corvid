@@ -5,7 +5,7 @@ class ::Corvid::Generator::Update < ::Corvid::Generator::Base
   desc 'project', 'Updates all Corvid resources and features in the current project.'
   def project
 
-    # Read installation details
+    # Read client details
     ver= read_client_version!
     features= read_client_features!
 
@@ -43,7 +43,7 @@ class ::Corvid::Generator::Update < ::Corvid::Generator::Base
         deployable_files.sort!.uniq!
       }
 
-      # Patch & migrate installed files
+      # Patch & migrate deployable files
       unless deployable_files.empty?
         rpm.allow_interactive_patching do
           say_status 'patch', "Patching installed files...", :cyan
