@@ -17,7 +17,7 @@ describe Corvid::Generator::Update do
   }
 
   def run_update_task
-    run_generator Corvid::Generator::Update, 'installed'
+    run_generator Corvid::Generator::Update, 'project'
   end
 
   context 'Corvid not installed' do

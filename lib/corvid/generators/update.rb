@@ -2,8 +2,8 @@ require 'corvid/generators/base'
 
 class ::Corvid::Generator::Update < ::Corvid::Generator::Base
 
-  desc 'installed', 'Updates all installed Corvid features.'
-  def installed
+  desc 'project', 'Updates all Corvid resources and features in the current project.'
+  def project
 
     # Read installation details
     ver= read_deployed_corvid_version!
