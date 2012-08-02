@@ -2,6 +2,6 @@
 --output-dir target/doc
 --markup     markdown
 --readme     README.md
---files      TODO.md
+--files      doc/*.md
 --protected
 lib/**/*.rb
