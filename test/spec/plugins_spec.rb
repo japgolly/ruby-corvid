@@ -4,7 +4,7 @@ require_relative 'spec_helper'
 describe 'Plugin system' do
 
   around :each do |ex|
-    inside_fixture('plugin',true){ ex.run }
+    inside_fixture('plugin'){ ex.run }
   end
 
   it("should only load specified plugins"){
