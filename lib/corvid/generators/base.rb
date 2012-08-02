@@ -9,6 +9,11 @@ require 'thor'
 require 'yaml'
 
 module Corvid
+
+  # Everything within this module directly relates to Thor generators.
+  #
+  # @see https://github.com/wycats/thor Thor project.
+  # @see http://rdoc.info/github/wycats/thor Thor documentation.
   module Generator
 
     # Abstract Thor generator that adds support for Corvid specific functionality.
@@ -236,19 +241,25 @@ module Corvid
       end
       alias :add_feature :add_features
 
+      # @return [String] The installer filename.
       def feature_installer_file(dir = res_dir(), feature)
         "#{dir}/corvid-features/#{feature}.rb"
       end
+      # @return [String] The installer filename.
+      # @raise If the installer file doesn't exist.
       def feature_installer_file!(dir = res_dir(), feature)
         filename= feature_installer_file(dir, feature)
         raise "File not found: #{filename}" unless File.exists?(filename)
         filename
       end
 
+      # @return [nil,String] The installer file contents or `nil` if the file doesn't exist.
       def feature_installer_code(dir = res_dir(), feature)
         file= feature_installer_file(dir, feature)
-        file && File.read(file) # TODO encoding
+        File.exist?(file) && File.read(file) # TODO encoding
       end
+      # @return [String] The installer file contents.
+      # @raise If the installer file doesn't exist.
       def feature_installer_code!(dir = res_dir(), feature)
         code= feature_installer_code(dir, feature)
         code or (
@@ -257,10 +268,14 @@ module Corvid
         )
       end
 
+      # @return [nil, GollyUtils::Delegator<Base>] An instance of the feature installer, unless any forseeable exception
+      #   (such as the installer file not existing) occurs.
       def feature_installer(dir = res_dir(), feature)
         code= feature_installer_code(dir, feature)
         code && dynamic_installer(code, feature)
       end
+      # @return [GollyUtils::Delegator<Base>] An instance of the feature installer.
+      # @raise If the installer file doesn't exist or any other problem occurs.
       def feature_installer!(dir = res_dir(), feature)
         installer= feature_installer(dir, feature)
         installer or (

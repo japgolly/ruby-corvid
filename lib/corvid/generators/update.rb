@@ -23,6 +23,10 @@ class ::Corvid::Generator::Update < ::Corvid::Generator::Base
 
   protected
 
+  # @param [Fixnum] from The version already installed.
+  # @param [Fixnum] to The target version to upgrade to.
+  # @param [Array<String>] features The features to upgrade.
+  # @return [void]
   def upgrade!(from, to, features)
 
     # Expand versions m->n
@@ -77,6 +81,7 @@ class ::Corvid::Generator::Update < ::Corvid::Generator::Base
   end
 
   # @param [String] installer_script The contents of the `corvid-features/{feature}.rb` script.
+  # @return [Array<String>]
   def extract_deployable_files(installer_code, feature, ver)
     x= DeployableFileExtractor.new
     add_dynamic_code! x, installer_code, feature, ver
