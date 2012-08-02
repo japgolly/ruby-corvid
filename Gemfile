@@ -16,7 +16,9 @@ end
 
 # Documentation
 group :doc do
-  gem 'yard'
+  # TODO remove this
+  #gem 'yard', path: '~/projects/my_forks/yard'
+  gem 'yard', git: 'git://github.com/japgolly/yard.git', branch: 'happy_days'
   gem 'rdiscount', platforms: :mri
   gem 'kramdown', platforms: :jruby
 end
