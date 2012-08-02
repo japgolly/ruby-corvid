@@ -15,12 +15,19 @@ Plugins
 =======
 * Doco on how plugins work, how to write one.
 * How to install plugin initially?
-* How can plugins edit shared resources (eg. `Gemfile`)? Is there a need? Would ext points be better (like with Rake
-  tasks)?
 * Plugins must be able to contribute to:
   * test bootstraps
   * test helpers
+  * project dependencies / `Gemfile`
   * `Guardfile`
   * code coverage settings
   * Rake tasks ![Done](done.png)
-
+  * project file system (i.e. add new files, create new dirs, etc).
+* Plugins must be able to perform the following with resources:
+  * mkdir
+  * add own
+  * remove own
+  * edit own
+  * modify client's ![?](question.png)
+  * modify corvid's ![?](question.png)
+  * modify other plugin's ![?](question.png)
