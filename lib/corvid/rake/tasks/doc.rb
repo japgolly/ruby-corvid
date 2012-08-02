@@ -21,6 +21,20 @@ namespace :doc do
       end
     end
   end
+
+  desc 'Starts the YARD server.'
+  task :server do
+    cmd= "bundle exec yard server --reload"
+    puts "Running: #{cmd}"
+    Dir.chdir(APP_ROOT){ system cmd }
+  end
+
+  # Create aliases for doc:server
+  task serve: :server
+  task s: :server
+
+  desc 'Cleans and Serves.'
+  task cs: [:clean, :server]
 end
 
 namespace :clean do
