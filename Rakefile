@@ -2,7 +2,7 @@ APP_ROOT= CORVID_ROOT= File.expand_path(File.dirname(__FILE__))
 $:<< "#{CORVID_ROOT}/lib"
 
 # Load external tasks
-require 'bundler/gem_tasks'
+namespace(:gem){ require 'bundler/gem_tasks' }
 require 'corvid/rake/tasks/clean'
 require 'corvid/rake/tasks/doc'
 
