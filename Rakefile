@@ -1,19 +1,14 @@
-require 'bundler/gem_tasks'
-CORVID_ROOT= File.expand_path '..', __FILE__
+APP_ROOT= CORVID_ROOT= File.expand_path(File.dirname(__FILE__))
 $:<< "#{CORVID_ROOT}/lib"
 
+# Load external tasks
+require 'bundler/gem_tasks'
+require 'corvid/rake/tasks/clean'
+require 'corvid/rake/tasks/doc'
+
+# Load local tasks
 def relative_to_corvid_root(dir)
   dir.sub /^#{Regexp.quote CORVID_ROOT}[\\\/]+/, ''
 end
-
-desc "Test specifications."
-task :test do
-  require 'rspec/core/rake_task'
-  RSpec::Core::RakeTask.new(:test) do |t|
-    t.rspec_path= "bin/rspec"
-    t.pattern= "test/spec{,/*,/**}/*_spec.rb"
-  end
-end
-
 Dir["#{CORVID_ROOT}/tasks/**/*.{rb,rake}"].each{|f| import f }
 
