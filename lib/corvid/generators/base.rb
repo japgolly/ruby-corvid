@@ -41,70 +41,69 @@ module Corvid
       end
 
       # This stops Thor thinking the public methods below are tasks
-      no_tasks {
+      @no_tasks= true
 
-        # Sets the {Corvid::ResPatchManager} that the generator will use.
-        # @param [Corvid::ResPatchManager] rpm
-        # @return [Corvid::ResPatchManager]
-        def rpm=(rpm)
-          @rpm= rpm
-        end
+      # Sets the {Corvid::ResPatchManager} that the generator will use.
+      # @param [Corvid::ResPatchManager] rpm
+      # @return [Corvid::ResPatchManager]
+      def rpm=(rpm)
+        @rpm= rpm
+      end
 
-        # Gets the {Corvid::ResPatchManager} that the generator will use.
-        # @return [Corvid::ResPatchManager]
-        def rpm()
-          @rpm ||= ::Corvid::ResPatchManager.new
-        end
+      # Gets the {Corvid::ResPatchManager} that the generator will use.
+      # @return [Corvid::ResPatchManager]
+      def rpm()
+        @rpm ||= ::Corvid::ResPatchManager.new
+      end
 
-        # Reads and parses the contents of the client's {FEATURES_FILE} if it exists.
-        #
-        # @return [nil,Array<String>] A list of features or `nil` if the file wasn't found.
-        def read_client_features
-          if File.exists? FEATURES_FILE
-            v= YAML.load_file FEATURES_FILE
-            raise "Invalid #{FEATURES_FILE}. Array expected but got #{v.class}." unless v.is_a?(Array)
-            raise "Invalid #{FEATURES_FILE}. At least 1 feature expected but not defined." if v.empty?
-            v
-          else
-            nil
-          end
+      # Reads and parses the contents of the client's {FEATURES_FILE} if it exists.
+      #
+      # @return [nil,Array<String>] A list of features or `nil` if the file wasn't found.
+      def read_client_features
+        if File.exists? FEATURES_FILE
+          v= YAML.load_file FEATURES_FILE
+          raise "Invalid #{FEATURES_FILE}. Array expected but got #{v.class}." unless v.is_a?(Array)
+          raise "Invalid #{FEATURES_FILE}. At least 1 feature expected but not defined." if v.empty?
+          v
+        else
+          nil
         end
+      end
 
-        # Reads and parses the contents of the client's {FEATURES_FILE}.
-        #
-        # @return [Array<String>] A list of features.
-        # @raise If file not found.
-        # @see #read_client_features
-        def read_client_features!
-          features= read_client_features
-          raise "File not found: #{FEATURES_FILE}\nYou must install Corvid first. Try corvid init:project." if features.nil?
-          features
-        end
+      # Reads and parses the contents of the client's {FEATURES_FILE}.
+      #
+      # @return [Array<String>] A list of features.
+      # @raise If file not found.
+      # @see #read_client_features
+      def read_client_features!
+        features= read_client_features
+        raise "File not found: #{FEATURES_FILE}\nYou must install Corvid first. Try corvid init:project." if features.nil?
+        features
+      end
 
-        # Reads and parses the contents of the client's {VERSION_FILE} if it exists.
-        #
-        # @return [nil,Fixnum] The version number or `nil` if the file wasn't found.
-        def read_client_version
-          if File.exists?(VERSION_FILE)
-            v= YAML.load_file(VERSION_FILE)
-            raise "Invalid version: #{v.inspect}\nNumber expected. Check your #{VERSION_FILE}." unless v.is_a? Fixnum
-            v
-          else
-            nil
-          end
+      # Reads and parses the contents of the client's {VERSION_FILE} if it exists.
+      #
+      # @return [nil,Fixnum] The version number or `nil` if the file wasn't found.
+      def read_client_version
+        if File.exists?(VERSION_FILE)
+          v= YAML.load_file(VERSION_FILE)
+          raise "Invalid version: #{v.inspect}\nNumber expected. Check your #{VERSION_FILE}." unless v.is_a? Fixnum
+          v
+        else
+          nil
         end
+      end
 
-        # Reads and parses the contents of the client's {VERSION_FILE} if it exists.
-        #
-        # @return [Fixnum] The version number.
-        # @raise If file not found.
-        # @see read_client_version
-        def read_client_version!
-          ver= read_client_version
-          raise "File not found: #{VERSION_FILE}\nYou must install Corvid first. Try corvid init:project." if ver.nil?
-          ver
-        end
-      }
+      # Reads and parses the contents of the client's {VERSION_FILE} if it exists.
+      #
+      # @return [Fixnum] The version number.
+      # @raise If file not found.
+      # @see read_client_version
+      def read_client_version!
+        ver= read_client_version
+        raise "File not found: #{VERSION_FILE}\nYou must install Corvid first. Try corvid init:project." if ver.nil?
+        ver
+      end
 
       protected
 
@@ -350,6 +349,9 @@ module Corvid
       private
       @@with_resource_depth= 0
       @@with_resource_version= nil
+
+      # Re-enable Thor's support for assuming all public methods are tasks
+      no_tasks {}
     end
   end
 end
