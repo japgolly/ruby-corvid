@@ -1,7 +1,7 @@
 require 'corvid/generators/base'
 require 'yaml'
 
-class ::Corvid::Generator::Init < ::Corvid::Generator::Base
+class Corvid::Generator::Init < ::Corvid::Generator::Base
 
   desc 'project', 'Creates a new Corvid project in the current directory.'
   method_option :'test-unit', type: :boolean

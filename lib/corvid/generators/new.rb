@@ -1,6 +1,6 @@
 require 'corvid/generators/base'
 
-module ::Corvid::Generator::New
+module Corvid::Generator::New
   class Test < ::Corvid::Generator::Base
     argument :name, type: :string
 

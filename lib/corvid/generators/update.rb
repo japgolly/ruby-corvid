@@ -1,6 +1,6 @@
 require 'corvid/generators/base'
 
-class ::Corvid::Generator::Update < ::Corvid::Generator::Base
+class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   desc 'project', 'Updates all Corvid resources and features in the current project.'
   def project
