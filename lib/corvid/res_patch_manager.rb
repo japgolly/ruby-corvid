@@ -4,17 +4,28 @@ require 'tmpdir'
 require 'digest/sha2'
 
 module Corvid
+
+  # Manages the generation, deployment, and patch-migration of versioned resources.
   class ResPatchManager
 
+    # Returns the default directory that res-patches are expected to reside in.
+    # @return [String]
     def self.default_res_patch_dir
       require 'corvid/environment' unless defined?(CORVID_ROOT)
       res_patch_dir= "#{CORVID_ROOT}/resources"
     end
 
     # The directory where resource patches are located.
+    # @return [String]
     attr_reader :res_patch_dir
 
-    attr_accessor :diff_exe, :patch_exe
+    # The command to run `diff`.
+    # @return [String]
+    attr_accessor :diff_exe
+
+    # The command to run `patch`.
+    # @return [String]
+    attr_accessor :patch_exe
 
     def initialize(res_patch_dir = self.class.default_res_patch_dir)
       self.res_patch_dir= res_patch_dir
@@ -27,6 +38,9 @@ module Corvid
       @res_patch_dir= res_patch_dir
     end
 
+    # Inspects the {#res_patch_dir} to determine the latest version of resources.
+    #
+    # @return [Fixnum] The latest version, or 0 if there are no res-patches.
     def latest_version
       @latest_version ||= \
         if prev_pkg= Dir["#{res_patch_dir}/[0-9][0-9][0-9][0-9][0-9].patch"].sort.last
@@ -36,8 +50,38 @@ module Corvid
         end
     end
 
+    # Checks if a given version is the latest.
+    #
+    # @param [Fixnum] version The version to test.
+    # @return [Boolean]
     def latest?(version)
       version == latest_version
+    end
+
+    # Checks that a given version is valid.
+    #
+    # @param [Fixnum] ver The version to check.
+    # @param [Fixnum] min The minimum acceptable version (inclusive). 0 is also acceptable.
+    # @param [nil,String] name The name of the variable being checked. Used in error messages.
+    #   eg. `"upgrade target version"`
+    # @return [true]
+    # @raise If given version is not a valid number.
+    # @raise If given version is beyond the latest available version.
+    # @raise If given minimum is beyond the latest available version.
+    # @raise If given version is below the provided minimum.
+    def validate_version!(ver, min, name=nil)
+      def invalid_msg; "Invalid version" + name ? " for #{name}" : ''; end
+
+      unless ver.is_a?(Fixnum)
+        raise "#{invalid_msg}. #{ver.inspect} is not a valid integer."
+      end
+      if min > latest_version
+        raise "Something's not right, the minimum required version for #{name} is #{min} but the latest available is #{latest_version}."
+      end
+      unless ver >= min and ver <= latest_version
+        raise "#{invalid_msg}. #{name} must be between #{min} and #{latest_version} (inclusive)."
+      end
+      true
     end
 
     # Creates a new resource patch.
@@ -73,20 +117,13 @@ module Corvid
       end
     end
 
-    # Deploys the latest version of resources to an empty directory.
-    #
-    # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will be
-    #   created. If it exists, it must be empty.
-    def deploy_latest_res_patch(target_dir)
-      deploy_res_patch target_dir, :latest
-    end
-
     # Deploys a specified version of resources to an empty directory.
     #
     # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will be
     #   created. If it exists, it must be empty.
     # @param [Fixnum,:latest] ver The version of resources to deploy.
-    def deploy_res_patch(target_dir, ver)
+    # @return [self]
+    def deploy_resources(target_dir, ver)
 
       # Check version
       ver= latest_version if ver == :latest
@@ -106,39 +143,54 @@ module Corvid
       self
     end
 
-    def with_latest_resources(&block)
-      with_resources :latest, &block
+    # Deploys the latest version of resources to an empty directory.
+    #
+    # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will be
+    #   created. If it exists, it must be empty.
+    # @return [self]
+    def deploy_latest_resources(target_dir)
+      deploy_resources target_dir, :latest
     end
 
+    # Deploys a specified version of resources to a temporary directory and yields.
+    #
+    # Resources will be removed on method exit.
+    #
+    # @param [Fixnum,:latest] ver The version of resources to deploy.
+    # @yieldparam [String] dir The directory containing the resources.
+    # @return Whatever the yielded block returns.
     def with_resources(ver, &block)
       Dir.mktmpdir {|tmpdir|
-        deploy_res_patch tmpdir, ver
+        deploy_resources tmpdir, ver
         return block.call(tmpdir)
       }
     end
 
-    def validate_version!(ver, min, name=nil)
-      def invalid_msg; "Invalid version" + name ? " for #{name}" : ''; end
-
-      unless ver.is_a?(Fixnum)
-        raise "#{invalid_msg}. #{ver.inspect} is not a valid integer."
-      end
-      if min > latest_version
-        raise "Something's not right, the minimum required version for #{name} is #{min} but the latest available is #{latest_version}."
-      end
-      unless ver >= min and ver <= latest_version
-        raise "#{invalid_msg}. #{name} must be between #{min} and #{latest_version} (inclusive)."
-      end
-      true
+    # Deploys the latest version of resources to a temporary directory and yields.
+    #
+    # Resources will be removed on method exit.
+    #
+    # @yieldparam [String] dir The directory containing the resources.
+    # @return Whatever the yielded block returns.
+    def with_latest_resources(&block)
+      with_resources :latest, &block
     end
 
-    # @yield [String] dir
-    # @return [true]
-    def with_resource_versions(from_ver, to_ver=nil, &block)
-      raise "Block not provided." unless block
+    # Deploys a range of versions of resources to a temporary directory and yields.
+    #
+    # Resources will be removed on method exit.
+    #
+    # @param [Fixnum] from_ver The lowest version (inclusive) of resources to deploy. Must be >= 1.
+    # @param [Fixnum,:latest] to_ver The highest version (inclusive) of resources to deploy. Must be >= `from_ver`.
+    # @yieldparam [String] dir The directory containing subdirectories of each version of resources. Use {#ver_dir} to
+    #   get the directory for a specific version.
+    # @return Whatever the yielded block returns.
+    # @see #ver_dir
+    def with_resource_versions(from_ver, to_ver=:latest, &block)
 
-      # Validate version args
-      to_ver ||= latest_version
+      # Validate args
+      raise "Block not provided." unless block
+      to_ver= latest_version if to_ver == :latest
       validate_version! from_ver, 1, 'From-version'
       validate_version! to_ver, from_ver, 'To-version'
 
@@ -161,25 +213,152 @@ module Corvid
         end
 
         # Done. Yield control.
-        block.call base_dir
+        return block.call base_dir
 
       end
-      true
     end
 
-    def reconstruction_dir(ver)
+    # Provides a directory to the deployed resources of a given version. Use in conjunction with
+    # {#with_resource_versions}.
+    #
+    # @param [Fixnum] ver The version of resources wanted.
+    # @return [String] The directory of resources of the given version.
+    # @raise If resources haven't been deployed yet.
+    # @see #with_resource_versions
+    def ver_dir(ver)
       raise "Reconstruction dir not yet defined." unless @reconstruction_dir
       "#{@reconstruction_dir}/#{ver}"
     end
-    alias :ver_dir :reconstruction_dir
+    alias :reconstruction_dir :ver_dir
 
+    # Allows the `patch` command to be run interactively and allow merge conflicts.
+    #
+    # @yield control with interactive patching enabled.
+    # @return Whatever the yielded block returns.
+    # @see #migrate
+    def allow_interactive_patching
+      before= @interactive_patching
+      begin
+        @interactive_patching= true
+        yield
+      ensure
+        @interactive_patching= before
+      end
+    end
+
+    # Returns whether interactive patching is enabled.
+    #
+    # @return [Boolean]
+    # @see #allow_interactive_patching
+    def interactive_patching?
+      @interactive_patching
+    end
+
+    # Patches up files initially deployed at ver A, to ver B.
+    #
+    # You will likely want to run this in conjunction with {#allow_interactive_patching}.
+    #
+    # @param [nil,Fixnum] from_ver The version previously deployed. If nothing has been deployed previously, use `nil`
+    #   or 0.
+    # @param [Fixnum] to_ver The target version.
+    # @param [String] target_dir The directory containing the resources to patch.
+    # @param [nil,Array<String>] filelist The list of files to patch. If `nil` then all files will patched.
+    # @return [Boolean] Whether there were any merge conflicts.
+    # @raise If resources haven't been deployed yet.
+    # @see #allow_interactive_patching
+    # @see #with_resource_versions
+    def migrate(from_ver, to_ver, target_dir, filelist=nil)
+      from_ver ||= 0
+      raise "Invalid from-version. Must be a number >= 0." unless from_ver.is_a?(Fixnum) and from_ver >= 0
+      raise "Invalid to-version. Must be a number." unless to_ver.is_a?(Fixnum)
+      raise "Invalid versions. Can't migrate backwards." unless to_ver >= from_ver
+
+      merge_conflicts= false
+
+      # Check if anything to do: version
+      unless from_ver == to_ver
+
+        # Build list of files
+        if filelist.nil?
+          filelist= []
+          for v in from_ver..to_ver do
+            next if v == 0
+            src_dir= reconstruction_dir(v)
+            raise "Reconstruction dir for v#{v} not found: #{src_dir}" unless Dir.exists?(src_dir)
+            filelist.concat get_files_in_dir(src_dir)
+          end
+        end
+        filelist= filelist.inject({}){|h,f| h[f] ||= {}; h }
+
+        # Create patches
+        patches= {}
+        Dir.chdir target_dir do
+          filelist.each do |f,fv|
+            from_ver2= from_ver
+
+            # Check if deployed is identical to a versioned copy
+            if File.exists?(f)
+              csum= DIGEST.file(f)
+              to_ver.downto(from_ver) do |ver|
+                vf= "#{reconstruction_dir ver}/#{f}"
+                if File.exists?(vf) and csum == DIGEST.file(vf)
+                  # Found a match
+                  from_ver2= ver
+                  break
+                end
+              end
+            end
+
+            # Do nothing if target is already up-to-date
+            next if from_ver2 == to_ver
+
+            # Create patch
+            from_file,to_file = [from_ver2,to_ver].map{|ver| "#{reconstruction_dir ver}/#{f}" }
+            patch= diff_files f, from_file, to_file
+            patches[f]= patch if patch
+          end
+        end
+
+        # Apply patches
+        unless patches.empty?
+          megapatch= patches.keys.sort.map{|f| patches[f]}.join($/) + $/
+          #puts '_'*80; puts megapatch; puts '_'*80
+          merge_conflicts= apply_patch target_dir, megapatch
+        end
+      end
+
+      merge_conflicts
+    end
+
+    private
+    DIGEST= Digest::SHA2
+
+    # Gets a list of files in a directory tree.
+    #
+    # @param [nil,String] dir The directory to inspect.
+    # @return [Array<String>] A list of files relative to `dir`, or an empty array if `dir` is `nil`.
+    def get_files_in_dir(dir)
+      r= []
+      Dir.chdir dir do
+        Dir.glob("**/*", File::FNM_DOTMATCH).sort.each do |f|
+          if File.file?(f)
+            f= yield f if block_given?
+            r<< f
+          end
+        end
+      end if dir
+      r
+    end
+
+    # Generates a res-patch in-memory. (Doesn't save anything.)
+    #
     # @param [nil,String] from_dir
     # @param [String] to_dir
-    # @return String
+    # @return String The patch contents.
     def generate_single_res_patch(from_dir, to_dir, include_header=true)
       files= get_files_in_dir(from_dir) | get_files_in_dir(to_dir)
       patch= files.sort
-               .map{|f| create_patch f, from_dir ? "#{from_dir}/#{f}" : nil, "#{to_dir}/#{f}" }
+               .map{|f| diff_files f, from_dir ? "#{from_dir}/#{f}" : nil, "#{to_dir}/#{f}" }
                .compact
                .join("\n") + "\n"
       return nil if /\A\s*\z/ === patch
@@ -196,99 +375,12 @@ module Corvid
       end
     end
 
-    def interactive_patching?
-      @interactive_patching
-    end
-    def allow_interactive_patching
-      before= @interactive_patching
-      begin
-        @interactive_patching= true
-        yield
-      ensure
-        @interactive_patching= before
-      end
-    end
-
-    # TODO shit
-    def migrate(from_ver, to_ver, target_dir, files_whitelist=nil)
-      from_ver ||= 0
-      raise unless from_ver >= 0
-      raise unless to_ver >= from_ver
-      return if from_ver == to_ver
-
-      # Build list of files
-      filelist= {}
-      if files_whitelist
-        files_whitelist.each{|f| filelist[f] ||= {} }
-      else
-        for v in from_ver..to_ver do
-          next if v == 0
-          src_dir= reconstruction_dir(v)
-          raise "Reconstruction dir for v#{v} not found: #{src_dir}" unless Dir.exists?(src_dir)
-          get_files_in_dir(src_dir){|f| filelist[f] ||= {} }
-        end
-      end
-
-      # Create patches
-      patches= {}
-      Dir.chdir target_dir do
-        filelist.each do |f,fv|
-          from_ver2= from_ver
-
-          # Check if deployed is identical to a versioned copy
-          if File.exists?(f)
-            csum= DIGEST.file(f)
-            to_ver.downto(from_ver) do |ver|
-              vf= "#{reconstruction_dir ver}/#{f}"
-              if File.exists?(vf) and csum == DIGEST.file(vf)
-                # Found a match
-                from_ver2= ver
-                break
-              end
-            end
-          end
-
-          # Do nothing if target is already up-to-date
-          next if from_ver2 == to_ver
-
-          # Create patch
-          from_file,to_file = [from_ver2,to_ver].map{|ver| "#{reconstruction_dir ver}/#{f}" }
-          patch= create_patch f, from_file, to_file
-          patches[f]= patch if patch
-        end
-      end
-
-      # Apply patches
-      merge_conflicts= false
-      unless patches.empty?
-        megapatch= patches.keys.sort.map{|f| patches[f]}.join($/) + $/
-#puts '_'*80; puts megapatch; puts '_'*80
-        merge_conflicts= apply_patch target_dir, megapatch
-      end
-
-      merge_conflicts
-    end
-
-    protected
-
-    # @param [nil,String] dir
-    def get_files_in_dir(dir)
-      r= []
-      Dir.chdir dir do
-        Dir.glob("**/*", File::FNM_DOTMATCH).sort.each do |f|
-          if File.file?(f)
-            f= yield f if block_given?
-            r<< f
-          end
-        end
-      end if dir
-      r
-    end
-
-    # @param [String] relative_filename
-    # @param [nil,String] from_file
-    # @param [nil,String] to_file
-    def create_patch(relative_filename, from_file, to_file)
+    # Diffs two files.
+    #
+    # @param [String] relative_filename The filename to store in the patch that is relative to our resource directory.
+    # @param [nil,String] from_file The full path to file A. Use `nil` if new file.
+    # @param [nil,String] to_file The full path to file B. Use `nil` if file deleted.
+    def diff_files(relative_filename, from_file, to_file)
       from_file= '/dev/null' unless from_file and File.exists? from_file
       to_file= '/dev/null' unless to_file and File.exists? to_file
       patch= `#{diff_exe} -u #{from_file.inspect} #{to_file.inspect}`
@@ -307,6 +399,12 @@ module Corvid
       end
     end
 
+    # Invokes the `patch` command.
+    #
+    # @param [String] patch The patch contents.
+    # @return [Boolean] Whether there was a merge conflict or not. Can only be `true` during
+    #   {#allow_interactive_patching}.
+    # @see #interactive_patching?
     def apply_patch(target_dir, patch)
       Dir.chdir target_dir do
         tmp= Tempfile.new('corvid-migration')
@@ -350,8 +448,9 @@ module Corvid
       '%s/%05d.patch' % [res_patch_dir,ver]
     end
 
+    # Generates a checksum representing the contents of all files in a directory tree.
     # @param [nil,String] dir
-    # @return String
+    # @return String A single checksum.
     def digest_dir(dir)
       digests= get_files_in_dir(dir){|f| DIGEST.file f}
       DIGEST.hexdigest digests.join(nil)
@@ -391,15 +490,17 @@ module Corvid
       r
     end
 
-    # Deploys a specific version of resources.
+    # Deploys resources by applying a res-patch (i.e. a single version).
     #
     # @param [String] target_dir The directory where the resources will be deployed to. Must exist.
     # @param [Fixnum] ver The version of resources to deploy.
-    # @param [nil,String] digest_before The hex digest of the contents of the previous directory. This will be compared to the
-    #   *before* checksum in the resource patch before applying. If `nil` then a digest will be calculated for the target
-    #   directory before applying the patch.
-    # @param [nil,String] prev_ver_dir The directory containing the already-deployed contents of this target version + 1. If
-    #   provided then the contents of the directory will be copied to `target_dir` before applying the patch.
+    # @param [nil,String] digest_before The hex digest of the contents of the previous directory. This will be compared
+    #   to the *before* checksum in the resource patch before applying. If `nil` then a digest will be calculated for
+    #   the target directory before applying the patch.
+    # @param [nil,String] prev_ver_dir The directory containing the already-deployed contents of this target version + 1.
+    #   If provided then the contents of the directory will be copied to `target_dir` before applying the patch.
+    # @return [String] The digest of the target dir on completion.
+    # @raise If any digest checking tests fail.
     def apply_res_patch(target_dir, ver, digest_before=nil, prev_ver_dir=nil)
 
       # Read migration patch
@@ -428,9 +529,7 @@ module Corvid
       new_dir_digest
     end
 
-    private
-    DIGEST= Digest::SHA2
-
+    # Creates a temporary directory or uses a given one as the base reconstruction dir.
     def with_reconstruction_dir(dir=nil, &block)
       if dir.nil?
         Dir.mktmpdir {|d| with_reconstruction_dir d, &block }

@@ -65,7 +65,7 @@ namespace :res do
       FileUtils.mkdir_p LATEST_DIR
 
       # Deploy latest
-      rpm.deploy_latest_res_patch(LATEST_DIR)
+      rpm.deploy_latest_resources(LATEST_DIR)
       puts "Deployed v#{rpm.latest_version} to #{LATEST_DIR_REL}."
     end
   end

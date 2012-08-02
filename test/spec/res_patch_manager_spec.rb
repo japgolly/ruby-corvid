@@ -108,7 +108,7 @@ describe Corvid::ResPatchManager do
 
     def deploy_latest
       %w[a b r].each{|d| FileUtils.rm_rf d if Dir.exists?(d) }
-      ResPatchManager.new('mig').deploy_latest_res_patch 'r'
+      ResPatchManager.new('mig').deploy_latest_resources 'r'
       if block_given?
         Dir.chdir('r'){ yield }
       end
