@@ -80,7 +80,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     end
   end
 
-  # @param [String] installer_script The contents of the `corvid-features/{feature}.rb` script.
+  # @param [String] installer_code The contents of the `corvid-features/{feature}.rb` script.
   # @return [Array<String>]
   def extract_deployable_files(installer_code, feature, ver)
     x= DeployableFileExtractor.new
