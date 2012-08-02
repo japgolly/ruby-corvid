@@ -2,21 +2,8 @@
 require_relative 'spec_helper'
 
 describe 'Integration test' do
-  before :all do
-    $dir = Dir.mktmpdir
-  end
-
-  after :all do
-    if $dir
-      FileUtils.rm_rf $dir
-      $dir = nil
-    end
-  end
-
-  around :each do |ex|
-    clean
-    Dir.chdir($dir){ ex.run }
-  end
+  run_all_in_empty_dir
+  before(:each){ clean }
 
   def clean
     return unless Dir.exist?('target')

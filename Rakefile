@@ -1,4 +1,10 @@
 require 'bundler/gem_tasks'
+CORVID_ROOT= File.expand_path '..', __FILE__
+$:<< "#{CORVID_ROOT}/lib"
+
+def relative_to_corvid_root(dir)
+  dir.sub /^#{Regexp.quote CORVID_ROOT}[\\\/]+/, ''
+end
 
 desc "Test specifications."
 task :test do
@@ -8,4 +14,6 @@ task :test do
     t.pattern= "test/spec{,/*,/**}/*_spec.rb"
   end
 end
+
+Dir["#{CORVID_ROOT}/tasks/**/*.{rb,rake}"].each{|f| import f }
 

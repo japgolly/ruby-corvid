@@ -1,56 +1,60 @@
 require 'corvid/generators/base'
+require 'yaml'
 
-class Corvid::Generator::Init < Corvid::Generator::Base
+class Corvid::Generator::Init < ::Corvid::Generator::Base
 
   desc 'project', 'Creates a new Corvid project in the current directory.'
   method_option :'test-unit', type: :boolean
   method_option :'test-spec', type: :boolean
-  run_bundle_option(self)
+  declare_option_to_run_bundle(self)
   def project
-    empty_directory '.corvid'
-    copy_file       '.corvid/Gemfile'
-    copy_file       '.gitignore'
-    copy_file       '.simplecov'
-    copy_file       '.yardopts'
-    copy_file       'CHANGELOG.md'
-    copy_file       'Gemfile'
-    copy_file       'Guardfile'
-    copy_file       'Rakefile'
-    copy_file       'README.md'
-    copy_executable 'bin/rake'
-    copy_executable 'bin/yard'
-    copy_executable 'bin/yardoc'
-    copy_executable 'bin/yri'
-    empty_directory 'lib'
+    with_latest_resources {|ver|
+      feature_installer!('corvid').install
+      add_feature 'corvid'
+      write_client_version ver
 
-    invoke 'init:test:unit', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
-    invoke 'init:test:spec', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'
-    run_bundle
+      invoke 'init:test:unit', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
+      invoke 'init:test:spec', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'
+
+      run_bundle()
+    }
   end
 
-  class Test < Corvid::Generator::Base
+  class Test < ::Corvid::Generator::Base
 
     desc 'unit', 'Adds support for unit tests.'
-    run_bundle_option(self)
+    declare_option_to_run_bundle(self)
     def unit
-      copy_executable         'bin/guard'
-      copy_file_unless_exists 'test/bootstrap/all.rb'
-      copy_file               'test/bootstrap/unit.rb'
-      empty_directory         'test/unit'
-      run_bundle
+      install_feature 'test_unit'
     end
 
     desc 'spec', 'Adds support for specifications.'
-    run_bundle_option(self)
+    declare_option_to_run_bundle(self)
     def spec
-      copy_file               '.rspec'
-      copy_executable         'bin/guard'
-      copy_executable         'bin/rspec'
-      copy_file_unless_exists 'test/bootstrap/all.rb'
-      copy_file               'test/bootstrap/spec.rb'
-      empty_directory         'test/spec'
-      run_bundle
+      install_feature 'test_spec'
     end
 
-  end
-end
+    protected
+
+    def install_feature(name, run_bundle=true)
+
+      # Read client details
+      ver= read_client_version!
+      features= read_client_features!
+
+      # Corvid installation confirmed - now check if feature already installed
+      if features.include? name
+        say "Feature '#{name}' already installed."
+      else
+        # Install feature
+        with_resources(ver) {|ver|
+          feature_installer!(name).install
+          add_feature name
+          yield ver if block_given?
+          run_bundle() if run_bundle
+        }
+      end
+    end
+
+  end # class Init::Test
+end # class Init

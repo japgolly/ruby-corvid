@@ -1,7 +1,10 @@
 # encoding: utf-8
 
-require_relative '../../lib/corvid/environment'
+STDIN.close
 
+require_relative '../../lib/corvid/environment'
+require 'golly-utils/testing/rspec/files'
+require 'golly-utils/testing/rspec/arrays'
 require 'tmpdir'
 require 'fileutils'
 
@@ -10,7 +13,21 @@ BOOTSTRAP_ALL= 'test/bootstrap/all.rb'
 BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 
+# Add test/ to lib path
+$:<< "#{CORVID_ROOT}/test"
+
+module Fixtures
+  FIXTURE_ROOT= "#{CORVID_ROOT}/test/fixtures"
+end
+
 module TestHelpers
+
+  def assert_corvid_features(*expected)
+    f= YAML.load_file('.corvid/features.yml')
+    f.should be_kind_of(Array)
+    f.should == expected.flatten
+  end
+
   def invoke_sh(cmd,env=nil)
     cmd= cmd.map(&:inspect).join ' ' if cmd.kind_of?(Array)
     env ||= {}
@@ -48,13 +65,8 @@ module TestHelpers
     @dirs ||= Dir['**/*'].select{|f| File.directory? f}.sort
   end
 
-  def file_should_match_template(f, src=nil)
-    File.read(f).should == File.read("#{CORVID_ROOT}/templates/#{src || f}")
-  end
-
-  def inside_fixture(fixture_name, copy_templates=false)
+  def inside_fixture(fixture_name)
     Dir.mktmpdir {|dir|
-      FileUtils.cp_r "#{CORVID_ROOT}/templates/.", dir, dereference_root: true if copy_templates
       FileUtils.cp_r "#{CORVID_ROOT}/test/fixtures/#{fixture_name}/.", dir
       Dir.chdir dir do
         patch_corvid_gemfile
@@ -75,9 +87,59 @@ module TestHelpers
     true
   end
 
+  def assert_files(src_dir, exceptions={})
+    filelist= Dir.chdir(src_dir){
+      Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }
+    } + exceptions.keys
+    filelist.uniq!
+    get_files.should == filelist.sort
+    filelist.each do |f|
+      expected= exceptions[f] || File.read("#{src_dir}/#{f}")
+      File.read(f).should == expected
+    end
+  end
+
+  def generator_config(quiet)
+    # Quiet stdout - how the hell else are you supposed to do this???
+    config= {}
+    config[:shell] ||= Thor::Base.shell.new
+    if quiet
+      config[:shell].instance_eval 'def say(*) end'
+      config[:shell].instance_eval 'def quiet?; true; end'
+      #config[:shell].instance_variable_set :@mute, true
+    end
+    config
+  end
+
+  def quiet_generator(generator_class)
+    config= generator_config(true)
+    g= generator_class.new([], [], config)
+    decorate_generator g
+  end
+
+  def decorate_generator(g)
+    # Use a test res-patch manager if available
+    g.rpm= @rpm if @rpm
+    g
+  end
+
+  def run_generator(generator_class, args, no_bundle=true, quiet=true)
+    args= args.split(/\s+/) unless args.is_a?(Array)
+    args<< "--no-#{RUN_BUNDLE}" if no_bundle
+
+    config= generator_config(quiet)
+
+    # Do horrible stupid Thor-internal crap to instantiate a generator
+    task= generator_class.tasks[args.shift]
+    args, opts = Thor::Options.split(args)
+    config.merge!(:current_task => task, :task_options => task.options)
+    g= generator_class.new(args, opts, config)
+
+    decorate_generator g
+    g.invoke_task task
+  end
 end
 
 RSpec.configure do |config|
   config.include TestHelpers
 end
-
