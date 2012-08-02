@@ -94,7 +94,7 @@ describe Corvid::ResPatchManager do
     end
 
     def create_pkg
-      ResPatchManager.new('mig').create_res_patch 'a','b'
+      ResPatchManager.new('mig').create_res_patch_files! 'a','b'
     end
 
     def deploy_pkg(ver=:latest)

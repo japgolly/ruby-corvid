@@ -11,14 +11,14 @@ namespace :res do
 
   def diff_latest_dir
     rpm.with_latest_resources do |dir|
-      return rpm.generate_single_res_patch dir, LATEST_DIR, false
+      return rpm.create_res_patch_content dir, LATEST_DIR, false
     end
   end
 
   desc 'Create a new resource patch.'
   task :new do
     rpm.with_latest_resources do |dir|
-      ver= rpm.create_res_patch dir, LATEST_DIR
+      ver= rpm.create_res_patch_files! dir, LATEST_DIR
       puts ver ? "Created v#{ver}." : "There are no changes to record. The latest patch is up-to-date."
     end
   end

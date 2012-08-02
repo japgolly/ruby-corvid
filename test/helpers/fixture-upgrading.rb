@@ -108,12 +108,12 @@ module Fixtures::Upgrading
     # Create first patch
     rpm= Corvid::ResPatchManager.new("#{Dir.pwd}/#{res_dir}")
     Dir.mkdir 'empty' unless Dir.exists?('empty')
-    rpm.create_res_patch 'empty', fixture_dir(1)
+    rpm.create_res_patch_files! 'empty', fixture_dir(1)
     get_files(res_dir).should == %w[00001.patch]
 
     # Create subsequent patches
     2.upto(upto_version) do |v|
-      rpm.create_res_patch fixture_dir(v-1), fixture_dir(v)
+      rpm.create_res_patch_files! fixture_dir(v-1), fixture_dir(v)
       get_files(res_dir).size.should == v
     end
 

@@ -84,7 +84,36 @@ module Corvid
       true
     end
 
-    # Creates a new resource patch.
+    # Generates a res-patch in-memory. (Doesn't save anything.)
+    #
+    # @param [nil,String] from_dir
+    # @param [String] to_dir
+    # @return String The patch contents.
+    def create_res_patch_content(from_dir, to_dir, include_header=true)
+      files= get_files_in_dir(from_dir) | get_files_in_dir(to_dir)
+      patch= files.sort
+               .map{|f| diff_files f, from_dir ? "#{from_dir}/#{f}" : nil, "#{to_dir}/#{f}" }
+               .compact
+               .join("\n") + "\n"
+      return nil if /\A\s*\z/ === patch
+
+      if include_header
+        from_digest= digest_dir(from_dir)
+        to_digest= digest_dir(to_dir)
+        patch_digest= DIGEST.hexdigest(patch)
+        header= "Before: #{from_digest}\nAfter: #{to_digest}\nPatch: #{patch_digest}\n"
+
+        header + patch
+      else
+        patch
+      end
+    end
+
+    # Creates a new resource patch and writes changes to disk.
+    #
+    # Res-patches are designed so that the later patches are faster to reconstruct than older patches, thus in
+    # performing this operation in addition to a new patch will being created, the current latest will also be updated
+    # to be backwards reconstructable from the new latest.
     #
     # @param [String] from_dir The directory containing the contents of the last-packaged resources (i.e. matching the
     #   latest resource patch.)
@@ -92,14 +121,14 @@ module Corvid
     #   new resource patch.
     # @return [nil,Fixnum] The version of the new resource patch, else `nil` if there were no changes and one wasn't
     #   created.
-    def create_res_patch(from_dir, to_dir)
+    def create_res_patch_files!(from_dir, to_dir)
       raise "From-dir doesn't exist: #{from_dir}" unless Dir.exists?(from_dir)
       raise "To-dir doesn't exist: #{to_dir}" unless Dir.exists?(to_dir)
       raise "Resource patch dir doesn't exist: #{res_patch_dir}" unless Dir.exists?(res_patch_dir)
 
-      content_backwards= generate_single_res_patch to_dir, from_dir
+      content_backwards= create_res_patch_content to_dir, from_dir
       if content_backwards
-        content_new= generate_single_res_patch nil, to_dir
+        content_new= create_res_patch_content nil, to_dir
 
         prev_ver= latest_version
         prev_pkg= prev_ver == 0 ? nil : res_patch_filename(prev_ver)
@@ -348,31 +377,6 @@ module Corvid
         end
       end if dir
       r
-    end
-
-    # Generates a res-patch in-memory. (Doesn't save anything.)
-    #
-    # @param [nil,String] from_dir
-    # @param [String] to_dir
-    # @return String The patch contents.
-    def generate_single_res_patch(from_dir, to_dir, include_header=true)
-      files= get_files_in_dir(from_dir) | get_files_in_dir(to_dir)
-      patch= files.sort
-               .map{|f| diff_files f, from_dir ? "#{from_dir}/#{f}" : nil, "#{to_dir}/#{f}" }
-               .compact
-               .join("\n") + "\n"
-      return nil if /\A\s*\z/ === patch
-
-      if include_header
-        from_digest= digest_dir(from_dir)
-        to_digest= digest_dir(to_dir)
-        patch_digest= DIGEST.hexdigest(patch)
-        header= "Before: #{from_digest}\nAfter: #{to_digest}\nPatch: #{patch_digest}\n"
-
-        header + patch
-      else
-        patch
-      end
     end
 
     # Diffs two files.
