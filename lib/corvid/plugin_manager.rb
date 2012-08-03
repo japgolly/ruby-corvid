@@ -1,4 +1,5 @@
 require 'corvid/environment' unless defined?(CORVID_ROOT)
+require 'corvid/constants'
 require 'corvid/plugin'
 require 'singleton'
 
@@ -8,8 +9,8 @@ module Corvid
 
     attr_writer :plugin_list
     def plugin_list
-      @plugin_list ||= read_plugin_list_from_file("#{APP_ROOT}/.corvid/plugins.yml") if defined?(APP_ROOT)
-      @plugin_list ||= read_plugin_list_from_file('.corvid/plugins.yml')
+      @plugin_list ||= read_plugin_list_from_file \
+        File.join(defined?(APP_ROOT) ? APP_ROOT : '.', Constants::PLUGINS_FILE)
     end
 
     attr_writer :plugins
