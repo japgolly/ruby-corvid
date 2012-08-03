@@ -1,5 +1,6 @@
 # encoding: utf-8
 require_relative '../spec_helper'
+require 'corvid/constants'
 require 'corvid/res_patch_manager'
 require 'corvid/generators/update'
 
@@ -46,7 +47,7 @@ describe "Actual resource patches" do
         #run_generator TestInstaller, "install #{feature} 1"
         quiet_generator(TestInstaller).install feature, 1
         quiet_generator(Corvid::Generator::Update).send :upgrade!, 1, @rpm.latest_version, [feature]
-        File.delete Corvid::Generator::Base::VERSION_FILE
+        File.delete Corvid::Constants::VERSION_FILE
       end
 
       # Compare directories
