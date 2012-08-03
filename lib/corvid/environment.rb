@@ -3,6 +3,5 @@ raise "Gemfile not found in Corvid root: #{CORVID_ROOT}" unless File.exists?("#{
 
 require 'bundler/setup'
 
-require 'corvid/version'
 require 'golly-utils/ruby_ext/env_helpers'
 require 'corvid/plugin_manager'
