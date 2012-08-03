@@ -1,9 +1,9 @@
 # encoding: utf-8
-require File.expand_path('../lib/corvid/version', __FILE__)
+require File.expand_path('../lib/corvid/constants', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.name          = "corvid"
-  gem.version       = Corvid::VERSION
+  gem.version       = Corvid::Constants::VERSION.dup
   gem.date          = Date.today.to_s
   #gem.summary       = %q{TODO: Write a gem summary}
   #gem.description   = %q{TODO: Write a gem description}

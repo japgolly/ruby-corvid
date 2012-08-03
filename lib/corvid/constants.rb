@@ -1,5 +1,7 @@
 module Corvid
   module Constants
+    # The current version of Corvid. (Nothing to do with resource versions.)
+    VERSION = "0.0.1"
 
     # Filename of the client-side file that stores the version of Corvid resources last deployed.
     VERSION_FILE = '.corvid/version.yml'
