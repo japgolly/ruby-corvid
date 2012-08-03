@@ -24,6 +24,18 @@ module Corvid
       self
     end
 
+    # Runs a given callback on each plugin available.
+    #
+    # @param [Symbol] callback The callback name.
+    # @param args Optional arguments to pass to the callback.
+    # @return [self]
+    def run_callback(callback, *args)
+      each_plugin do |plugin|
+        plugin.run_callback callback, *args
+      end
+      self
+    end
+
     protected
 
     # Loads and creates an instance of each plugin referenced in {#read_client_plugins}.
