@@ -38,18 +38,12 @@ module Corvid
       # This stops Thor thinking the public methods below are tasks
       @no_tasks= true
 
-      # Sets the {Corvid::ResPatchManager} that the generator will use.
-      # @param [Corvid::ResPatchManager] rpm
-      # @return [Corvid::ResPatchManager]
-      def rpm=(rpm)
-        @rpm= rpm
-      end
-
-      # Gets the {Corvid::ResPatchManager} that the generator will use.
+      # The {Corvid::ResPatchManager} that the generator will use.
       # @return [Corvid::ResPatchManager]
       def rpm()
         @rpm ||= ::Corvid::ResPatchManager.new
       end
+      attr_writer :rpm
 
       # Reads and parses the contents of the client's {Constants::FEATURES_FILE FEATURES_FILE} if it exists.
       #
