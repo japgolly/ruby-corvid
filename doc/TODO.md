@@ -3,6 +3,8 @@ Fix or Enhance Existing Functionality
 * Fix up `corvid --help` messages
 * Warn if uncommitted changes before install/update. Test with a few vcs systems; at least git and svn.
 * Test non-ASCII resources.
+* `.corvid/Gemfile` should check if certain features are installed rather than `Dir.exist?` checks
+* Allow `copy_file()` to deploy to a different filename (without breaking patches).
 
 Documentation
 -------------
