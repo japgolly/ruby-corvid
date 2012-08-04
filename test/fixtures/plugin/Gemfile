@@ -2,3 +2,4 @@
 eval File.read(File.expand_path '../.corvid/Gemfile', __FILE__)
 
 gem 'mock_plugin', path: 'mock_plugin'
+gem 'golly-utils', git: 'git://github.com/japgolly/golly-utils.git' 
