@@ -4,6 +4,13 @@ GIT
   specs:
     golly-utils (0.1.0)
 
+GIT
+  remote: git://github.com/japgolly/yard.git
+  revision: 9e86df2a9c14412bd5c4b05005137e776b703129
+  branch: happy_days
+  specs:
+    yard (0.8.2.1)
+
 PATH
   remote: ../../../..
   specs:
@@ -34,3 +41,4 @@ DEPENDENCIES
   corvid!
   golly-utils!
   mock_plugin!
+  yard!

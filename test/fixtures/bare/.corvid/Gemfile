@@ -5,7 +5,7 @@ group :debug do
   gem "debugger", platforms: :mri
 end
 group :doc do
-  gem "yard"
+#  gem "yard"
 end
 group :rake do
   gem "rake"
