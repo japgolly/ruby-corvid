@@ -29,8 +29,3 @@ Features
 *   Upgrade-patching.
     * Corvid can update. No need to ever replace manually.
     * Patches user-modified resources.
-
-
-TODO
-----
-{file:doc/TODO.md TODOs are here}.

@@ -16,7 +16,7 @@ require_relative '../bootstrap/unit'
 require 'hehe'
 
 class HeheTest < MiniTest::Unit::TestCase
-  # TODO
+  # T\ODO
 end
       EOB
     }
@@ -29,7 +29,7 @@ require_relative '../../../bootstrap/unit'
 require 'what/say/good'
 
 class GoodTest < MiniTest::Unit::TestCase
-  # TODO
+  # T\ODO
 end
       EOB
     }
@@ -44,7 +44,7 @@ require_relative '../bootstrap/spec'
 require 'hehe'
 
 describe Hehe do
-  # TODO
+  # T\ODO
 end
       EOB
     }
@@ -57,7 +57,7 @@ require_relative '../../../bootstrap/spec'
 require 'what/say/good'
 
 describe What::Say::Good do
-  # TODO
+  # T\ODO
 end
       EOB
     }
