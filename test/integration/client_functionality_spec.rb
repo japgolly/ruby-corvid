@@ -1,5 +1,5 @@
 # encoding: utf-8
-require_relative '../spec/spec_helper'
+require_relative '../spec_helper'
 
 describe 'Client-Functionality Integration test' do
   run_all_in_empty_dir

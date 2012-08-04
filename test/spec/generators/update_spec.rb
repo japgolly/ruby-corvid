@@ -1,5 +1,5 @@
 # encoding: utf-8
-require_relative '../spec_helper'
+require_relative '../../spec_helper'
 require 'corvid/generators/update'
 require 'corvid/generators/init'
 require 'helpers/fixture-upgrading'
