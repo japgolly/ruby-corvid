@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative '../spec_helper'
 
-describe 'Plugin system' do
+describe 'Plugin Integration Test' do
 
   around :each do |ex|
     inside_fixture('plugin'){ ex.run }
