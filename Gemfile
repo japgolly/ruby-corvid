@@ -16,9 +16,7 @@ end
 
 # Documentation
 group :doc do
-  # TODO use proper yard
-  #gem 'yard', path: '~/projects/my_forks/yard'
-  gem 'yard', git: 'git://github.com/japgolly/yard.git', branch: 'happy_days'
   gem 'rdiscount', platforms: :mri
   gem 'kramdown', platforms: :jruby
 end
+gem 'yard', git: 'git://github.com/japgolly/yard.git', branch: 'happy_days', group: :doc # TODO Use proper yard
