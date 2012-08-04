@@ -35,7 +35,8 @@ module Corvid
         EOB
       end
 
-      # This stops Thor thinking the public methods below are tasks
+      # This stops stupid Thor thinking the public methods below are tasks and issuing warnings
+      # Not using no_tasks{} because it stops Yard seeing the methods.
       @no_tasks= true
 
       # The {Corvid::ResPatchManager} that the generator will use.
@@ -44,6 +45,8 @@ module Corvid
         @rpm ||= ::Corvid::ResPatchManager.new
       end
       attr_writer :rpm
+
+      @no_tasks= true # Shutup stupid Thor, you idiot!
 
       # Reads and parses the contents of the client's {Constants::FEATURES_FILE FEATURES_FILE} if it exists.
       #
