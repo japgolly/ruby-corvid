@@ -44,7 +44,7 @@ describe 'Client-Functionality Integration Test' do
   it("should support unit tests"){
     # Create unit test
     invoke_corvid! 'new:test:unit hehe'
-    invoke_sh! %!sed -i 's/# TODO/def test_hehe; assert_equal 123, Hehe.new.num end/' test/unit/hehe_test.rb!
+    invoke_sh! %!sed -i 's/# T[O]DO/def test_hehe; assert_equal 123, Hehe.new.num end/' test/unit/hehe_test.rb!
 
     # Invoke via rake (by default without coverage)
     invoke_rake! 'test:unit'
@@ -63,7 +63,7 @@ describe 'Client-Functionality Integration Test' do
   it("should support specs"){
     # Create spec
     invoke_corvid! 'new:test:spec hehe'
-    invoke_sh! %!sed -i 's/# TODO/it("num"){ subject.num.should == 123 }/' test/spec/hehe_spec.rb!
+    invoke_sh! %!sed -i 's/# T[O]DO/it("num"){ subject.num.should == 123 }/' test/spec/hehe_spec.rb!
 
     # Invoke via rake
     invoke_rake! 'test:spec coverage=1'
