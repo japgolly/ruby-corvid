@@ -19,9 +19,6 @@ group :spec do
     # Lib
     watch(%r'^lib/corvid/(.+)\.rb$') {|m| "test/spec/#{m[1]}_spec.rb"}
 
-    # Plugin tests
-    watch(%r'^.*plugin.*$') {|m| "test/spec/plugins_spec.rb"}
-
     # Fixtures
     watch(%r'^test/fixtures/migration/.+$')  {"test/spec/res_patch_manager_spec.rb"}
     upgrading= %w[test/spec/generators/init_spec.rb test/spec/generators/update_spec.rb]
@@ -35,6 +32,9 @@ end
 
 group :int do
   guard 'rspec', binstubs: true, spec_paths: ['test/integration'], cli: rspec_cli, all_on_start: false, all_after_pass: false, keep_failed: false do
+
+    # Plugin tests
+    watch(%r'^.*plugin.*$') {|m| "test/integration/plugin_spec.rb"}
 
     # Each spec
     watch(%r'^test/integration/.+_spec\.rb$')
