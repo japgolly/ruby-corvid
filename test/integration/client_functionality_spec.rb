@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative '../spec_helper'
 
-describe 'Client-Functionality Integration test' do
+describe 'Client-Functionality Integration Test' do
   run_all_in_empty_dir
   before(:each){ clean }
 
