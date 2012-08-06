@@ -232,6 +232,42 @@ module Corvid
       end
       alias :add_feature :add_features
 
+      # Installs a feature into an existing Corvid project.
+      #
+      # If the feature is already installed then this tells the user thus and stops.
+      #
+      # @param [String] name The feature name to install.
+      # @option options [Boolean] :run_bundle (false) If enabled, then {#run_bundle} will be called after the feature is
+      #   added.
+      # @option options [Boolean] :say_if_installed (true) If enabled and feature is already installed, then display a message
+      #   indicating so to the user.
+      # @return [void]
+      def install_feature(name, options={})
+        options= DEFAULT_OPTIONS_FOR_INSTALL_FEATURE.merge options
+
+        # Read client details
+        ver= read_client_version!
+        features= read_client_features!
+
+        # Corvid installation confirmed - now check if feature already installed
+        if features.include? name
+          say "Feature '#{name}' already installed." if options[:say_if_installed]
+        else
+          # Install feature
+          with_resources(ver) {|ver|
+            feature_installer!(name).install
+            add_feature name
+            yield ver if block_given?
+            run_bundle() if options[:run_bundle]
+          }
+        end
+      end
+      # @!visibility private
+      DEFAULT_OPTIONS_FOR_INSTALL_FEATURE= {
+        run_bundle: false,
+        say_if_installed: true,
+      }.freeze
+
       # @return [String] The installer filename.
       def feature_installer_file(dir = res_dir(), feature)
         "#{dir}/corvid-features/#{feature}.rb"

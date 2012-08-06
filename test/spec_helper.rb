@@ -7,6 +7,7 @@ require 'golly-utils/testing/rspec/files'
 require 'golly-utils/testing/rspec/arrays'
 require 'tmpdir'
 require 'fileutils'
+require 'yaml'
 
 RUN_BUNDLE= 'run_bundle'
 BOOTSTRAP_ALL= 'test/bootstrap/all.rb'
@@ -21,6 +22,11 @@ module Fixtures
 end
 
 module TestHelpers
+
+  def add_feature!(feature_name)
+    f= YAML.load_file('.corvid/features.yml') + [feature_name]
+    File.write '.corvid/features.yml', f.to_yaml
+  end
 
   def assert_corvid_features(*expected)
     f= YAML.load_file('.corvid/features.yml')
@@ -56,6 +62,7 @@ module TestHelpers
     invoke_rake(args,env).should eq(true), 'Rake failed.'
   end
 
+  # TODO remove files() and dirs() test helpers.
   def files(force=false)
     @files= nil if force
     @files ||= Dir['**/*'].select{|f| ! File.directory? f}.sort
@@ -65,10 +72,14 @@ module TestHelpers
     @dirs ||= Dir['**/*'].select{|f| File.directory? f}.sort
   end
 
+  def copy_fixture(fixture_name, target_dir='.')
+    FileUtils.cp_r "#{Fixtures::FIXTURE_ROOT}/#{fixture_name}/.", target_dir
+  end
+
   def inside_fixture(fixture_name)
-    Dir.mktmpdir {|dir|
-      FileUtils.cp_r "#{CORVID_ROOT}/test/fixtures/#{fixture_name}/.", dir
+    Dir.mktmpdir {|dir|dir
       Dir.chdir dir do
+        copy_fixture fixture_name
         patch_corvid_gemfile
         yield
       end

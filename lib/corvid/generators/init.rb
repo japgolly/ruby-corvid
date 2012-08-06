@@ -20,40 +20,24 @@ class Corvid::Generator::Init < ::Corvid::Generator::Base
     }
   end
 
+  desc 'plugin', 'Adds plugin development support.'
+  declare_option_to_run_bundle(self)
+  def plugin
+    install_feature 'plugin'
+  end
+
   class Test < ::Corvid::Generator::Base
 
     desc 'unit', 'Adds support for unit tests.'
     declare_option_to_run_bundle(self)
     def unit
-      install_feature 'test_unit'
+      install_feature 'test_unit', run_bundle: true
     end
 
     desc 'spec', 'Adds support for specifications.'
     declare_option_to_run_bundle(self)
     def spec
-      install_feature 'test_spec'
-    end
-
-    protected
-
-    def install_feature(name, run_bundle=true)
-
-      # Read client details
-      ver= read_client_version!
-      features= read_client_features!
-
-      # Corvid installation confirmed - now check if feature already installed
-      if features.include? name
-        say "Feature '#{name}' already installed."
-      else
-        # Install feature
-        with_resources(ver) {|ver|
-          feature_installer!(name).install
-          add_feature name
-          yield ver if block_given?
-          run_bundle() if run_bundle
-        }
-      end
+      install_feature 'test_spec', run_bundle: true
     end
 
   end # class Init::Test
