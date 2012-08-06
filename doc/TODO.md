@@ -36,8 +36,10 @@ Plugins: The Plan
   * `Guardfile`
   * code coverage settings
   * Rake tasks ![Done](done.png)
+* Plugins register themselves:
+  * `plugins.yml` contains: `plugin -> :require -> string`
 * Plugins can add features
-  * `version.yml` update to structure: `plugin -> :resources -> version`
+  * `version.yml` update to structure: `plugin -> :resources -> version` and rename to `versions.yml`
   * `features.yml` and feature names: update to `<plugin>:<name>`
   * Rake tasks for plugin development (eg. res-patch creation)
 * Plugins and/or features can require other features to already be installed.
