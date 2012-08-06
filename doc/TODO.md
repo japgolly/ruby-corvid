@@ -36,15 +36,36 @@ Plugins: The Plan
   * `Guardfile`
   * code coverage settings
   * Rake tasks ![Done](done.png)
-* Plugins register themselves:
-  * `plugins.yml` contains: `plugin -> :require -> string`
-* Plugins can add features
-  * `version.yml` update to structure: `plugin -> :resources -> version` and rename to `versions.yml`
-  * `features.yml` and feature names: update to `<plugin>:<name>`
-  * Rake tasks for plugin development (eg. res-patch creation)
-* Plugins and/or features can require other features to already be installed.
-* Provide template bin script then passes to internal plugin CLI.
+* Create a plugin feature
+  * Creates new `resources/latest` dir
+  * Adds `res` rake tasks
+  * Adds rspec feature
+  * Adds res-patch validity test
+* Create a `new:plugin NAME` task
+  1. ensures plugin feature installed
+  1. creates `bin/NAME`
+  1. creates `lib/NAME/corvid/plugin.rb` which
+     * loads and extends {Plugin}
+  1. creates `test/spec/corvid/plugin_spec.rb` which
+     * loads plugin test-helpers
+  1. creates `test/spec/corvid/bin_spec.rb` which
+     * tests that the bin script works
+* Create a plugin bin/CLI delegate
   * `<plugin> init`
   * `<plugin> update`
+* Existing state changes
+  * `plugins.yml` contains: `plugin -> :require -> string`
+  * `version.yml` update to structure: `plugin -> version` and rename to `versions.yml`
+  * `features.yml` and feature names: update to `<plugin>:<name>`
+  * `corvid-features/*` to specify dependencies on feature and/or res versions.
+* Plugin installation
+  * Check that feature requirements are met.
+  * Add name and require-path to `plugins.yml`
+  * Install features
+* Feature installation
+  * Check that requirements are met.
+  * Use plugin resources.
+* Plugin updating
+  * Check requirements already met for latest version of all installed plugin features.
 * Test Corvid and a plugin both modifying the same file.
 * Doco on how plugins work, how to write one.

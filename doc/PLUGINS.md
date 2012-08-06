@@ -19,8 +19,8 @@ New Plugin Creation Process
 1. Edit plugin and test.
 
 
-Plugin Injection Process
-------------------------
+Plugin Installation Process
+---------------------------
 1. Check if already installed.
 1. Check that feature requirements are met.
 1. Add name and require-path to `plugins.yml`
