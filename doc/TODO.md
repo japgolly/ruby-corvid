@@ -6,6 +6,7 @@ Fix or Enhance Existing Functionality
 * `.corvid/Gemfile` should check if certain features are installed rather than `Dir.exist?` checks
 * Allow `copy_file()` to deploy to a different filename (without breaking patches).
 * Should tasks be organised by content before function? i.e. `project:*, test:*, plugin:*` instead of `init:*, new:*` ![?](question.png)
+* Handle cases where installed = n and first version of feature installer is n+1
 
 Documentation
 -------------
@@ -15,6 +16,7 @@ Documentation
 
 New Functionality
 -----------------
+* New task: `res:redo`
 * Allow different dir structure than default
 * Have Corvid provide code stats (LOC, lib vs test, doc/undoc methods/classes etc).
 * Have Corvid provide code analysis (complexity, duplication, etc).
