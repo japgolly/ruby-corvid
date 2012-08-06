@@ -29,18 +29,20 @@ Non-Functional / Under-The-Hood
 
 Plugins: The Plan
 -----------------
-* Provide ext points
-  * test bootstraps
-  * test helpers
-  * `Gemfile`
-  * `Guardfile`
-  * code coverage settings
-  * Rake tasks ![Done](done.png)
 * Create a plugin feature
   * Creates new `resources/latest` dir
   * Adds `res` rake tasks
   * Adds rspec feature
   * Adds res-patch validity test
+* Feature installation
+  * Check that requirements are met.
+  * Use plugin resources.
+* Plugin installation
+  * Check that feature requirements are met.
+  * Add name and require-path to `plugins.yml`
+  * Install features
+* Plugin updating
+  * Check requirements already met for latest version of all installed plugin features.
 * Create a `new:plugin NAME` task
   1. ensures plugin feature installed
   1. creates `bin/NAME`
@@ -50,22 +52,20 @@ Plugins: The Plan
      * loads plugin test-helpers
   1. creates `test/spec/corvid/bin_spec.rb` which
      * tests that the bin script works
-* Create a plugin bin/CLI delegate
-  * `<plugin> init`
-  * `<plugin> update`
 * Existing state changes
   * `plugins.yml` contains: `plugin -> :require -> string`
   * `version.yml` update to structure: `plugin -> version` and rename to `versions.yml`
   * `features.yml` and feature names: update to `<plugin>:<name>`
   * `corvid-features/*` to specify dependencies on feature and/or res versions.
-* Plugin installation
-  * Check that feature requirements are met.
-  * Add name and require-path to `plugins.yml`
-  * Install features
-* Feature installation
-  * Check that requirements are met.
-  * Use plugin resources.
-* Plugin updating
-  * Check requirements already met for latest version of all installed plugin features.
+* Provide ext points
+  * test bootstraps
+  * test helpers
+  * `Gemfile`
+  * `Guardfile`
+  * code coverage settings
+  * Rake tasks ![Done](done.png)
+* Create a plugin bin/CLI delegate
+  * `<plugin> init`
+  * `<plugin> update`
 * Test Corvid and a plugin both modifying the same file.
 * Doco on how plugins work, how to write one.
