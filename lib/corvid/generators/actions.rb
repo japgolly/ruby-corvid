@@ -29,6 +29,31 @@ module Corvid
         v or v.nil? && yes?(question + ' [yn]')
       end
 
+      # Adds a line of text to a file.
+      #
+      # * If the file already contains the line of text, nothing happens.
+      # * If the file doesn't exist, it is created.
+      #
+      # @param [String] file The file to update.
+      # @param [String] line The line of text to insert. (Don't include any carriage returns.)
+      # @return [Boolean] `true` if file updated, else `false`.
+      def add_line_to_file(file, line)
+        updated= false
+        if File.exists?(file)
+          file_contents= File.read(file)
+          unless file_contents[line]
+            repl= "\r\n".include?(file_contents[-1]) ? "#{line}\n" : "\n#{line}"
+            insert_into_file file, repl, before: /\z/
+            updated= true
+          end
+        else
+          create_file file, line
+          updated= true
+        end
+
+        updated
+      end
+
     end
   end
 end
