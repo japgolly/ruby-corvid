@@ -31,3 +31,15 @@ Non-Functional / Under-The-Hood
 * Check `APP_ROOT` reliance
 * In feature installers, is `update()` really needed? Currently it needs increments of `install()` without the `copy_file` stuff. That's stupid...
 * Reduce version granularity to feature?
+
+Feature Manifest & Ext Point Support
+------------------------------------
+* Open ext points to features, not plugins
+  * For each installed feature, use a factory to get a feature ext class
+    * Give a string
+    * Load feature manifest for plugin
+      * For corvid, we know the manifest file
+      * For plugins, use plugin manager to extract from Plugin
+    * Require file specified in feature manifest
+    * Get ni/class instance
+  * For each feature ext class, iterate from ext point
