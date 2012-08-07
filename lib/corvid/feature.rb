@@ -1,7 +1,7 @@
-require 'golly-utils/callbacks'
+require 'corvid/extentions'
 
 module Corvid
   class Feature
-#    include ExtentionProvider
+    include Extention
   end
 end
