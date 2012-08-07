@@ -1,4 +1,5 @@
 require 'golly-utils/singleton'
+require 'corvid/constants'
 require 'corvid/builtin/manifest'
 
 module Corvid
@@ -7,6 +8,43 @@ module Corvid
 
     def initialize
       @cache= {}
+    end
+
+    def self.def_accessor(target)
+      # Not using attr_writer here cos of Thor
+      target.class_eval <<-EOB
+        def feature_manager
+           @feature_manager ||= ::#{self}.instance
+        end
+        def feature_manager=(fm)
+           @feature_manager= fm
+        end
+      EOB
+    end
+
+    # Reads and parses the contents of the client's {Constants::FEATURES_FILE FEATURES_FILE} if it exists.
+    #
+    # @return [nil,Array<String>] A list of features or `nil` if the file wasn't found.
+    def read_client_features
+      if File.exists? Constants::FEATURES_FILE
+        v= YAML.load_file Constants::FEATURES_FILE
+        raise "Invalid #{Constants::FEATURES_FILE}. Array expected but got #{v.class}." unless v.is_a?(Array)
+        raise "Invalid #{Constants::FEATURES_FILE}. At least 1 feature expected but not defined." if v.empty?
+        v
+      else
+        nil
+      end
+    end
+
+    # Reads and parses the contents of the client's {Constants::FEATURES_FILE FEATURES_FILE}.
+    #
+    # @return [Array<String>] A list of features.
+    # @raise If file not found.
+    # @see #read_client_features
+    def read_client_features!
+      features= read_client_features
+      raise "File not found: #{Constants::FEATURES_FILE}\nYou must install Corvid first. Try corvid init:project." if features.nil?
+      features
     end
 
     # @param [String] name

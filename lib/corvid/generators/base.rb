@@ -1,5 +1,6 @@
 require 'corvid/environment'
 require 'corvid/constants'
+require 'corvid/feature_manager'
 require 'corvid/res_patch_manager'
 require 'corvid/generators/actions'
 
@@ -38,6 +39,8 @@ module Corvid
       # This stops Thor thinking the public methods below are tasks
       @no_tasks= true
 
+      # TODO make sure rpm shows up as attribute in doc
+
       # Sets the {Corvid::ResPatchManager} that the generator will use.
       # @param [Corvid::ResPatchManager] rpm
       # @return [Corvid::ResPatchManager]
@@ -51,29 +54,17 @@ module Corvid
         @rpm ||= ::Corvid::ResPatchManager.new
       end
 
-      # Reads and parses the contents of the client's {Constants::FEATURES_FILE FEATURES_FILE} if it exists.
-      #
-      # @return [nil,Array<String>] A list of features or `nil` if the file wasn't found.
-      def read_client_features
-        if File.exists? Constants::FEATURES_FILE
-          v= YAML.load_file Constants::FEATURES_FILE
-          raise "Invalid #{Constants::FEATURES_FILE}. Array expected but got #{v.class}." unless v.is_a?(Array)
-          raise "Invalid #{Constants::FEATURES_FILE}. At least 1 feature expected but not defined." if v.empty?
-          v
-        else
-          nil
-        end
-      end
+      # @!attribute feature_manager
+      #   @return [FeatureManager]
+      ::Corvid::FeatureManager.def_accessor(self)
 
-      # Reads and parses the contents of the client's {Constants::FEATURES_FILE FEATURES_FILE}.
-      #
-      # @return [Array<String>] A list of features.
-      # @raise If file not found.
-      # @see #read_client_features
+      # @see Corvid::FeatureManager#read_client_features
+      def read_client_features
+        feature_manager.read_client_features
+      end
+      # @see Corvid::FeatureManager#read_client_features!
       def read_client_features!
-        features= read_client_features
-        raise "File not found: #{Constants::FEATURES_FILE}\nYou must install Corvid first. Try corvid init:project." if features.nil?
-        features
+        feature_manager.read_client_features!
       end
 
       # Reads and parses the contents of the client's {Constants::VERSION_FILE VERSION_FILE} if it exists.
