@@ -143,11 +143,14 @@ module TestHelpers
 end
 
 module IntegrationTestDecoration
-  SEP= "\e[0;40;34m#{'-'*120}\e[0m"
+  SEP1= "\e[0;40;34m#{'_'*120}\e[0m"
+  SEP2= "\e[0;40;34m#{'-'*120}\e[0m"
+  SEP3= "\e[0;40;34m#{'='*120}\e[0m"
   def self.included spec
     spec.class_eval <<-EOB
-      before(:each){ puts ::#{self}::SEP }
-      after(:all){ puts ::#{self}::SEP; puts }
+      before(:all){ puts ::#{self}::SEP1; $__GOLTEST_ITD=1 }
+      before(:each){ $__GOLTEST_ITD ?  $__GOLTEST_ITD= nil : puts(::#{self}::SEP2) }
+      after(:all){ puts ::#{self}::SEP3 }
     EOB
   end
 end
