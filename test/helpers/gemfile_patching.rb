@@ -3,6 +3,17 @@
 module GemfilePatching
   extend self
 
+  def gsub_files!(pattern, replacement, *files)
+    files.flatten.uniq.each do |file|
+      if File.exists? file
+        c= File.read file
+        c.gsub! pattern, replacement
+        File.write file, c
+      end
+    end
+  end
+  alias :gsub_file! :gsub_files!
+
   # Files:
   # * `Gemfile`
   # * `.corvid/Gemfile`.
@@ -10,14 +21,7 @@ module GemfilePatching
   # Changes:
   # * Corvid library to be sourced directly by specifying `path: '...'`
   def patch_corvid_gemfile
-    files= %w[Gemfile .corvid/Gemfile]
-    files.select!{|f| File.exists? f}
-    unless files.empty?
-      `perl -pi -e '
-         s|^\\s*(gem\\s+.corvid.)\\s*(?:,\\s*path.*)?$|\\1, path: "#{CORVID_ROOT}"|
-       ' #{files.join ' '}`
-      raise 'patch failed' unless $?.success?
-    end
+    gsub_files! /^\s*(gem\s+.corvid.)\s*(?:,\s*path.*)?$/, %|\\1, path: "#{CORVID_ROOT}"|, %w[Gemfile .corvid/Gemfile]
     true
   end
 
