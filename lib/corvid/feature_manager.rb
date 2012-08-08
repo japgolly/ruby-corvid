@@ -7,11 +7,18 @@ module Corvid
     include GollyUtils::Singleton
 
     def initialize
-      @cache= {}
+      clear_cache
+    end
+
+    def clear_cache
+      @feature_manifest= nil
+      @instance_cache= {}
+      @instances_for_installed= nil
+      self
     end
 
     def self.def_accessor(target)
-      # Not using attr_writer here cos of Thor
+      # Not using attr_writer here cos of Thor.no_tasks
       target.class_eval <<-EOB
         def feature_manager
            @feature_manager ||= ::#{self}.instance
@@ -47,10 +54,23 @@ module Corvid
       features
     end
 
+    # @return [Hash<String,nil|String>]
+    def feature_manifest
+      if @feature_manifest.nil?
+        @feature_manifest= {}
+
+        # Register built-in features
+        register_features Corvid::Builtin::Manifest.new.feature_manifest
+
+      end
+      @feature_manifest
+    end
+
     # @param [String] name
     # @return [nil,Feature]
     def instance_for(name)
-      return @cache[name] if @cache.has_key?(name)
+      return @instance_cache[name] if @instance_cache.has_key?(name)
+
       raise "Unknown feature: #{name}. It isn't specified in any manifests." unless feature_manifest.has_key?(name)
 
       data= feature_manifest[name]
@@ -64,16 +84,18 @@ module Corvid
           nil
         end
 
-      @cache[name]= instance
+      @instance_cache[name]= instance
     end
 
-    # @return [Hash<String,nil|String>]
-    def feature_manifest
-      unless @feature_manifest
-        @feature_manifest= {}
-        register_features Corvid::Builtin::Manifest.new.feature_manifest
-      end
-      @feature_manifest
+    # TODO
+    #
+    # @param [Boolean] force If enabled, then the cached value will be discarded.
+    # @return [Hash<String,nil|Feature>] An instance of each client-installed feature. May return an empty array but never `nil`.
+    def instances_for_installed#(force=false)
+#      @instances_for_installed= nil if force
+      @instances_for_installed ||= (
+        (read_client_features || []).inject({}) {|h,f| h[f]= instance_for f; h }
+      )
     end
 
     private

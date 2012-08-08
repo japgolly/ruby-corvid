@@ -1,7 +1,7 @@
-require 'corvid/extentions'
+require 'corvid/extension'
 
 module Corvid
   class Feature
-    include Extention
+    include Extension
   end
 end
