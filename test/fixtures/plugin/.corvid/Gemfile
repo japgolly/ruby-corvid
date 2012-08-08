@@ -3,5 +3,5 @@ gem "corvid", path: '../../..'
 gem 'rake', group: :rake
 
 group :doc do
-#  gem "yard"
+  gem "yard"
 end

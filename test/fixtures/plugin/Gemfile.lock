@@ -1,15 +1,8 @@
 GIT
   remote: git://github.com/japgolly/golly-utils.git
-  revision: 04f22a2fd0d778f4478bde9f743be8eaecedf2c7
+  revision: 53c7af78d38ee2d4a464e13bd04501fdd72fdc08
   specs:
     golly-utils (0.1.0)
-
-GIT
-  remote: git://github.com/japgolly/yard.git
-  revision: 9e86df2a9c14412bd5c4b05005137e776b703129
-  branch: happy_days
-  specs:
-    yard (0.8.2.1)
 
 PATH
   remote: ../../..
@@ -36,6 +29,7 @@ GEM
     thor (0.15.4)
 
 PLATFORMS
+  java
   ruby
 
 DEPENDENCIES
@@ -43,4 +37,3 @@ DEPENDENCIES
   golly-utils!
   mock_plugin!
   rake
-  yard!
