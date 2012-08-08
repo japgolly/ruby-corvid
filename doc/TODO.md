@@ -36,9 +36,9 @@ Non-Functional / Under-The-Hood
 Plugins: The Plan
 -----------------
 * Create a plugin feature
-  * Creates new `resources/latest` dir
+  * Creates new `resources/latest` dir ![Done](done.png)
   * Adds `res` rake tasks
-  * Adds rspec feature
+  * Adds rspec feature ![Done](done.png)
   * Adds res-patch validity test
 * Feature installation
   * Check that requirements are met.
