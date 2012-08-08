@@ -13,10 +13,12 @@ describe 'Client-Functionality Integration Test' do
 
   it("should initialise project"){
     invoke_corvid! "init:project --no-#{RUN_BUNDLE} --test-unit --test-spec"
+    'Gemfile.lock'.should_not exist_as_file
     patch_corvid_gemfile
-    invoke_sh! 'bundle install'
-    File.exist?('Gemfile.lock').should == true
-    invoke_sh! 'echo "class Hehe; def num; 123 end end" > lib/hehe.rb'
+    patch_corvid_deps
+    #invoke_sh! 'bundle install'
+    'Gemfile.lock'.should exist_as_file
+    File.write 'lib/hehe.rb', 'class Hehe; def num; 123 end end'
   }
 
   it("should generate documentation"){
