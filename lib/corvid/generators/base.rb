@@ -49,7 +49,7 @@ module Corvid
 
       @no_tasks= true # Shutup Thor, you idiot!
 
-      # @!attribute feature_manager
+      # @!attribute [rw] feature_manager
       #   @return [FeatureManager]
       ::Corvid::FeatureManager.def_accessor(self)
 
