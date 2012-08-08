@@ -33,9 +33,6 @@ end
 group :int do
   guard 'rspec', binstubs: true, spec_paths: ['test/integration'], cli: rspec_cli, all_on_start: false, all_after_pass: false, keep_failed: false do
 
-    # Plugin tests
-    watch(%r'^.*plugin.*$') {|m| "test/integration/plugin_spec.rb"}
-
     # Each spec
     watch(%r'^test/integration/.+_spec\.rb$')
   end
