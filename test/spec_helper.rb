@@ -15,6 +15,8 @@ BOOTSTRAP_ALL= 'test/bootstrap/all.rb'
 BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 BUILTIN_FEATURES= Corvid::Builtin::Manifest.new.feature_manifest.keys.map(&:freeze).freeze
+CORVID_BIN= "#{CORVID_ROOT}/bin/corvid"
+CORVID_BIN_Q= CORVID_BIN.inspect
 
 # Add test/ to lib path
 $:<< "#{CORVID_ROOT}/test"
@@ -50,7 +52,9 @@ module TestHelpers
   end
   def invoke_corvid(args,env=nil)
     args= args.map(&:inspect).join ' ' if args.kind_of?(Array)
-    cmd= %`"#{CORVID_ROOT}/bin/corvid" #{args}`
+    args= args.gsub /^\s+|\s+$/, ''
+    cmd= "#{CORVID_BIN_Q} #{args}"
+    cmd.gsub! /\n| && /, " && #{CORVID_BIN_Q} "
     invoke_sh cmd, env
   end
   def invoke_corvid!(args,env=nil)

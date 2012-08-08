@@ -1,12 +1,15 @@
-namespace :res do
-  LATEST_DIR     = "#{CORVID_ROOT}/resources/latest"
-  LATEST_DIR_REL = relative_to_corvid_root LATEST_DIR
+CORIVD_RES_NS= :res
+namespace CORIVD_RES_NS do
+  LATEST_DIR_REL = "resources/latest"
+  LATEST_DIR     = "#{APP_ROOT}/#{LATEST_DIR_REL}"
 
   def rpm
-    @rpm ||= (
+    unless @rpm
       require 'corvid/res_patch_manager'
-      Corvid::ResPatchManager.new
-    )
+      @rpm= Corvid::ResPatchManager.new "#{APP_ROOT}/resources"
+      STDERR.puts "[WARNING] Resources directory doesn't exist: #{@rpm.res_patch_dir}" unless Dir.exist?(@rpm.res_patch_dir)
+    end
+    @rpm
   end
 
   def diff_latest_dir
@@ -15,14 +18,17 @@ namespace :res do
     end
   end
 
+  #---------------------------------------------------------------------------------------------------------------------
   desc 'Create a new resource patch.'
-  task :new do
+  CORIVD_RES_NEW_TASK= :new
+  task CORIVD_RES_NEW_TASK do
     rpm.with_latest_resources do |dir|
       ver= rpm.create_res_patch_files! dir, LATEST_DIR
       puts ver ? "Created v#{ver}." : "There are no changes to record. The latest patch is up-to-date."
     end
   end
 
+  #---------------------------------------------------------------------------------------------------------------------
   desc "Shows the differences between the latest resource patch and #{LATEST_DIR_REL}."
   task :diff do
     if Dir.exists?(LATEST_DIR)
@@ -33,6 +39,7 @@ namespace :res do
     end
   end
 
+  #---------------------------------------------------------------------------------------------------------------------
   desc "Deploys the latest version of resources into #{LATEST_DIR_REL}."
   task :latest do
     require 'corvid/rake/prompt'
@@ -43,7 +50,7 @@ namespace :res do
 
       # Check if already up-to-date
       if diff_latest_dir().nil?
-        puts "Already up-to-date: #{LATEST_DIR_REL}"
+        puts "#{LATEST_DIR_REL} is already up-to-date with v#{rpm.latest_version}."
         deploy= false
       else
         # Ask to overwrite
@@ -65,8 +72,13 @@ namespace :res do
       FileUtils.mkdir_p LATEST_DIR
 
       # Deploy latest
-      rpm.deploy_latest_resources(LATEST_DIR)
-      puts "Deployed v#{rpm.latest_version} to #{LATEST_DIR_REL}."
+      if rpm.latest_version == 0
+        puts "There are no resources to deploy."
+        puts "Put resources in #{LATEST_DIR_REL} and call the #{CORIVD_RES_NS}:#{CORIVD_RES_NEW_TASK} rake task to create your first res-patch."
+      else
+        rpm.deploy_latest_resources(LATEST_DIR)
+        puts "Deployed v#{rpm.latest_version} to #{LATEST_DIR_REL}."
+      end
     end
   end
 end

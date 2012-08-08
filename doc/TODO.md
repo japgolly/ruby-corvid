@@ -37,7 +37,7 @@ Plugins: The Plan
 -----------------
 * Create a plugin feature
   * Creates new `resources/latest` dir ![Done](done.png)
-  * Adds `res` rake tasks
+  * Adds `res` rake tasks ![Done](done.png)
   * Adds rspec feature ![Done](done.png)
   * Adds res-patch validity test
 * Feature installation

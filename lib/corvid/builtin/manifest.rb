@@ -7,6 +7,7 @@ module Corvid
           'corvid'    => ['corvid/builtin/corvid_feature'   ,'Corvid::Builtin::CorvidFeature'],
           'test_unit' => ['corvid/builtin/test_unit_feature','Corvid::Builtin::TestUnitFeature'],
           'test_spec' => ['corvid/builtin/test_spec_feature','Corvid::Builtin::TestSpecFeature'],
+          'plugin'    => ['corvid/builtin/plugin_feature'   ,'Corvid::Builtin::PluginFeature'],
         }
       end
 

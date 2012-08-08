@@ -64,11 +64,13 @@ describe Corvid::Generator::Init do
         copy_fixture 'bare'
         run!
       }
+      it("should install the plugin feature"){
+        File.read('.corvid/features.yml').should include('plugin')
+      }
       it("should create resource directories"){
         'resources'.should exist_as_dir
         'resources/latest'.should exist_as_dir
       }
-      it("should add resource Rake tasks")
       it("should add rspec support"){
         'test/spec'.should exist_as_dir
         File.read('.corvid/features.yml').should include('spec')
