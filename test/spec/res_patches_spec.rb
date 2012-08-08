@@ -19,9 +19,6 @@ describe "Actual resource patches" do
   context 'Update vs Install' do
 
     class TestInstaller < Corvid::Generator::Base
-#      argument :feature, type: :string
-#      argument :ver, type: :numeric, optional: true
-#      desc 'install', ''
       no_tasks{
         def install(feature, ver=nil)
           ver ||= rpm.latest_version
@@ -68,9 +65,9 @@ describe "Actual resource patches" do
       expect{ test 'corvid' }.to raise_error /wtfff/
     }
 
-    %w[corvid test_unit test_spec].each do |feature|
+    BUILTIN_FEATURES.each do |feature|
       eval <<-EOB
-        it("Testing feature: #{feature}"){
+        it("Testing built-in feature: #{feature}"){
           @rpm= rpm
           test '#{feature}'
         }

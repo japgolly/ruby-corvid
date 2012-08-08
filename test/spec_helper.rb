@@ -8,11 +8,13 @@ require 'golly-utils/testing/rspec/arrays'
 require 'tmpdir'
 require 'fileutils'
 require 'yaml'
+require 'corvid/builtin/manifest'
 
 RUN_BUNDLE= 'run_bundle'
 BOOTSTRAP_ALL= 'test/bootstrap/all.rb'
 BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
+BUILTIN_FEATURES= Corvid::Builtin::Manifest.new.feature_manifest.keys.map(&:freeze).freeze
 
 # Add test/ to lib path
 $:<< "#{CORVID_ROOT}/test"
