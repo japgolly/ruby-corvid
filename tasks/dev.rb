@@ -13,9 +13,12 @@ namespace :dev do
       dirs.map{|f| File.dirname f}.each {|dir|
         puts "#{dir} ..."
         begin
-          GemfilePatching.apply_corvid_deps_patch dir, true
+          GemfilePatching.apply_corvid_deps_patch dir
+          system %|cd "#{dir}" && BUNDLE_GEMFILE= bundle install --local --quiet|
+          raise "Something went wrong: exit status = #{$?.exitstatus}" unless $?.success?
           puts "Success."
-        rescue
+        rescue => e
+          puts "ERROR: #{e}"
         end
         puts
       }

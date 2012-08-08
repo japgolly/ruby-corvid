@@ -16,7 +16,7 @@ describe 'Client-Functionality Integration Test' do
     'Gemfile.lock'.should_not exist_as_file
     patch_corvid_gemfile
     patch_corvid_deps
-    #invoke_sh! 'bundle install'
+    invoke_sh! 'bundle install'
     'Gemfile.lock'.should exist_as_file
     File.write 'lib/hehe.rb', 'class Hehe; def num; 123 end end'
   }
