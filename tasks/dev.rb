@@ -13,7 +13,7 @@ namespace :dev do
       dirs.map{|f| File.dirname f}.each {|dir|
         puts "#{dir} ..."
         begin
-          GemfilePatching.apply_corvid_deps_patch dir
+          GemfilePatching.apply_corvid_deps_patch dir, true
           puts "Success."
         rescue
         end
