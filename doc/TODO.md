@@ -31,6 +31,7 @@ Non-Functional / Under-The-Hood
 * Check `APP_ROOT` reliance
 * In feature installers, is `update()` really needed? Currently it needs increments of `install()` without the `copy_file` stuff. That's stupid...
 * Reduce version granularity to feature?
+* Split `corvid/rake/tasks/test.rb` into unit, spec, all.
 
 Feature Manifest & Ext Point Support
 ------------------------------------

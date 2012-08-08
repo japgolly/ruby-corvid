@@ -4,10 +4,9 @@ module Corvid
 
       def feature_manifest
         {
-          'corvid'    => nil,
-          'test_unit' => nil,
-          'test_spec' => nil,
-          'plugin'    => ['corvid/builtin/plugin_feature','Corvid::Builtin::PluginFeature']
+          'corvid'    => ['corvid/builtin/corvid_feature'   ,'Corvid::Builtin::CorvidFeature'],
+          'test_unit' => ['corvid/builtin/test_unit_feature','Corvid::Builtin::TestUnitFeature'],
+          'test_spec' => ['corvid/builtin/test_spec_feature','Corvid::Builtin::TestSpecFeature'],
         }
       end
 

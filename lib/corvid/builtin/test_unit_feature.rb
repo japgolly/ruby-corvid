@@ -2,10 +2,10 @@ require 'corvid/feature'
 
 module Corvid
   module Builtin
-    class PluginFeature < ::Corvid::Feature
+    class TestUnitFeature < ::Corvid::Feature
 
       rake_tasks {
-        # TODO rake tasks
+        require 'corvid/rake/tasks/test'
       }
 
     end

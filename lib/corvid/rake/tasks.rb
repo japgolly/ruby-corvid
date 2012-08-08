@@ -5,9 +5,6 @@ end
 
 Bundler.require :rake
 
-# TODO Should ExtManager replace?: Load corvid rake-tasks
-Dir["#{File.dirname __FILE__}/tasks/**/*.rb"].each{|f| require f }
-
 require 'corvid/extension_registry'
 Corvid::ExtensionRegistry.run_extensions_for :rake_tasks
 
