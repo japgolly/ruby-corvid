@@ -33,14 +33,3 @@ Non-Functional / Under-The-Hood
 * Reduce version granularity to feature?
 * Split `corvid/rake/tasks/test.rb` into unit, spec, all.
 
-Feature Manifest & Ext Point Support
-------------------------------------
-* Open ext points to features, not plugins
-  * For each installed feature, use a factory to get a feature ext class
-    * Give a string
-    * Load feature manifest for plugin
-      * For corvid, we know the manifest file
-      * For plugins, use plugin manager to extract from Plugin
-    * Require file specified in feature manifest
-    * Get ni/class instance
-  * For each feature ext class, iterate from ext point

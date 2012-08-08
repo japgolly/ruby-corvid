@@ -100,7 +100,7 @@ module Corvid
 
     private
 
-    # @param [Hash<String|Symbol, Array<String>] Feature manifest for a single plugin. See {#register_feature} for key
+    # @param [Hash<String|Symbol, Array<String>>] feature_hash Feature manifest for a single plugin. See {#register_feature} for key
     #   and value explanations.
     def register_features(feature_hash)
       feature_hash.each do |name, data|

@@ -54,7 +54,7 @@ module Corvid
         @rpm ||= ::Corvid::ResPatchManager.new
       end
 
-      # @!attribute feature_manager
+      # @!attribute [rw] feature_manager
       #   @return [FeatureManager]
       ::Corvid::FeatureManager.def_accessor(self)
 

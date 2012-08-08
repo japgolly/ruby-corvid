@@ -6,7 +6,7 @@ module Corvid
   class ExtensionRegistry
     include GollyUtils::Singleton
 
-    # @!attribute feature_manager
+    # @!attribute [rw] feature_manager
     #   @return [FeatureManager]
     FeatureManager.def_accessor(self)
 
