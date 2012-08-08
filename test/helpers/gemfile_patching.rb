@@ -43,14 +43,12 @@ module GemfilePatching
 
   def apply_corvid_deps_patch(dir='.')
 #    sed -n 's/[ \t'"'"'"]//g; s/gem\([^,]*\),.*$/\1/p' /tmp/gem.tmp
-    cmd= <<-EOB
+    system <<-EOB
       cd "#{dir}" \
       && rm -f Gemfile.lock \
       && sed -i -n '/^ *gem .*git:/!p; $r /tmp/gem.tmp' Gemfile \
       && cp "#{CORVID_ROOT}"/Gemfile.lock .
     EOB
-    puts cmd
-    system cmd
     raise "Something went wrong: exit status = #{$?.exitstatus}" unless $?.success?
   end
 

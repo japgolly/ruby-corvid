@@ -3,5 +3,6 @@ gem "corvid", path: '../../..'
 gem 'rake', group: :rake
 
 group :doc do
-  gem "yard"
+#  gem "yard"
 end
+gem 'yard', git: 'git://github.com/japgolly/yard.git', branch: 'happy_days', group: :doc # TODO Use proper yard
