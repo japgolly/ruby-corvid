@@ -35,6 +35,9 @@ Non-Functional / Under-The-Hood
 
 Plugins: The Plan
 -----------------
+* Features should be able to contribute extensions. ![Done](done.png)
+  * Create extension points. ![Done](done.png)
+  * Create feature manager. ![Done](done.png)
 * Create a plugin feature
   * Creates new `resources/latest` dir ![Done](done.png)
   * Adds `res` rake tasks ![Done](done.png)
