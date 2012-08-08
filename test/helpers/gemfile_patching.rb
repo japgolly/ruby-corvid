@@ -41,15 +41,13 @@ module GemfilePatching
       system "rm -f /tmp/gem.tmp"
   end
 
-  def apply_corvid_deps_patch(dir='.', local=false)
-    local= local ? '--local' : ''
+  def apply_corvid_deps_patch(dir='.')
 #    sed -n 's/[ \t'"'"'"]//g; s/gem\([^,]*\),.*$/\1/p' /tmp/gem.tmp
     cmd= <<-EOB
       cd "#{dir}" \
       && rm -f Gemfile.lock \
       && sed -i -n '/^ *gem .*git:/!p; $r /tmp/gem.tmp' Gemfile \
-      && cp "#{CORVID_ROOT}"/Gemfile.lock . \
-      && BUNDLE_GEMFILE= bundle install #{local} --quiet
+      && cp "#{CORVID_ROOT}"/Gemfile.lock .
     EOB
     puts cmd
     system cmd
