@@ -142,6 +142,16 @@ module TestHelpers
   end
 end
 
+module IntegrationTestDecoration
+  SEP= "\e[0;40;34m#{'-'*120}\e[0m"
+  def self.included spec
+    spec.class_eval <<-EOB
+      before(:each){ puts ::#{self}::SEP }
+      after(:all){ puts ::#{self}::SEP; puts }
+    EOB
+  end
+end
+
 RSpec.configure do |config|
   config.include TestHelpers
   config.include GemfilePatching

@@ -1,7 +1,8 @@
 # encoding: utf-8
 require_relative '../spec_helper'
 
-describe 'Client-Functionality Integration Test' do
+describe 'Client Functionality provided by Corvid' do
+  include IntegrationTestDecoration
   run_all_in_empty_dir
   before(:each){ clean }
 
@@ -11,12 +12,12 @@ describe 'Client-Functionality Integration Test' do
     Dir.exist?('target').should == false
   end
 
-  it("should initialise project"){
+  it("should install itself into new project"){
     invoke_corvid! "init:project --no-#{RUN_BUNDLE} --test-unit --test-spec"
     'Gemfile.lock'.should_not exist_as_file
     patch_corvid_gemfile
     patch_corvid_deps
-    invoke_sh! 'bundle install'
+    invoke_sh! 'bundle install --quiet'
     'Gemfile.lock'.should exist_as_file
     File.write 'lib/hehe.rb', 'class Hehe; def num; 123 end end'
   }
