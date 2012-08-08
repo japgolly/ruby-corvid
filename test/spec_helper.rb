@@ -152,9 +152,9 @@ module IntegrationTestDecoration
   SEP3= "\e[0;40;34m#{'='*120}\e[0m"
   def self.included spec
     spec.class_eval <<-EOB
-      before(:all){ puts ::#{self}::SEP1; $__GOLTEST_ITD=1 }
-      before(:each){ $__GOLTEST_ITD ?  $__GOLTEST_ITD= nil : puts(::#{self}::SEP2) }
-      after(:all){ puts ::#{self}::SEP3 }
+      before(:all) { puts ::#{self}::SEP1 }
+      before(:each){ puts ::#{self}::SEP2 }
+      after(:all)  { puts ::#{self}::SEP3 }
     EOB
   end
 end
