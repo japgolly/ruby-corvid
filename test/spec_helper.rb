@@ -16,6 +16,7 @@ BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
 # Add test/ to lib path
 $:<< "#{CORVID_ROOT}/test"
 
+require 'helpers/gemfile_patching'
 module Fixtures
   FIXTURE_ROOT= "#{CORVID_ROOT}/test/fixtures"
 end
@@ -75,18 +76,6 @@ module TestHelpers
     }
   end
 
-  def patch_corvid_gemfile
-    files= %w[Gemfile .corvid/Gemfile]
-    files.select!{|f| File.exists? f}
-    unless files.empty?
-      `perl -pi -e '
-         s|^\\s*(gem\\s+.corvid.)\\s*(?:,\\s*path.*)?$|\\1, path: "#{CORVID_ROOT}"|
-       ' #{files.join ' '}`
-      raise 'patch failed' unless $?.success?
-    end
-    true
-  end
-
   def assert_files(src_dir, exceptions={})
     filelist= Dir.chdir(src_dir){
       Dir.glob('**/*',File::FNM_DOTMATCH).select{|f| File.file? f }
@@ -142,4 +131,5 @@ end
 
 RSpec.configure do |config|
   config.include TestHelpers
+  config.include GemfilePatching
 end
