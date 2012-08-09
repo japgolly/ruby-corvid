@@ -5,7 +5,7 @@ require 'singleton'
 require 'thread'
 
 module Corvid
-  class PluginManager
+  class PluginRegistry
     include Singleton
 
     # Plugin instances. Loaded on demand.
