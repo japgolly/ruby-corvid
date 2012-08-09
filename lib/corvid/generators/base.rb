@@ -32,6 +32,12 @@ module Corvid
       # Filename of the client-side file that stores the Corvid features that are enabled in the client's project.
       FEATURES_FILE= '.corvid/features.yml'
 
+      # Methods provided to feature installer that each take a block of code.
+      FEATURE_INSTALLER_CODE_DEFS= %w[install update].map(&:freeze).freeze
+
+      # Methods provided to feature installer that each take a single value.
+      FEATURE_INSTALLER_VALUES_DEFS= %w[since_ver].map(&:freeze).freeze
+
       # @!visibility private
       def self.inherited(c)
         c.class_eval <<-EOB
@@ -255,7 +261,9 @@ module Corvid
       # @return [nil,String] The installer file contents or `nil` if the file doesn't exist.
       def feature_installer_code(dir = res_dir(), feature)
         file= feature_installer_file(dir, feature)
-        File.exist?(file) && File.read(file) # TODO encoding
+        return nil unless File.exist?(file)
+        code= File.read(file) # TODO encoding
+        allow_declarative_feature_installer_config code, feature
       end
       # @return [String] The installer file contents.
       # @raise If the installer file doesn't exist.
@@ -265,6 +273,60 @@ module Corvid
           feature_installer_file!(dir, feature) # This will raise its own error if file not found
           raise "Unable to read feature installer code for '#{feature}'."
         )
+      end
+
+      # Wraps the code of a feature installer so that values/code blocks are provided as arguments to pre-defined
+      # keywords.
+      #
+      # Eg. the following code:
+      #     since_ver 2
+      #
+      #     install {
+      #       do_stuff
+      #     }
+      # will be translated into:
+      #     def since_ver
+      #       2
+      #     end
+      #
+      #     def install
+      #       do_stuff
+      #     end
+      #
+      # Why? Because this fails fast:
+      #     instal {  # <-- typo, this causes an error on parsing now
+      #       do_stuff
+      #     }
+      #
+      # @param [String] code The feature installer code.
+      # @return [String] The feature installer code wrapped in magic goodness!
+      def allow_declarative_feature_installer_config(code, feature)
+        iv= '@__corvid_fi_'
+        new_code= []
+        new_code.concat FEATURE_INSTALLER_VALUES_DEFS.map{|m| "def #{m}(v); #{iv}#{m}= v; end"}
+        new_code.concat FEATURE_INSTALLER_CODE_DEFS.map{|m| %|
+                          def #{m}(&b)
+                            raise "Block not provided for #{m} in #{feature} feature-installer." if b.nil?
+                            #{iv}#{m}= b
+                          end
+                        |}
+        new_code<< code
+        new_code.concat FEATURE_INSTALLER_VALUES_DEFS.map{|m| %|
+                          if instance_variable_defined? :#{iv}#{m}
+                            def #{m}; #{iv}#{m} end
+                          else
+                            undef :#{m}
+                          end
+                        |}
+        new_code.concat FEATURE_INSTALLER_CODE_DEFS.map{|m| %|
+                          if instance_variable_defined? :#{iv}#{m}
+                            def #{m}(*args) #{iv}#{m}.call(*args) end
+                          else
+                            undef :#{m}
+                          end
+                        |}
+        code= new_code.join "\n"
+        code
       end
 
       # @return [nil, GollyUtils::Delegator<Base>] An instance of the feature installer, unless any forseeable exception
