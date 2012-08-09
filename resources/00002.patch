@@ -1,0 +1,75 @@
+Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+After: ee8716bdbcf4169340b744e4ffcd5d9c94a885b343d878b5e1cbc5f4e60e80d3
+Patch: 07558b802eebced335748443c3ed4996e3a94197cb97bca85be10f05b301e89a
+--- /dev/null	2012-07-30 09:37:23.066384672 +1000
++++ Rakefile	2012-08-09 11:58:02.612251978 +1000
+@@ -0,0 +1,6 @@
++raise "Rake must not be run directly. Either run via Bundler (bundle exec rake) or via bin/rake." unless defined?(Bundler)
++APP_ROOT ||= File.expand_path(File.dirname(__FILE__))
++require 'corvid/rake/tasks'
++
++# Set default task to test
++task :default => :test
+--- /dev/null	2012-07-30 09:37:23.066384672 +1000
++++ corvid-features/corvid.rb	2012-08-09 12:37:41.761933580 +1000
+@@ -0,0 +1,13 @@
++since_ver 1
++
++install {
++  copy_file       'Rakefile'
++  empty_directory 'lib'
++  empty_directory 'wtffff'
++}
++
++update {|ver|
++  if ver == 2
++    #empty_directory 'wtffff'
++  end
++}
+--- /dev/null	2012-07-30 09:37:23.066384672 +1000
++++ corvid-features/test_spec.rb	2012-08-09 12:28:47.208969779 +1000
+@@ -0,0 +1,6 @@
++since_ver 1
++
++install {
++  copy_file               'test/bootstrap/spec.rb'
++  empty_directory         'test/spec'
++}
+--- /dev/null	2012-07-30 09:37:23.066384672 +1000
++++ corvid-features/test_unit.rb	2012-08-09 12:28:47.228969888 +1000
+@@ -0,0 +1,6 @@
++since_ver 1
++
++install {
++  copy_file               'test/bootstrap/unit.rb'
++  empty_directory         'test/unit'
++}
+--- /dev/null	2012-07-30 09:37:23.066384672 +1000
++++ test/bootstrap/all.rb	2012-08-09 11:58:02.615585330 +1000
+@@ -0,0 +1,11 @@
++# encoding: utf-8
++APP_ROOT = File.expand_path('../../..',__FILE__)
++require 'rubygems'
++require 'bundler/setup'
++require 'corvid/test/bootstrap/all'
++
++Bundler.require :default
++
++# Load test helpers
++Dir.glob("#{APP_ROOT}/test/helpers/**/*.rb") {|f| require f}
++
+--- /dev/null	2012-07-30 09:37:23.066384672 +1000
++++ test/bootstrap/spec.rb	2012-08-09 11:58:02.615585330 +1000
+@@ -0,0 +1,5 @@
++# encoding: utf-8
++$coverage_name = 'specs'
++require_relative 'all'
++require 'corvid/test/bootstrap/spec'
++
+--- /dev/null	2012-07-30 09:37:23.066384672 +1000
++++ test/bootstrap/unit.rb	2012-08-09 11:58:02.615585330 +1000
+@@ -0,0 +1,4 @@
++# encoding: utf-8
++$coverage_name = 'unit tests'
++require_relative 'all'
++require 'corvid/test/bootstrap/unit'
