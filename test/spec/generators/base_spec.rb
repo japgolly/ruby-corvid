@@ -18,7 +18,7 @@ describe Corvid::Generator::Base do
     }
   end
 
-  context 'with_latest_resources()' do
+  describe '#with_latest_resources' do
     it("should reuse an existing res-patch deployment"){
       x= X.new
       y= Y.new
@@ -64,5 +64,41 @@ describe Corvid::Generator::Base do
       source_root.should be_nil
     }
 
+  end
+
+  describe '#feature_installer' do
+    def installer_for(code)
+      subject.stub feature_installer_file: 'as.rb'
+      File.stub exist?: true
+      File.should_receive(:read).once.and_return(code)
+      subject.send(:feature_installer!,'dir','mock')
+    end
+
+    it("should allow declarative definition of install"){
+      f= installer_for "install{ copy_file 'hehe'; 123 }"
+      subject.should_receive(:copy_file).with('hehe').once
+      f.install().should == 123
+    }
+    it("should allow declarative definition of update"){
+      f= installer_for "update{ copy_file 'hehe2'; :no }"
+      subject.should_receive(:copy_file).with('hehe2').once
+      f.update().should == :no
+    }
+    it("should pass a version argument to update"){
+      f= installer_for "update{|v| v*v }"
+      f.update(3).should == 9
+    }
+    it("should allow declarative definition of since_ver"){
+      f= installer_for "since_ver 2"
+      f.since_ver().should == 2
+    }
+    it("should fail when no block passed to install"){
+      expect { installer_for "install" }.to raise_error
+    }
+    it("should respond_to? provided values only"){
+      f= installer_for "install{ 2 }"
+      f.respond_to?(:install).should == true
+      f.respond_to?(:update).should == false
+    }
   end
 end
