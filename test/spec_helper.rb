@@ -3,12 +3,16 @@
 STDIN.close
 
 require_relative '../lib/corvid/environment'
+$:<< "#{CORVID_ROOT}/test" # Add test/ to lib path
+
+require 'corvid/builtin/manifest'
+require 'corvid/test/helpers/plugins'
+require 'helpers/gemfile_patching'
 require 'golly-utils/testing/rspec/files'
 require 'golly-utils/testing/rspec/arrays'
-require 'tmpdir'
 require 'fileutils'
+require 'tmpdir'
 require 'yaml'
-require 'corvid/builtin/manifest'
 
 RUN_BUNDLE= 'run_bundle'
 BOOTSTRAP_ALL= 'test/bootstrap/all.rb'
@@ -18,10 +22,6 @@ BUILTIN_FEATURES= Corvid::Builtin::Manifest.new.feature_manifest.keys.map(&:free
 CORVID_BIN= "#{CORVID_ROOT}/bin/corvid"
 CORVID_BIN_Q= CORVID_BIN.inspect
 
-# Add test/ to lib path
-$:<< "#{CORVID_ROOT}/test"
-
-require 'helpers/gemfile_patching'
 module Fixtures
   FIXTURE_ROOT= "#{CORVID_ROOT}/test/fixtures"
 end
@@ -105,30 +105,6 @@ module TestHelpers
     end
   end
 
-  def generator_config(quiet)
-    # Quiet stdout - how the hell else are you supposed to do this???
-    config= {}
-    config[:shell] ||= Thor::Base.shell.new
-    if quiet
-      config[:shell].instance_eval 'def say(*) end'
-      config[:shell].instance_eval 'def quiet?; true; end'
-      #config[:shell].instance_variable_set :@mute, true
-    end
-    config
-  end
-
-  def quiet_generator(generator_class)
-    config= generator_config(true)
-    g= generator_class.new([], [], config)
-    decorate_generator g
-  end
-
-  def decorate_generator(g)
-    # Use a test res-patch manager if available
-    g.rpm= @rpm if @rpm
-    g
-  end
-
   def run_generator(generator_class, args, no_bundle=true, quiet=true)
     args= args.split(/\s+/) unless args.is_a?(Array)
     args<< "--no-#{RUN_BUNDLE}" if no_bundle
@@ -160,6 +136,7 @@ module IntegrationTestDecoration
 end
 
 RSpec.configure do |config|
-  config.include TestHelpers
+  config.include Corvid::PluginTestHelpers
   config.include GemfilePatching
+  config.include TestHelpers
 end
