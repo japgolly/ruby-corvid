@@ -1,62 +1,17 @@
-Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+Before: 7f01a519428dbf523f21d77ad05cef17b9606df319d5974d7710d7421bb52c49
 After: b73de844401e0401e0c97dc556286c7192a90ac56bf4c3a0a7051f44386d8fdb
-Patch: 9b0138d9fa4fdd3bdbf044ec9d23ff7aea6c8f96912a1cea63fbf76fb043f9fb
---- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ Rakefile	2012-08-09 13:11:22.963368014 +1000
-@@ -0,0 +1,6 @@
-+raise "Rake must not be run directly. Either run via Bundler (bundle exec rake) or via bin/rake." unless defined?(Bundler)
-+APP_ROOT ||= File.expand_path(File.dirname(__FILE__))
-+require 'corvid/rake/tasks'
-+
-+# Set default task to test
-+task :default => :test
---- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ corvid-features/corvid.rb	2012-08-09 13:12:38.123777004 +1000
-@@ -0,0 +1,4 @@
-+install {
-+  copy_file       'Rakefile'
-+  empty_directory 'lib'
-+}
---- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ corvid-features/test_spec.rb	2012-08-09 13:12:38.140443759 +1000
-@@ -0,0 +1,4 @@
-+install {
-+  copy_file               'test/bootstrap/spec.rb'
-+  empty_directory         'test/spec'
-+}
---- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ corvid-features/test_unit.rb	2012-08-09 13:12:38.163777218 +1000
-@@ -0,0 +1,4 @@
-+install {
-+  copy_file               'test/bootstrap/unit.rb'
-+  empty_directory         'test/unit'
-+}
---- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/bootstrap/all.rb	2012-08-09 13:11:22.963368014 +1000
-@@ -0,0 +1,11 @@
-+# encoding: utf-8
-+APP_ROOT = File.expand_path('../../..',__FILE__)
-+require 'rubygems'
-+require 'bundler/setup'
-+require 'corvid/test/bootstrap/all'
-+
-+Bundler.require :default
-+
-+# Load test helpers
-+Dir.glob("#{APP_ROOT}/test/helpers/**/*.rb") {|f| require f}
-+
---- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/bootstrap/spec.rb	2012-08-09 13:11:22.963368014 +1000
-@@ -0,0 +1,5 @@
-+# encoding: utf-8
-+$coverage_name = 'specs'
-+require_relative 'all'
-+require 'corvid/test/bootstrap/spec'
-+
---- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/bootstrap/unit.rb	2012-08-09 13:11:22.963368014 +1000
-@@ -0,0 +1,4 @@
-+# encoding: utf-8
-+$coverage_name = 'unit tests'
-+require_relative 'all'
-+require 'corvid/test/bootstrap/unit'
+Patch: b89955f5bd930e75e81bef2b1fc3a4353fa47717f5c818c133a4583d2948c102
+--- corvid-features/corvid.rb	2012-08-09 13:23:06.417199997 +1000
++++ corvid-features/corvid.rb	2012-08-09 13:23:43.907404464 +1000
+@@ -1,11 +1,4 @@
+ install {
+   copy_file       'Rakefile'
+   empty_directory 'lib'
+-  empty_directory 'wtffff'
+-}
+-
+-update {|ver|
+-  if ver == 2
+-    #empty_directory 'wtffff'
+-  end
+ }
