@@ -32,7 +32,7 @@ module Corvid
       FEATURE_INSTALLER_CODE_DEFS= %w[install update].map(&:freeze).freeze
 
       # Methods provided to feature installer that each take a single value.
-      FEATURE_INSTALLER_VALUES_DEFS= %w[since_ver].map(&:freeze).freeze
+      FEATURE_INSTALLER_VALUES_DEFS= %w[].map(&:freeze).freeze
 
       # @!visibility private
       def self.inherited(c)

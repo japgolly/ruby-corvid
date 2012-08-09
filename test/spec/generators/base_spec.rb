@@ -88,7 +88,8 @@ describe Corvid::Generator::Base do
       f= installer_for "update{|v| v*v }"
       f.update(3).should == 9
     }
-    it("should allow declarative definition of since_ver"){
+    it("should allow declarative definition of values (as opposed to blocks)"){
+      stub_const "#{Corvid::Generator::Base}::FEATURE_INSTALLER_VALUES_DEFS", %w[since_ver]
       f= installer_for "since_ver 2"
       f.since_ver().should == 2
     }

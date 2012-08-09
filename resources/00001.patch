@@ -1,18 +1,16 @@
-Before: df2ca9402ae08e52322d6f8e221e8ac381c9afa7eae6c91894fa6173a8f44020
-After: 817e49280c3b0702bf116e181955be362bcc4472c8ab0f02d680b375e86802e0
-Patch: b84774eea62b810b9d41bd71081cc2854c9cd00d8613426e39450ecc266d16fa
---- corvid-features/plugin.rb	2012-08-09 12:47:53.088740480 +1000
+Before: fd97ed68d5a27a885760e2f7db43e4d31889c44a392d74b3f0a9aa33c5c97703
+After: 33bfbc981a0607f4ba3019729ce32d3a0171520c560873cc5a84d42f841bc3e9
+Patch: 4fd12c58f967c093fcdc2b826a2ef94fccc60cf33e283267451b28b618453aeb
+--- corvid-features/plugin.rb	2012-08-09 13:34:29.694263314 +1000
 +++ /dev/null	2012-07-30 09:37:23.066384672 +1000
-@@ -1,8 +0,0 @@
--since_ver 2
--
+@@ -1,6 +0,0 @@
 -install {
 -  empty_directory 'resources'
 -  empty_directory 'resources/latest'
 -  copy_file       'resources/.gitignore'
 -  install_feature 'test_spec', run_bundle: true, say_if_installed: false
 -}
---- resources/.gitignore	2012-08-09 12:47:19.975219366 +1000
+--- resources/.gitignore	2012-08-09 13:34:14.000844233 +1000
 +++ /dev/null	2012-07-30 09:37:23.066384672 +1000
 @@ -1 +0,0 @@
 -latest
