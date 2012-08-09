@@ -7,5 +7,6 @@ describe "Actual Resources" do
   res_patch_dir Corvid::ResPatchManager.default_res_patch_dir
 
   include_patch_validity_tests
+
   include_feature_update_install_tests BUILTIN_FEATURES
 end
