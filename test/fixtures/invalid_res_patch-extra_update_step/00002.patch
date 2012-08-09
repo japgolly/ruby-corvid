@@ -1,8 +1,8 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: 61a83daecc08f650c09b61445d6bdccae91c65981475713aa4bbbe21c7bd2f32
-Patch: 49690a0cc194a944143ddb9bbc39e6a4f4627bc5849c2902a4565526d5a28e6c
+After: 49e9d461c87f849db88ea6c22415bfce83309bf85124719359c29cde88f0f050
+Patch: 15693ae1c03bad84a3928b8aa58582695a85e81be891aabd2ad13029964f0ecf
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ Rakefile	2012-08-09 11:58:02.612251978 +1000
++++ Rakefile	2012-08-09 13:11:22.963368014 +1000
 @@ -0,0 +1,6 @@
 +raise "Rake must not be run directly. Either run via Bundler (bundle exec rake) or via bin/rake." unless defined?(Bundler)
 +APP_ROOT ||= File.expand_path(File.dirname(__FILE__))
@@ -11,14 +11,12 @@ Patch: 49690a0cc194a944143ddb9bbc39e6a4f4627bc5849c2902a4565526d5a28e6c
 +# Set default task to test
 +task :default => :test
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ corvid-features/corvid.rb	2012-08-09 12:32:52.820305676 +1000
-@@ -0,0 +1,13 @@
-+since_ver 1
-+
++++ corvid-features/corvid.rb	2012-08-09 13:21:35.793372509 +1000
+@@ -0,0 +1,11 @@
 +install {
 +  copy_file       'Rakefile'
 +  empty_directory 'lib'
-+  #  empty_directory 'wtffff'
++  #empty_directory 'wtffff'
 +}
 +
 +update {|ver|
@@ -27,25 +25,21 @@ Patch: 49690a0cc194a944143ddb9bbc39e6a4f4627bc5849c2902a4565526d5a28e6c
 +  end
 +}
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ corvid-features/test_spec.rb	2012-08-09 12:28:47.208969779 +1000
-@@ -0,0 +1,6 @@
-+since_ver 1
-+
++++ corvid-features/test_spec.rb	2012-08-09 13:16:54.395172329 +1000
+@@ -0,0 +1,4 @@
 +install {
 +  copy_file               'test/bootstrap/spec.rb'
 +  empty_directory         'test/spec'
 +}
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ corvid-features/test_unit.rb	2012-08-09 12:28:47.228969888 +1000
-@@ -0,0 +1,6 @@
-+since_ver 1
-+
++++ corvid-features/test_unit.rb	2012-08-09 13:16:54.395172329 +1000
+@@ -0,0 +1,4 @@
 +install {
 +  copy_file               'test/bootstrap/unit.rb'
 +  empty_directory         'test/unit'
 +}
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/bootstrap/all.rb	2012-08-09 11:58:02.615585330 +1000
++++ test/bootstrap/all.rb	2012-08-09 13:11:22.963368014 +1000
 @@ -0,0 +1,11 @@
 +# encoding: utf-8
 +APP_ROOT = File.expand_path('../../..',__FILE__)
@@ -59,7 +53,7 @@ Patch: 49690a0cc194a944143ddb9bbc39e6a4f4627bc5849c2902a4565526d5a28e6c
 +Dir.glob("#{APP_ROOT}/test/helpers/**/*.rb") {|f| require f}
 +
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/bootstrap/spec.rb	2012-08-09 11:58:02.615585330 +1000
++++ test/bootstrap/spec.rb	2012-08-09 13:11:22.963368014 +1000
 @@ -0,0 +1,5 @@
 +# encoding: utf-8
 +$coverage_name = 'specs'
@@ -67,7 +61,7 @@ Patch: 49690a0cc194a944143ddb9bbc39e6a4f4627bc5849c2902a4565526d5a28e6c
 +require 'corvid/test/bootstrap/spec'
 +
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/bootstrap/unit.rb	2012-08-09 11:58:02.615585330 +1000
++++ test/bootstrap/unit.rb	2012-08-09 13:11:22.963368014 +1000
 @@ -0,0 +1,4 @@
 +# encoding: utf-8
 +$coverage_name = 'unit tests'

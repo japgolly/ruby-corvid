@@ -1,13 +1,13 @@
-Before: 61a83daecc08f650c09b61445d6bdccae91c65981475713aa4bbbe21c7bd2f32
-After: 024467d03e7db9ef40534ffaec1a1fe2233dfb1248e12692445be914b5f514af
-Patch: 5bd1b2b84a76442082c98acc281f592811171c6db08276360c75e5a12bf4db48
---- corvid-features/corvid.rb	2012-08-09 12:32:52.820305676 +1000
-+++ corvid-features/corvid.rb	2012-08-09 12:32:58.407002725 +1000
-@@ -3,11 +3,4 @@
+Before: 49e9d461c87f849db88ea6c22415bfce83309bf85124719359c29cde88f0f050
+After: b73de844401e0401e0c97dc556286c7192a90ac56bf4c3a0a7051f44386d8fdb
+Patch: c8a647304ae150d4b73d1bee4e81e2615b5016d49a25e1198df88ada3d5a5d3c
+--- corvid-features/corvid.rb	2012-08-09 13:21:35.793372509 +1000
++++ corvid-features/corvid.rb	2012-08-09 13:21:53.896804544 +1000
+@@ -1,11 +1,4 @@
  install {
    copy_file       'Rakefile'
    empty_directory 'lib'
--  #  empty_directory 'wtffff'
+-  #empty_directory 'wtffff'
 -}
 -
 -update {|ver|
