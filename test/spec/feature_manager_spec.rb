@@ -1,8 +1,8 @@
 # encoding: utf-8
 require_relative '../spec_helper'
-require 'corvid/feature_manager'
+require 'corvid/feature_registry'
 
-describe Corvid::FeatureManager do
+describe Corvid::FeatureRegistry do
   subject{ described_class.send :new }
 
   describe "#instance_for" do

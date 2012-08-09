@@ -1,19 +1,19 @@
 require 'golly-utils/singleton'
 require 'corvid/extension'
-require 'corvid/feature_manager'
+require 'corvid/feature_registry'
 
 module Corvid
   class ExtensionRegistry
     include GollyUtils::Singleton
 
-    # @!attribute [rw] feature_manager
-    #   @return [FeatureManager]
-    FeatureManager.def_accessor(self)
+    # @!attribute [rw] feature_registry
+    #   @return [FeatureRegistry]
+    FeatureRegistry.def_accessor(self)
 
     def extensions
       @extensions ||= (
         # Add all extensions provided by installed features
-        feature_manager.instances_for_installed.values.compact.select{|f| Extension === f }
+        feature_registry.instances_for_installed.values.compact.select{|f| Extension === f }
       )
     end
 

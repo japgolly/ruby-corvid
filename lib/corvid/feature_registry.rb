@@ -3,7 +3,7 @@ require 'corvid/constants'
 require 'corvid/builtin/manifest'
 
 module Corvid
-  class FeatureManager
+  class FeatureRegistry
     include GollyUtils::Singleton
 
     def initialize
@@ -20,11 +20,11 @@ module Corvid
     def self.def_accessor(target)
       # Not using attr_writer here cos of Thor.no_tasks
       target.class_eval <<-EOB
-        def feature_manager
-           @feature_manager ||= ::#{self}.instance
+        def feature_registry
+           @feature_registry ||= ::#{self}.instance
         end
-        def feature_manager=(fm)
-           @feature_manager= fm
+        def feature_registry=(fr)
+           @feature_registry= fr
         end
       EOB
     end

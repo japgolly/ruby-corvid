@@ -109,8 +109,8 @@ describe Corvid::Generator::Base do
       subject.stub read_client_features!: []
       f= mock 'feature b'
       f.should_receive(:since_ver).at_least(:once).and_return(4)
-      subject.feature_manager= fm= mock 'feature manager'
-      fm.should_receive(:instance_for).with('b').once.and_return(f)
+      subject.feature_registry= fr= mock 'feature registry'
+      fr.should_receive(:instance_for).with('b').once.and_return(f)
       subject.should_not_receive :with_resources
       expect{
         subject.send :install_feature, 'b'

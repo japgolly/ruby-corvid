@@ -1,6 +1,6 @@
 require 'corvid/environment'
 require 'corvid/constants'
-require 'corvid/feature_manager'
+require 'corvid/feature_registry'
 require 'corvid/res_patch_manager'
 require 'corvid/generators/actions'
 
@@ -55,17 +55,17 @@ module Corvid
 
       @no_tasks= true # Shutup Thor, you idiot!
 
-      # @!attribute [rw] feature_manager
-      #   @return [FeatureManager]
-      ::Corvid::FeatureManager.def_accessor(self)
+      # @!attribute [rw] feature_registry
+      #   @return [FeatureRegistry]
+      ::Corvid::FeatureRegistry.def_accessor(self)
 
-      # @see Corvid::FeatureManager#read_client_features
+      # @see Corvid::FeatureRegistry#read_client_features
       def read_client_features
-        feature_manager.read_client_features
+        feature_registry.read_client_features
       end
-      # @see Corvid::FeatureManager#read_client_features!
+      # @see Corvid::FeatureRegistry#read_client_features!
       def read_client_features!
-        feature_manager.read_client_features!
+        feature_registry.read_client_features!
       end
 
       # Reads and parses the contents of the client's {Constants::VERSION_FILE VERSION_FILE} if it exists.
@@ -252,7 +252,7 @@ module Corvid
         else
 
           # Ensure resources up-to-date
-          f= feature_manager.instance_for(name)
+          f= feature_registry.instance_for(name)
           if f and f.since_ver > ver
             plugin_name= 'corvid' # TODO plugin name hardcoded to corvid
             raise "The #{name} feature requires at least v#{f.since_ver} of #{plugin_name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."

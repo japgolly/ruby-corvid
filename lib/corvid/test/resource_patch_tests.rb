@@ -1,5 +1,5 @@
 require 'corvid/constants'
-require 'corvid/feature_manager'
+require 'corvid/feature_registry'
 require 'corvid/generators/update'
 require 'corvid/res_patch_manager'
 require 'corvid/test/helpers/plugins'
@@ -35,9 +35,9 @@ module Corvid
 
       def include_feature_update_install_tests(features)
         latest_resource_version= rpm.latest_version
-        feature_manager= Corvid::FeatureManager
+        feature_registry= Corvid::FeatureRegistry
         tests= features.map {|name|
-                 f= feature_manager.instance_for(name)
+                 f= feature_registry.instance_for(name)
                  unless f.since_ver == latest_resource_version
                    %[
                      it("Testing feature: #{name}"){

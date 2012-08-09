@@ -10,10 +10,10 @@ describe Corvid::ExtensionRegistry do
   end
 
   it("should load all installed features"){
-    fm= mock 'FeatureManager'
+    fr= mock 'FeatureRegistry'
     pf= MockExtension.new
-    fm.should_receive(:instances_for_installed).once.and_return 'corvid'=>nil, 'plugin'=>pf
-    subject.feature_manager= fm
+    fr.should_receive(:instances_for_installed).once.and_return 'corvid'=>nil, 'plugin'=>pf
+    subject.feature_registry= fr
     subject.extensions.should == [pf]
   }
 
