@@ -237,6 +237,8 @@ module Corvid
       # @option options [Boolean] :say_if_installed (true) If enabled and feature is already installed, then display a message
       #   indicating so to the user.
       # @return [void]
+      # @raise If failed to read client's version and installed features.
+      # @raise If the feature isn't available at the current version of resources (i.e. update required).
       def install_feature(name, options={})
         options= DEFAULT_OPTIONS_FOR_INSTALL_FEATURE.merge options
 
@@ -248,6 +250,14 @@ module Corvid
         if features.include? name
           say "Feature '#{name}' already installed." if options[:say_if_installed]
         else
+
+          # Ensure resources up-to-date
+          f= feature_manager.instance_for(name)
+          if f and f.since_ver > ver
+            plugin_name= 'corvid' # TODO plugin name hardcoded to corvid
+            raise "The #{name} feature requires at least v#{f.since_ver} of #{plugin_name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
+          end
+
           # Install feature
           with_resources(ver) {|ver|
             feature_installer!(name).install

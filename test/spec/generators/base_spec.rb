@@ -102,4 +102,27 @@ describe Corvid::Generator::Base do
       f.respond_to?(:update).should == false
     }
   end
+
+  describe "#install_feature" do
+    it("should fail if client resource version is prior to first feature version"){
+      subject.stub read_client_version!: 3
+      subject.stub read_client_features!: []
+      f= mock 'feature b'
+      f.should_receive(:since_ver).at_least(:once).and_return(4)
+      subject.feature_manager= fm= mock 'feature manager'
+      fm.should_receive(:instance_for).with('b').once.and_return(f)
+      subject.should_not_receive :with_resources
+      expect{
+        subject.send :install_feature, 'b'
+      }.to raise_error /update/
+    }
+
+    it("should do nothing if feature already installed"){
+      subject.stub read_client_version!: 3
+      subject.stub read_client_features!: ['b']
+      subject.stub :say
+      subject.should_not_receive :with_resources
+      subject.send :install_feature, 'b'
+    }
+  end
 end

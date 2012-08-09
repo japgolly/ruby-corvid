@@ -2,10 +2,13 @@
 require_relative '../spec_helper'
 require 'corvid/constants'
 require 'corvid/res_patch_manager'
+require 'corvid/feature_manager'
 require 'corvid/generators/update'
 
 describe "Actual resource patches" do
-  run_each_in_empty_dir#_unless_in_one_already
+  LATEST_VER= Corvid::ResPatchManager.new.latest_version
+
+  run_each_in_empty_dir
 
   let(:rpm){ Corvid::ResPatchManager.new }
 
@@ -30,7 +33,7 @@ describe "Actual resource patches" do
       }
     end
 
-    def test(feature)
+    def test(feature, starting_version=1)
       # Install latest
       Dir.mkdir 'install'
       Dir.chdir 'install' do
@@ -41,9 +44,8 @@ describe "Actual resource patches" do
       # Install old and upgrade
       Dir.mkdir 'upgrade'
       Dir.chdir 'upgrade' do
-        #run_generator TestInstaller, "install #{feature} 1"
-        quiet_generator(TestInstaller).install feature, 1
-        quiet_generator(Corvid::Generator::Update).send :upgrade!, 1, @rpm.latest_version, [feature]
+        quiet_generator(TestInstaller).install feature, starting_version
+        quiet_generator(Corvid::Generator::Update).send :upgrade!, starting_version, @rpm.latest_version, [feature]
         File.delete Corvid::Constants::VERSION_FILE
       end
 
@@ -65,14 +67,18 @@ describe "Actual resource patches" do
       expect{ test 'corvid' }.to raise_error /wtfff/
     }
 
-    BUILTIN_FEATURES.each do |feature|
-      eval <<-EOB
-        it("Testing built-in feature: #{feature}"){
-          @rpm= rpm
-          test '#{feature}'
-        }
-      EOB
-    end
+    BUILTIN_FEATURES.each {|feature|
+      f= Corvid::FeatureManager.instance_for(feature)
+      unless f.since_ver == LATEST_VER
+        eval <<-EOB
+          it("Testing built-in feature: #{feature}"){
+            @rpm= rpm
+            test '#{feature}', f.since_ver
+          }
+        EOB
+      end
+    }
+
   end
 
 end
