@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/japgolly/golly-utils.git
-  revision: 53c7af78d38ee2d4a464e13bd04501fdd72fdc08
+  revision: 2561fe5cd0165b4fa60686d4884b99e0f80a3acb
   specs:
     golly-utils (0.1.0)
 
