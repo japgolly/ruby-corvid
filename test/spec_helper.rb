@@ -18,7 +18,8 @@ RUN_BUNDLE= 'run_bundle'
 BOOTSTRAP_ALL= 'test/bootstrap/all.rb'
 BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
-BUILTIN_FEATURES= Corvid::Builtin::Manifest.new.feature_manifest.keys.map(&:freeze).freeze
+BUILTIN_PLUGIN= Corvid::Builtin::Manifest
+BUILTIN_FEATURES= BUILTIN_PLUGIN.new.feature_manifest.keys.map(&:freeze).freeze
 CORVID_BIN= "#{CORVID_ROOT}/bin/corvid"
 CORVID_BIN_Q= CORVID_BIN.inspect
 

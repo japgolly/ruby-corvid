@@ -1,96 +1,81 @@
-require 'corvid/environment' unless defined?(CORVID_ROOT)
+require 'golly-utils/singleton'
 require 'corvid/constants'
 require 'corvid/plugin'
-require 'singleton'
-require 'thread'
 
 module Corvid
   class PluginRegistry
-    include Singleton
+    include GollyUtils::Singleton
 
-    # Plugin instances. Loaded on demand.
-    # @return [Array<Plugin>]
-    def plugins
-      @plugins ||= load_plugins
+    def initialize
+      clear_cache
     end
-    attr_writer :plugins
 
-    # Runs a given block once for each plugin available.
-    #
-    # @yieldparam [Plugin] plugin A plugin instance.
-    # @return [self]
-    def each_plugin(&block)
-      plugins.each {|p| block.call p }
+    def clear_cache
+      @instance_cache= nil
       self
     end
 
-    # Runs a given callback on each plugin available.
-    #
-    # @param [Symbol] callback The callback name.
-    # @param args Optional arguments to pass to the callback.
-    # @return [self]
-    def run_callback(callback, *args)
-      each_plugin do |plugin|
-        plugin.run_callback callback, *args
-      end
-      self
-    end
-
-    protected
-
-    # Loads and creates an instance of each plugin referenced in {#read_client_plugins}.
-    #
-    # @return [Array<Plugin>] New instances of each plugin.
-    def load_plugins
-      plugins= []
-      @@load_plugins_mutex.synchronize do
-        (read_client_plugins || []).each do |name|
-
-          # Load plugin
-          @@plugin_classes[name] ||= (
-            before= Plugin.subclasses
-            require "corvid/plugins/#{name}"
-            new_plugin_classes= Plugin.subclasses - before
-            STDERR.puts "WARNING: Plugin '#{name}' failed to provide any plugins." if new_plugin_classes.empty?
-            new_plugin_classes
-          )
-
-          # Instantiate each plugin
-          @@plugin_classes[name].each do |pc|
-            plugins<< pc.new
-          end
-        end
-      end
-      plugins
+    # @return [nil,Hash<String,Hash<Symbol,Object>>] A map of plugins to their propreties, or `nil` if the file wasn't
+    #   found.
+    def read_client_plugins
+      pd= read_client_plugin_details
+      pd && pd.keys
     end
 
     # Reads and parses the contents of the client's {Constants::PLUGINS_FILE PLUGINS_FILE} if it exists.
     #
-    # @return [nil,Array<String>] A list of plugins or `nil` if the file wasn't found.
-    def read_client_plugins
+    # @return [nil,Hash<String,Hash<Symbol,Object>>] A map of plugins to their propreties, or `nil` if the file wasn't
+    #   found.
+    def read_client_plugin_details
       if File.exists? Constants::PLUGINS_FILE
         p= YAML.load_file Constants::PLUGINS_FILE
-        raise "Invalid #{Constants::PLUGINS_FILE}. Array expected but got #{v.class}." unless p.is_a?(Array)
+        raise "Invalid #{Constants::PLUGINS_FILE}. Hash expected but got #{v.class}." unless p.is_a?(Hash)
         p
       else
         nil
       end
     end
 
-    private
-    @@load_plugins_mutex= Mutex.new
-    @@plugin_classes= {}
+    # @param [String] name
+    # @return [nil,Plugin]
+    def instance_for(name)
+      load_client_plugins unless @instance_cache
 
-    #-------------------------------------------------------------------------------------------------------------------
-
-    # Create class-method helpers that call instance-methods on the singleton instance.
-    # TODO Move to GU
-    public
-    (self.instance.public_methods - self.class.methods)
-      .reject{|m| /^_/ === m.to_s}
-      .each do |m|
-        class_eval "def self.#{m}(*a,&b); self.instance.send :#{m},*a,&b; end"
+      unless @instance_cache.has_key?(name)
+        raise "Unknown plugin: #{name}. Is it specified in #{Constants::PLUGINS_FILE}?\nKnown plugins are: #{@instance_cache.keys.sort.inspect}"
       end
+
+      @instance_cache[name]
+    end
+
+    # TODO
+    #
+    # @param [Boolean] force If enabled, then the cached value will be discarded.
+    # @return [Hash<String,nil|Plugin>] An instance of each client-installed feature. May return an empty array but never `nil`.
+    def instances_for_installed#(force=false)
+      load_client_plugins unless @instance_cache
+      @instance_cache
+    end
+
+    protected
+
+    def load_client_plugins
+      @instance_cache= {}
+
+      # Add client plugins
+      if plugin_manifest= read_client_plugin_details
+        plugin_manifest.each {|name,data|
+
+          # Create a new instance
+          path,class_name = data[:path],data[:class]
+          require path if path
+          klass= eval(class_name.sub /^(?!::)/,'::')
+          @instance_cache[name]= klass.new
+        }
+      end
+
+      @instance_cache.freeze
+    end
 
   end
 end

@@ -5,12 +5,9 @@ end
 
 Bundler.require :rake
 
+# Loads tasks from plugins and features
 require 'corvid/extension_registry'
 Corvid::ExtensionRegistry.run_extensions_for :rake_tasks
 
-# Load plugin rake-tasks
-require 'corvid/plugin_registry'
-Corvid::PluginRegistry.run_callback :rake_tasks
-
-# Load application rake-tasks
+# Load application rake tasks
 Dir["#{APP_ROOT}/tasks/**/*.{rb,rake}"].each{|f| import f }

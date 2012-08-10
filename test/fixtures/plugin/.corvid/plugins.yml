@@ -1,1 +1,5 @@
-- mock_plugin
+---
+mock_plugin:
+  :path: blah/mock_plugin
+  :class: MockPlugin
+

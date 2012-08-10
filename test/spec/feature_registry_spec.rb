@@ -1,9 +1,15 @@
 # encoding: utf-8
 require_relative '../spec_helper'
 require 'corvid/feature_registry'
+require 'corvid/feature'
 
 describe Corvid::FeatureRegistry do
   subject{ described_class.send :new }
+
+  before :each do
+    subject.plugin_registry= mock 'plugin_registry'
+    subject.plugin_registry.stub instances_for_installed: {}
+  end
 
   describe "#instance_for" do
     it("should return nothing when there is no feature class"){
@@ -12,7 +18,7 @@ describe Corvid::FeatureRegistry do
     }
 
     it("should fail when feature is unknown"){
-      expect{ subject.instance_for('porn!') }.to raise_error
+      expect{ subject.instance_for('crazy') }.to raise_error
     }
 
     it("should create a new instance"){
@@ -26,6 +32,15 @@ describe Corvid::FeatureRegistry do
       i.should_not be_nil
       i2= subject.instance_for('corvid')
       i.object_id.should == i2.object_id
+    }
+
+    class FakeFeature < ::Corvid::Feature; end
+    it("should read plugins' feature manifests"){
+      p= stub feature_manifest: {'crazy' => [nil,FakeFeature.to_s]}
+      subject.plugin_registry.stub instances_for_installed: {'blah' => p}
+      i= subject.instance_for('crazy') # TODO plugins not namespaced
+      i.should_not be_nil
+      i.should be_a FakeFeature
     }
   end
 

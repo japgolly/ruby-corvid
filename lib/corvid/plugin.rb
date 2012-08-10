@@ -1,11 +1,15 @@
-require 'golly-utils/callbacks'
-require 'golly-utils/ruby_ext/subclasses'
+require 'golly-utils/attr_declarative'
 
 module Corvid
   class Plugin
-    include GollyUtils::Callbacks
+    # Plugins can be extensions but are not by default.
+    # include Extension
 
-    define_callbacks :rake_tasks
+    # @!attribute [rw] feature_manifest
+    #   A manifest of all features provided by the plugin.
+    #   @return [Hash<String,Array<String>>] A hash with keys being feature names, and the values being a 2-element
+    #     array of the feature's require-path, and class name, respectively.
+    attr_declarative feature_manifest: {}
 
   end
 end

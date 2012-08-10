@@ -1,6 +1,7 @@
 require 'golly-utils/singleton'
 require 'corvid/extension'
 require 'corvid/feature_registry'
+require 'corvid/plugin_registry'
 
 module Corvid
   class ExtensionRegistry
@@ -10,8 +11,16 @@ module Corvid
     #   @return [FeatureRegistry]
     FeatureRegistry.def_accessor(self)
 
+    # @!attribute [rw] plugin_registry
+    #   @return [PluginRegistry]
+    PluginRegistry.def_accessor(self)
+
     def extensions
       @extensions ||= (
+
+        # Add all extensions provided by installed plugins
+        plugin_registry.instances_for_installed.values.compact.select{|f| Extension === f } +
+
         # Add all extensions provided by installed features
         feature_registry.instances_for_installed.values.compact.select{|f| Extension === f }
       )

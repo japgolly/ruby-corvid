@@ -1,10 +1,15 @@
 require 'golly-utils/singleton'
 require 'corvid/constants'
+require 'corvid/plugin_registry'
 require 'corvid/builtin/manifest'
 
 module Corvid
   class FeatureRegistry
     include GollyUtils::Singleton
+
+    # @!attribute [rw] plugin_registry
+    #   @return [PluginRegistry]
+    PluginRegistry.def_accessor(self)
 
     def initialize
       clear_cache
@@ -15,18 +20,6 @@ module Corvid
       @instance_cache= {}
       @instances_for_installed= nil
       self
-    end
-
-    def self.def_accessor(target)
-      # Not using attr_writer here cos of Thor.no_tasks
-      target.class_eval <<-EOB
-        def feature_registry
-           @feature_registry ||= ::#{self}.instance
-        end
-        def feature_registry=(fr)
-           @feature_registry= fr
-        end
-      EOB
     end
 
     # Reads and parses the contents of the client's {Constants::FEATURES_FILE FEATURES_FILE} if it exists.
@@ -59,8 +52,11 @@ module Corvid
       if @feature_manifest.nil?
         @feature_manifest= {}
 
-        # Register built-in features
-        register_features Corvid::Builtin::Manifest.new.feature_manifest
+        plugins= plugin_registry.instances_for_installed().values
+        plugins<< Corvid::Builtin::Manifest.new # TODO hardcoded built-in-ness
+        plugins.each do |p|
+          register_features p.feature_manifest
+        end
 
       end
       @feature_manifest
@@ -77,7 +73,7 @@ module Corvid
       instance= if data
           # Create a new instance
           path,class_name = data
-          require path
+          require path if path
           klass= eval(class_name.sub /^(?!::)/,'::')
           klass.new
         else
@@ -117,7 +113,7 @@ module Corvid
       STDERR.puts "WARNING: Feature '#{name}' already registered." if @feature_manifest.has_key?(name)
 
       # Check data
-      unless data.nil? or data.is_a?(Array) && data[0].is_a?(String) && data[1].is_a?(String)
+      unless data.nil? or data.is_a?(Array) && [NilClass,String].include?(data[0].class) && data[1].is_a?(String)
         raise "Invalid feature manifest value for #{name}.\nArray of [require_path, class_name] expected, got: #{data.inspect}"
       end
 

@@ -1,8 +1,10 @@
 require 'corvid/plugin'
+require 'corvid/extension'
 
 class MockPlugin < Corvid::Plugin
+  include Corvid::Extension
 
-  rake_tasks do
+  rake_tasks {
     extend Rake::DSL
 
     namespace :mock do
@@ -11,7 +13,6 @@ class MockPlugin < Corvid::Plugin
         File.write 'hello.txt', 'Created by mock plugin.'
       end
     end
-
-  end
+  }
 
 end

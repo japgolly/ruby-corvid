@@ -78,3 +78,4 @@ Plugins: The Plan
   * `<plugin> update`
 * Test Corvid and a plugin both modifying the same file.
 * Doco on how plugins work, how to write one.
+* Make `init:project` add corvid to `plugins.yml`? Then there's no special-logic anywhere else for built-in-ness.
