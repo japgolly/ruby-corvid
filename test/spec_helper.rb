@@ -45,6 +45,8 @@ module TestHelpers
     env ||= {}
     env['BUNDLE_GEMFILE'] ||= nil
     env['RUBYOPT'] ||= nil
+    cmd+= ' >/dev/null' if [true,1].include? @quiet_sh
+    cmd+= ' 2>/dev/null' if [true,2].include? @quiet_sh
     system env, cmd
     $?.success?
   end

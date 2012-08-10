@@ -42,7 +42,7 @@ Plugins: The Plan
   * Creates new `resources/latest` dir ![Done](done.png)
   * Adds `res` rake tasks ![Done](done.png)
   * Adds rspec feature ![Done](done.png)
-  * Adds res-patch validity test
+  * Adds res-patch validity test ![Done](done.png)
 * Feature installation
   * Check that requirements are met.
   * Use plugin resources.
@@ -79,3 +79,4 @@ Plugins: The Plan
 * Test Corvid and a plugin both modifying the same file.
 * Doco on how plugins work, how to write one.
 * Make `init:project` add corvid to `plugins.yml`? Then there's no special-logic anywhere else for built-in-ness.
+* Resource test installed by plugin feature should auto-load plugin features.

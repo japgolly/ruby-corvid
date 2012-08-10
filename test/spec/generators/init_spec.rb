@@ -6,7 +6,7 @@ require 'helpers/fixture-upgrading'
 require 'yaml'
 
 describe Corvid::Generator::Init do
-  context 'init:project' do
+  describe 'init:project' do
 
     def assert_corvid_version_is_latest
       v= YAML.load_file('.corvid/version.yml')
@@ -44,7 +44,7 @@ describe Corvid::Generator::Init do
 
   end
 
-  context 'init:plugin' do
+  describe 'init:plugin' do
     run_each_in_empty_dir_unless_in_one_already
 
     def run!; run_generator described_class, 'plugin' end
@@ -62,6 +62,8 @@ describe Corvid::Generator::Init do
     context 'when installed the first time in a corvid project' do
       run_all_in_empty_dir {
         copy_fixture 'bare'
+        # TODO fix bare version being out of date
+        File.write '.corvid/version.yml', Corvid::ResPatchManager.new.latest_version
         run!
       }
       it("should install the plugin feature"){
@@ -75,7 +77,11 @@ describe Corvid::Generator::Init do
         'test/spec'.should exist_as_dir
         File.read('.corvid/features.yml').should include('spec')
       }
-      it("should add res-patch validity tests")
+      it("should add res-patch validity tests"){
+        tests= get_files('test/spec')
+        tests.size.should == 1
+        File.read("test/spec/#{tests[0]}").should include 'corvid/test/resource_patch_tests'
+      }
     end
   end
 end
@@ -90,7 +96,7 @@ describe Corvid::Generator::Init::Test do
     }
   end
 
-  context 'init:test:unit' do
+  describe 'init:test:unit' do
     it("should initalise unit test support"){
       run_generator described_class, "unit"
       test_bootstraps true, true, false
@@ -108,7 +114,7 @@ describe Corvid::Generator::Init::Test do
     }
   end # init:test:unit
 
-  context 'init:test:spec' do
+  describe 'init:test:spec' do
     it("should initalise spec test support"){
       run_generator described_class, "spec"
       test_bootstraps true, false, true

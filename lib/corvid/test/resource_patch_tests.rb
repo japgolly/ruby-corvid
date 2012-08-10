@@ -17,7 +17,9 @@ module Corvid
     end
 
     module ClassMethods
-      def include_patch_validity_tests
+      def include_patch_validity_tests(&block)
+
+        $__corvid_resource_test_p1_block= block
 
         class_eval <<-EOB
           describe "Patches" do
@@ -26,7 +28,8 @@ module Corvid
             # Test that we can explode n->1 without errors being raised.
             it("should be reconstructable back to v1"){
               rpm.with_resource_versions 1 do |dir|
-                "#\{dir}/1/Gemfile".should exist_as_file
+                b= $__corvid_resource_test_p1_block
+                instance_exec dir, &b if b
               end
             }
           end
