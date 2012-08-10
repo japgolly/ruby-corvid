@@ -38,7 +38,7 @@ Plugins: The Plan
 * Features should be able to contribute extensions. ![Done](done.png)
   * Create extension points. ![Done](done.png)
   * Create feature manager. ![Done](done.png)
-* Create a plugin feature
+* Create a plugin feature ![Done](done.png)
   * Creates new `resources/latest` dir ![Done](done.png)
   * Adds `res` rake tasks ![Done](done.png)
   * Adds rspec feature ![Done](done.png)
@@ -62,7 +62,7 @@ Plugins: The Plan
   1. creates `test/spec/corvid/bin_spec.rb` which
      * tests that the bin script works
 * Existing state changes
-  * `plugins.yml` contains: `plugin -> :require -> string`
+  * `plugins.yml` contains: `plugin -> :require -> string` ![Done](done.png)
   * `version.yml` update to structure: `plugin -> version` and rename to `versions.yml`
   * `features.yml` and feature names: update to `<plugin>:<name>`
   * `corvid-features/*` to specify dependencies on feature and/or res versions.
