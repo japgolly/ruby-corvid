@@ -2,19 +2,24 @@ New Plugin Creation Process
 ---------------------------
 1. `corvid init:project`
 1. Create gemspec.
+1. `corvid init:plugin` which
+   * Creates new `resources/latest` dir
+   * Adds `res` rake tasks
+   * Adds rspec feature
+   * Adds res-patch validity test
 1. `corvid new:plugin NAME` which
-   1. calls `corvid init:plugin` (unless plugin feature exists) which
-      * Creates new `resources/latest` dir
-      * Adds `res` rake tasks
-      * Adds rspec feature
-      * Adds res-patch validity test
-   1. creates `bin/NAME`
-   1. creates `lib/NAME/corvid/plugin.rb` which
-      * loads and extends {Plugin}
-   1. creates `test/spec/corvid/plugin_spec.rb` which
-      * loads plugin test-helpers
-   1. creates `test/spec/corvid/bin_spec.rb` which
-      * tests that the bin script works
+   * creates `bin/NAME`
+   * creates `lib/corvid/NAME_plugin.rb` which
+     * loads and extends {Plugin}
+   * creates `test/spec/corvid/NAME_plugin_spec.rb` which
+     * loads plugin test-helpers
+   * creates `test/spec/corvid/NAME_bin_spec.rb` which
+     * tests that the bin script works
+   * creates `test/spec/corvid/NAME_features_spec.rb`
+1. `corvid new:plugin:feature NAME` which
+   * creates `resources/latest/corvid-features/NAME.rb`
+   * creates `lib/corvid/NAME_feature.rb`
+   * adds it to the plugin manifest (`lib/corvid/????_plugin.rb`)
 1. Put resources (if any) in `resources/latest` and call `res:new`
 1. Edit plugin and test.
 
@@ -48,4 +53,4 @@ Plugin Extention Points
 * `Gemfile`
 * `Guardfile`
 * code coverage settings
-* Rake tasks ![Done](done.png)
+* Rake tasks
