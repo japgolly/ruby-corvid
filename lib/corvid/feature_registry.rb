@@ -1,7 +1,6 @@
 require 'golly-utils/singleton'
 require 'corvid/constants'
 require 'corvid/plugin_registry'
-require 'corvid/builtin/manifest'
 
 module Corvid
   class FeatureRegistry
@@ -53,12 +52,18 @@ module Corvid
         @feature_manifest= {}
 
         plugins= plugin_registry.instances_for_installed().values
-        plugins<< Corvid::Builtin::Manifest.new # TODO hardcoded built-in-ness
         plugins.each do |p|
           register_features p.feature_manifest
         end
 
       end
+      @feature_manifest
+    end
+
+    def use_feature_manifest(manifest, clear_existing=true)
+      @feature_manifest= {} if clear_existing
+      @feature_manifest ||= {}
+      register_features manifest
       @feature_manifest
     end
 

@@ -1,4 +1,5 @@
 require 'corvid/generators/base'
+require 'corvid/builtin/builtin_plugin'
 require 'yaml'
 
 class Corvid::Generator::Init < ::Corvid::Generator::Base
@@ -10,8 +11,9 @@ class Corvid::Generator::Init < ::Corvid::Generator::Base
   def project
     with_latest_resources {|ver|
       feature_installer!('corvid').install
-      add_feature 'corvid'
       write_client_version ver
+      add_plugin 'corvid', ::Corvid::Builtin::BuiltinPlugin.new
+      add_feature 'corvid'
 
       invoke 'init:test:unit', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
       invoke 'init:test:spec', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'

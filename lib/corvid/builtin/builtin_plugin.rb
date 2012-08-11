@@ -2,8 +2,9 @@ require 'corvid/plugin'
 
 module Corvid
   module Builtin
-    # TODO Rename
-    class Manifest < Corvid::Plugin
+    class BuiltinPlugin < Corvid::Plugin
+
+      require_path 'corvid/builtin/builtin_plugin'
 
       feature_manifest({
           'corvid'    => ['corvid/builtin/corvid_feature'   ,'Corvid::Builtin::CorvidFeature'],

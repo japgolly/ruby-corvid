@@ -21,6 +21,7 @@ describe Corvid::Generator::Init do
         }
         it("should create Gemfile"){ 'Gemfile'.should exist_as_a_file }
         it("should store the resource version"){ assert_corvid_version_is_latest }
+        it("should store the corvid plugin"){ assert_plugins BUILTIN_PLUGIN_DETAILS }
         it("should store the corvid feature"){ assert_corvid_features 'corvid' }
       end
       context 'with additional features' do

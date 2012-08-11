@@ -6,7 +6,7 @@ require_relative '../lib/corvid/environment'
 $:<< "#{CORVID_ROOT}/test" # Add test/ to lib path
 
 require 'corvid/constants'
-require 'corvid/builtin/manifest'
+require 'corvid/builtin/builtin_plugin'
 require 'corvid/test/helpers/plugins'
 require 'helpers/gemfile_patching'
 require 'golly-utils/testing/rspec/files'
@@ -19,11 +19,12 @@ RUN_BUNDLE= 'run_bundle'
 BOOTSTRAP_ALL= 'test/bootstrap/all.rb'
 BOOTSTRAP_UNIT= 'test/bootstrap/unit.rb'
 BOOTSTRAP_SPEC= 'test/bootstrap/spec.rb'
-BUILTIN_PLUGIN= Corvid::Builtin::Manifest
+BUILTIN_PLUGIN= Corvid::Builtin::BuiltinPlugin
 BUILTIN_FEATURES= BUILTIN_PLUGIN.new.feature_manifest.keys.map(&:freeze).freeze
 CORVID_BIN= "#{CORVID_ROOT}/bin/corvid"
 CORVID_BIN_Q= CORVID_BIN.inspect
 CONST= Corvid::Constants
+BUILTIN_PLUGIN_DETAILS= {'corvid'=>{path: 'corvid/builtin/builtin_plugin', class: 'Corvid::Builtin::BuiltinPlugin'}}
 
 module Fixtures
   FIXTURE_ROOT= "#{CORVID_ROOT}/test/fixtures"
@@ -37,15 +38,21 @@ module TestHelpers
   end
 
   def assert_corvid_features(*expected)
+    CONST::FEATURES_FILE.should exist_as_file
     f= YAML.load_file(CONST::FEATURES_FILE)
     f.should be_kind_of(Array)
     f.should == expected.flatten
   end
 
-  def assert_corvid_features(*expected)
-    f= YAML.load_file(CONST::FEATURES_FILE)
-    f.should be_kind_of(Array)
-    f.should == expected.flatten
+  def assert_plugins(expected)
+    CONST::PLUGINS_FILE.should exist_as_file
+    f= YAML.load_file(CONST::PLUGINS_FILE)
+    f.should be_kind_of(Hash)
+    if expected.is_a?(Array)
+      f.keys.should equal_array expected
+    else
+      f.should == expected
+    end
   end
 
   def invoke_sh(cmd,env=nil)

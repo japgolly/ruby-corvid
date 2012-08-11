@@ -24,6 +24,9 @@ group :spec do
     upgrading= %w[test/spec/generators/init_spec.rb test/spec/generators/update_spec.rb]
     watch(%r'^test/fixtures/upgrading/.+$')   {upgrading}
     watch('test/helpers/fixture-upgrading.rb'){upgrading}
+
+    # Exceptional cases
+    watch(%r'^lib/corvid/test/resource_patch_tests\.rb') {'test/spec/resources_spec.rb'}
   end
 end
 

@@ -1,6 +1,7 @@
 require 'corvid/environment'
 require 'corvid/constants'
 require 'corvid/feature_registry'
+require 'corvid/plugin_registry'
 require 'corvid/res_patch_manager'
 require 'corvid/generators/actions'
 
@@ -58,6 +59,10 @@ module Corvid
       # @!attribute [rw] feature_registry
       #   @return [FeatureRegistry]
       ::Corvid::FeatureRegistry.def_accessor(self)
+
+      # @!attribute [rw] plugin_registry
+      #   @return [PluginRegistry]
+      ::Corvid::PluginRegistry.def_accessor(self)
 
       # @see Corvid::FeatureRegistry#read_client_features
       def read_client_features
@@ -226,6 +231,19 @@ module Corvid
         end
       end
       alias :add_feature :add_features
+
+      # TODO
+      #
+      # @param [String] name The plugin name.
+      # @param [Plugin] plugin The plugin instance.
+      # @return [true]
+      def add_plugin(name, plugin)
+        pdata= plugin_registry.read_client_plugin_details
+        pdata ||= {}
+        pdata[name]= {path: plugin.require_path, class: plugin.class.to_s}
+        File.write Constants::PLUGINS_FILE, pdata.to_yaml
+        true
+      end
 
       # Installs a feature into an existing Corvid project.
       #

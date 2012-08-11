@@ -10,5 +10,5 @@ describe "Actual Resources" do
     "#{dir}/1/Gemfile".should exist_as_file
   }
 
-  include_feature_update_install_tests BUILTIN_FEATURES
+  include_feature_update_install_tests BUILTIN_PLUGIN.new
 end

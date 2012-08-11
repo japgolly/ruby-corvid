@@ -8,7 +8,7 @@ describe Corvid::FeatureRegistry do
 
   before :each do
     subject.plugin_registry= mock 'plugin_registry'
-    subject.plugin_registry.stub instances_for_installed: {}
+    subject.plugin_registry.stub instances_for_installed: {'corvid' => BUILTIN_PLUGIN.new}
   end
 
   describe "#instance_for" do

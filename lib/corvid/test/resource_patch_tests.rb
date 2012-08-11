@@ -36,9 +36,16 @@ module Corvid
         EOB
       end
 
-      def include_feature_update_install_tests(features)
+      # @param [Plugin|Hash<String,Array>] manifest Either a plugin instance or a feature manifest.
+      # @see Plugin#feature_manifest
+      def include_feature_update_install_tests(manifest)
+        manifest= manifest.feature_manifest if manifest.is_a?(Plugin)
+        features= manifest.keys
+
         latest_resource_version= rpm.latest_version
-        feature_registry= Corvid::FeatureRegistry
+        feature_registry= ::Corvid::FeatureRegistry #.send :new - Generators need to use same instance. Easier to just set singleton and clear afterwards.
+        feature_registry.use_feature_manifest manifest
+
         tests= features.map {|name|
                  f= feature_registry.instance_for(name)
                  unless f.since_ver == latest_resource_version
@@ -55,6 +62,7 @@ module Corvid
             describe 'Feature Installers: Update vs Install' do
               run_each_in_empty_dir
               #{tests * "\n"}
+              after(:all){ ::Corvid::FeatureRegistry.clear_cache }
             end
           EOB
         end

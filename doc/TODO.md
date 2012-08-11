@@ -89,8 +89,8 @@ Plugins: The Plan
   * code coverage settings
   * ![Done](done.png) Rake tasks
 * `corvid` bin should also load and expose (namespaced) plugins' tasks.
-* Make `init:project` add corvid to `plugins.yml` and delete (most) special built-in logic. Should only load built-in if
-  no `plugins.yml` found.
+* ![Done](done.png) Make `init:project` add corvid to `plugins.yml` and delete (most) special built-in logic.
+  Should only load built-in if no `plugins.yml` found.
 
 #### Other
 * Doco on how plugins work, how to write one.

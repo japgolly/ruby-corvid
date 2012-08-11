@@ -14,10 +14,7 @@ describe Corvid::PluginRegistry do
   end
 
   before :each do
-    mock_plugins_file(
-      'corvid' => {path:'corvid/builtin/manifest',class:BUILTIN_PLUGIN.to_s},
-      'fake' => {class:FakePlugin.to_s},
-    )
+    mock_plugins_file BUILTIN_PLUGIN_DETAILS.merge('fake' => {class:FakePlugin.to_s})
   end
 
   describe "#instance_for" do

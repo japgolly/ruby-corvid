@@ -125,4 +125,27 @@ describe Corvid::Generator::Base do
       subject.send :install_feature, 'b'
     }
   end
+
+  describe '#add_plugin' do
+    run_all_in_empty_dir { Dir.mkdir '.corvid' }
+    before(:each){ File.delete CONST::PLUGINS_FILE if File.exists? CONST::PLUGINS_FILE }
+
+    it("should create the plugins file if it doesnt exist yet"){
+      subject.send :add_plugin, 'corvid', BUILTIN_PLUGIN.new
+      assert_plugins BUILTIN_PLUGIN_DETAILS
+    }
+
+    it("should add new plugins to the plugin file"){
+      before= {'xxx'=>{path: 'xpath', class: 'X'}}.freeze
+      File.write CONST::PLUGINS_FILE, before.to_yaml
+      subject.send :add_plugin, 'corvid', BUILTIN_PLUGIN.new
+      assert_plugins before.merge BUILTIN_PLUGIN_DETAILS
+    }
+
+    it("should replace existing plugin details if they differ") {
+      File.write CONST::PLUGINS_FILE, {'corvid'=>{path: 'xpath', class: 'X'}}.to_yaml
+      subject.send :add_plugin, 'corvid', BUILTIN_PLUGIN.new
+      assert_plugins BUILTIN_PLUGIN_DETAILS
+    }
+  end
 end
