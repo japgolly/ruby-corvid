@@ -9,7 +9,7 @@ describe Corvid::Generator::Init do
   describe 'init:project' do
 
     def assert_corvid_version_is_latest
-      v= YAML.load_file('.corvid/version.yml')
+      v= YAML.load_file(CONST::VERSION_FILE)
       v.should be_kind_of(Fixnum)
       v.should == Corvid::ResPatchManager.new.latest_version
     end
@@ -36,7 +36,7 @@ describe Corvid::Generator::Init do
     it("should overwrite the resource version when it exists"){
       inside_empty_dir {
         Dir.mkdir '.corvid'
-        File.write '.corvid/version.yml', '0'
+        File.write CONST::VERSION_FILE, '0'
         run_generator described_class, "project --no-test-unit --no-test-spec"
         assert_corvid_version_is_latest
       }
@@ -63,11 +63,11 @@ describe Corvid::Generator::Init do
       run_all_in_empty_dir {
         copy_fixture 'bare'
         # TODO fix bare version being out of date
-        File.write '.corvid/version.yml', Corvid::ResPatchManager.new.latest_version
+        File.write CONST::VERSION_FILE, Corvid::ResPatchManager.new.latest_version
         run!
       }
       it("should install the plugin feature"){
-        File.read('.corvid/features.yml').should include('plugin')
+        File.read(CONST::FEATURES_FILE).should include('plugin')
       }
       it("should create resource directories"){
         'resources'.should exist_as_dir
@@ -75,7 +75,7 @@ describe Corvid::Generator::Init do
       }
       it("should add rspec support"){
         'test/spec'.should exist_as_dir
-        File.read('.corvid/features.yml').should include('spec')
+        File.read(CONST::FEATURES_FILE).should include('spec')
       }
       it("should add res-patch validity tests"){
         tests= get_files('test/spec')
@@ -203,8 +203,8 @@ describe 'Installing features' do
 
     it("should do nothing if feature already installed"){
       with_sandbox_copy_of(2) do
-        f= YAML.load_file('.corvid/features.yml') + ['test_unit']
-        File.write '.corvid/features.yml', f.to_yaml
+        f= YAML.load_file(CONST::FEATURES_FILE) + ['test_unit']
+        File.write CONST::FEATURES_FILE, f.to_yaml
         run_init_test_unit_task
         assert_installation 2, 0
       end

@@ -5,6 +5,7 @@ STDIN.close
 require_relative '../lib/corvid/environment'
 $:<< "#{CORVID_ROOT}/test" # Add test/ to lib path
 
+require 'corvid/constants'
 require 'corvid/builtin/manifest'
 require 'corvid/test/helpers/plugins'
 require 'helpers/gemfile_patching'
@@ -22,6 +23,7 @@ BUILTIN_PLUGIN= Corvid::Builtin::Manifest
 BUILTIN_FEATURES= BUILTIN_PLUGIN.new.feature_manifest.keys.map(&:freeze).freeze
 CORVID_BIN= "#{CORVID_ROOT}/bin/corvid"
 CORVID_BIN_Q= CORVID_BIN.inspect
+CONST= Corvid::Constants
 
 module Fixtures
   FIXTURE_ROOT= "#{CORVID_ROOT}/test/fixtures"
@@ -30,12 +32,18 @@ end
 module TestHelpers
 
   def add_feature!(feature_name)
-    f= YAML.load_file('.corvid/features.yml') + [feature_name]
-    File.write '.corvid/features.yml', f.to_yaml
+    f= YAML.load_file(CONST::FEATURES_FILE) + [feature_name]
+    File.write CONST::FEATURES_FILE, f.to_yaml
   end
 
   def assert_corvid_features(*expected)
-    f= YAML.load_file('.corvid/features.yml')
+    f= YAML.load_file(CONST::FEATURES_FILE)
+    f.should be_kind_of(Array)
+    f.should == expected.flatten
+  end
+
+  def assert_corvid_features(*expected)
+    f= YAML.load_file(CONST::FEATURES_FILE)
     f.should be_kind_of(Array)
     f.should == expected.flatten
   end
