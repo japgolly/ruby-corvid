@@ -40,8 +40,10 @@ module Corvid
 
     # Inspects the {#res_patch_dir} to determine the latest version of resources.
     #
+    # @param [Boolean] force If `true` then a cached value will be discarded and the latest version reevaluated.
     # @return [Fixnum] The latest version, or 0 if there are no res-patches.
-    def latest_version
+    def latest_version(force=false)
+      @latest_version= nil if force
       @latest_version ||= \
         if prev_pkg= Dir["#{res_patch_dir}/[0-9][0-9][0-9][0-9][0-9].patch"].sort.last
           File.basename(prev_pkg).sub(/\D+/,'').to_i
@@ -359,6 +361,14 @@ module Corvid
       merge_conflicts
     end
 
+    # Returns the filename of a resource patch for a given version.
+    #
+    # @param [Fixnum] The resource patch version.
+    # @return [String] The resource patch filename.
+    def res_patch_filename(ver)
+      '%s/%05d.patch' % [res_patch_dir,ver]
+    end
+
     private
     DIGEST= Digest::SHA2
 
@@ -446,10 +456,6 @@ module Corvid
           tmp.delete
         end
       end
-    end
-
-    def res_patch_filename(ver)
-      '%s/%05d.patch' % [res_patch_dir,ver]
     end
 
     # Generates a checksum representing the contents of all files in a directory tree.
