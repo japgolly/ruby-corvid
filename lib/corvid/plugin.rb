@@ -8,7 +8,7 @@ module Corvid
     # @!attribute [rw] require_path
     #   The path for Ruby to `require` in order to load this plugin.
     #   @return [String] The path to require, usually relative to your `lib` dir.
-    attr_declarative :require_path
+    attr_declarative :require_path, required: true
 
     # @!attribute [rw] feature_manifest
     #   A manifest of all features provided by the plugin.
