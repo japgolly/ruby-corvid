@@ -1,6 +1,6 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: a63aaf4a921832caf1369616e2ae95d580cf9b780adea56bf83b531d65c7d562
-Patch: 56b659794f7975abb6400aa961dae14a4c880f08ec52d5434ccb55e4209c028c
+After: ca7036c625bb942c3cdd0fc63f94a3500340a8b5d930024ca4641afec61e42c1
+Patch: abae872d43eff93dcb0d157d7e140efe368e65f271ac3f25b6cedff7ea22bfe1
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
 +++ .corvid/Gemfile	2012-08-09 13:34:14.000844233 +1000
 @@ -0,0 +1,30 @@
@@ -101,7 +101,7 @@ Patch: 56b659794f7975abb6400aa961dae14a4c880f08ec52d5434ccb55e4209c028c
 +
 +Initial version.
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ Gemfile	2012-08-09 13:34:14.000844233 +1000
++++ Gemfile	2012-08-11 13:03:55.017984884 +1000
 @@ -0,0 +1,11 @@
 +source :rubygems
 +
@@ -387,8 +387,8 @@ Patch: 56b659794f7975abb6400aa961dae14a4c880f08ec52d5434ccb55e4209c028c
 +  # TODO
 +end
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
-+++ test/spec/resources_spec.rb	2012-08-10 15:26:53.527468231 +1000
-@@ -0,0 +1,12 @@
++++ test/spec/resources_spec.rb	2012-08-11 12:03:08.949488981 +1000
+@@ -0,0 +1,10 @@
 +# encoding: utf-8
 +require_relative '../bootstrap/spec'
 +require 'corvid/test/resource_patch_tests'
@@ -398,8 +398,6 @@ Patch: 56b659794f7975abb6400aa961dae14a4c880f08ec52d5434ccb55e4209c028c
 +  res_patch_dir "#{APP_ROOT}/resources"
 +
 +  include_patch_validity_tests
-+
-+  # include_feature_update_install_tests %w[feature_1 feature_2]
 +end
 --- /dev/null	2012-07-30 09:37:23.066384672 +1000
 +++ test/unit/%src%_test.rb.tt	2012-08-09 13:34:14.000844233 +1000

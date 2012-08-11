@@ -1,17 +1,17 @@
-Before: a63aaf4a921832caf1369616e2ae95d580cf9b780adea56bf83b531d65c7d562
+Before: ca7036c625bb942c3cdd0fc63f94a3500340a8b5d930024ca4641afec61e42c1
 After: fd97ed68d5a27a885760e2f7db43e4d31889c44a392d74b3f0a9aa33c5c97703
-Patch: f0280b104a7bf78a2544500d2ff3c6236550c16387ccb030177422cfc43d984c
+Patch: 8583eddb4e466cd6007d51643b3edb87581eb6f00a025e6c7be65f9fdb6991a8
 --- corvid-features/plugin.rb	2012-08-10 15:27:47.871100025 +1000
-+++ corvid-features/plugin.rb	2012-08-10 15:29:10.508220375 +1000
++++ corvid-features/plugin.rb	2012-08-11 13:04:03.601361708 +1000
 @@ -3,5 +3,4 @@
    empty_directory 'resources/latest'
    copy_file       'resources/.gitignore'
    install_feature 'test_spec', run_bundle: true, say_if_installed: false
 -  copy_file       'test/spec/resources_spec.rb'
  }
---- test/spec/resources_spec.rb	2012-08-10 15:26:53.527468231 +1000
+--- test/spec/resources_spec.rb	2012-08-11 12:03:08.949488981 +1000
 +++ /dev/null	2012-07-30 09:37:23.066384672 +1000
-@@ -1,12 +0,0 @@
+@@ -1,10 +0,0 @@
 -# encoding: utf-8
 -require_relative '../bootstrap/spec'
 -require 'corvid/test/resource_patch_tests'
@@ -21,6 +21,4 @@ Patch: f0280b104a7bf78a2544500d2ff3c6236550c16387ccb030177422cfc43d984c
 -  res_patch_dir "#{APP_ROOT}/resources"
 -
 -  include_patch_validity_tests
--
--  # include_feature_update_install_tests %w[feature_1 feature_2]
 -end
