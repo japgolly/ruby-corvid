@@ -27,7 +27,18 @@ namespace :res do
   task :diff do
     if Dir.exists?(LATEST_DIR)
       patch= diff_latest_dir
-      puts patch ? patch : "No differences."
+      if !patch
+        puts "No differences."
+      elsif STDOUT.tty? and (`colordiff --help` rescue nil; $?.success?)
+        require 'tempfile'
+        Tempfile.open('res_diff') do |f|
+          f.write patch
+          f.close
+          system "cat #{f.path.inspect} | colordiff"
+        end
+      else
+        puts patch
+      end
     else
       puts "Directory doesn't exist: #{LATEST_DIR_REL}"
     end
