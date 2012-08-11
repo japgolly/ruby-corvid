@@ -29,11 +29,49 @@ namespace CORIVD_RES_NS do
   end
 
   #---------------------------------------------------------------------------------------------------------------------
+  desc 'Recreate the latest resource patch (USE WITH CARE)'
+  task :redo do
+    puts "WARNING: If the latest resource patch has been released, then recreating it rather than creating a new patch will cause all clients to miss any changes you've just made."
+    puts "Only use this feature for development and testing, and if the latest resource patch hasn't been deployed yet."
+    puts
+
+    latest= rpm.latest_version
+    unless latest >= 1
+      raise "No resources patches found. Use #{CORIVD_RES_NS}:#{CORIVD_RES_NEW_TASK} instead."
+    end
+
+    puts "Recreating v#{latest}..."
+    rpm.with_resources latest-1 do |dir|
+      # Move latest somewhere else
+      redone_cur= rpm.res_patch_filename(latest)
+      redone_new= "%s/%05d-redone-%s.patch" % [Dir.tmpdir, latest, Time.new.strftime('%Y%m%d%H%M%S')]
+      puts "Moving #{redone_cur} to #{redone_new}"
+      FileUtils.mv redone_cur, redone_new
+      rpm.latest_version true
+
+      # Create new version
+      ver= rpm.create_res_patch_files! dir, LATEST_DIR
+      puts ver ? "Recreated v#{ver}." : "There are no changes to record. The latest patch is now v#{rpm.latest_version}.\nYou might need to run this again actually (yes, right now). This scenario is as-yet untested."
+    end
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
   desc "Shows the differences between the latest resource patch and #{LATEST_DIR_REL}."
   task :diff do
     if Dir.exists?(LATEST_DIR)
       patch= diff_latest_dir
-      puts patch ? patch : "No differences."
+      if !patch
+        puts "No differences."
+      elsif STDOUT.tty? and (`colordiff --help` rescue nil; $?.success?)
+        require 'tempfile'
+        Tempfile.open('res_diff') do |f|
+          f.write patch
+          f.close
+          system "cat #{f.path.inspect} | colordiff"
+        end
+      else
+        puts patch
+      end
     else
       puts "Directory doesn't exist: #{LATEST_DIR_REL}"
     end

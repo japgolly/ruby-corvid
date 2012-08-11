@@ -16,7 +16,6 @@ Documentation
 
 New Functionality
 -----------------
-* New task: `res:redo`
 * Allow different dir structure than default
 * Have Corvid provide code stats (LOC, lib vs test, doc/undoc methods/classes etc).
 * Have Corvid provide code analysis (complexity, duplication, etc).
