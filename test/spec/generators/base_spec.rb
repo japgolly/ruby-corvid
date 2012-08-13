@@ -110,19 +110,20 @@ describe Corvid::Generator::Base do
       f= mock 'feature b'
       f.should_receive(:since_ver).at_least(:once).and_return(4)
       subject.feature_registry= fr= mock 'feature registry'
-      fr.should_receive(:instance_for).with('b').once.and_return(f)
+      fr.should_receive(:validate_feature_name!).once.with('b')
+      fr.should_receive(:instance_for).with('a:b').once.and_return(f)
       subject.should_not_receive :with_resources
       expect{
-        subject.send :install_feature, 'b'
+        subject.send :install_feature, 'a', 'b'
       }.to raise_error /update/
     }
 
     it("should do nothing if feature already installed"){
       subject.stub read_client_version!: 3
-      subject.stub read_client_features!: ['b']
+      subject.stub read_client_features!: ['a:b']
       subject.stub :say
       subject.should_not_receive :with_resources
-      subject.send :install_feature, 'b'
+      subject.send :install_feature, 'a', 'b'
     }
   end
 

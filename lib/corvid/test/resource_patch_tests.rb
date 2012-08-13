@@ -38,21 +38,21 @@ module Corvid
 
       # @param [Plugin|Hash<String,Array>] manifest Either a plugin instance or a feature manifest.
       # @see Plugin#feature_manifest
-      def include_feature_update_install_tests(manifest)
+      def include_feature_update_install_tests(plugin_name, manifest)
         manifest= manifest.feature_manifest if manifest.is_a?(Plugin)
         features= manifest.keys
 
         latest_resource_version= rpm.latest_version
         feature_registry= ::Corvid::FeatureRegistry #.send :new - Generators need to use same instance. Easier to just set singleton and clear afterwards.
-        feature_registry.use_feature_manifest manifest
+        feature_registry.use_feature_manifest plugin_name, manifest
 
         tests= features.map {|name|
-                 f= feature_registry.instance_for(name)
+                 f= feature_registry.instance_for("#{plugin_name}:#{name}")
                  unless f.since_ver == latest_resource_version
                    %[
                      it("Testing feature: #{name}"){
                        @rpm= rpm
-                       test_feature_updates_match_install '#{name}', #{f.since_ver}
+                       test_feature_updates_match_install '#{plugin_name}', '#{name}', #{f.since_ver}
                      }
                    ]
                  end
@@ -91,17 +91,18 @@ module Corvid
     # @!visibility private
     class TestInstaller < Corvid::Generator::Base
       no_tasks{
-        def install(feature, ver=nil)
+        def install(plugin_name, feature_name, ver=nil)
           ver ||= rpm.latest_version
           # Hardcoded-logic here but all features apart from corvid, requrie corvid to be installed first.
-          unless feature == 'corvid'
+          full_feature_name= "#{plugin_name}:#{feature_name}"
+          unless full_feature_name == 'corvid:corvid'
             Dir.mkdir '.corvid' unless Dir.exists?('.corvid')
             File.write Corvid::Constants::VERSION_FILE, ver
             File.write Corvid::Constants::FEATURES_FILE, %w[corvid].to_yaml
           end
           with_resources(ver) {
-            feature_installer!(feature).install
-            add_feature feature
+            feature_installer!(feature_name).install
+            add_feature full_feature_name
           }
           File.delete Corvid::Constants::VERSION_FILE if File.exists?(Corvid::Constants::VERSION_FILE)
         end
@@ -109,19 +110,18 @@ module Corvid
     end
 
     # @!visibility private
-    def test_feature_updates_match_install(feature, starting_version=1)
+    def test_feature_updates_match_install(plugin_name, feature_name, starting_version=1)
       # Install latest
       Dir.mkdir 'install'
       Dir.chdir 'install' do
-        #run_generator TestInstaller, "install #{feature}"
-        quiet_generator(TestInstaller).install feature
+        quiet_generator(TestInstaller).install plugin_name, feature_name
       end
 
       # Install old and upgrade
       Dir.mkdir 'upgrade'
       Dir.chdir 'upgrade' do
-        quiet_generator(TestInstaller).install feature, starting_version
-        quiet_generator(Corvid::Generator::Update).send :upgrade!, starting_version, @rpm.latest_version, [feature]
+        quiet_generator(TestInstaller).install plugin_name, feature_name, starting_version
+        quiet_generator(Corvid::Generator::Update).send :upgrade!, starting_version, @rpm.latest_version, ["#{plugin_name}:#{feature_name}"]
         File.delete Corvid::Constants::VERSION_FILE
       end
 

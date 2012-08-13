@@ -5,19 +5,18 @@ require 'corvid/plugin_registry'
 describe Corvid::PluginRegistry do
   subject{ described_class.send :new }
 
-  class FakePlugin < ::Corvid::Plugin
-  end
+  class FakePlugin < ::Corvid::Plugin; end
 
   def mock_plugins_file(contents)
     File.stub exists?: true
     YAML.should_receive(:load_file).once.and_return(contents)
   end
 
-  before :each do
-    mock_plugins_file BUILTIN_PLUGIN_DETAILS.merge('fake' => {class:FakePlugin.to_s})
-  end
-
   describe "#instance_for" do
+    before :each do
+      mock_plugins_file BUILTIN_PLUGIN_DETAILS.merge('fake' => {class:FakePlugin.to_s})
+    end
+
     it("should fail when plugin is unknown"){
       expect{ subject.instance_for('porn!') }.to raise_error
     }
@@ -37,6 +36,10 @@ describe Corvid::PluginRegistry do
   end
 
   describe "#instances_for_installed" do
+    before :each do
+      mock_plugins_file BUILTIN_PLUGIN_DETAILS.merge('fake' => {class:FakePlugin.to_s})
+    end
+
     it("should return a key for each plugin"){
       f= subject.instances_for_installed
       f.should be_a Hash
@@ -47,6 +50,28 @@ describe Corvid::PluginRegistry do
       pf= subject.instances_for_installed()['corvid']
       pf.should_not be_nil
       pf.should be_a BUILTIN_PLUGIN
+    }
+  end
+
+  describe '#validate_plugin_name!' do
+    it("should pass with valid names"){
+      subject.validate_plugin_name! 'a'
+      subject.validate_plugin_name! 'corvid'
+      subject.validate_plugin_name! 'omg_hehe'
+      subject.validate_plugin_name! 'b-123'
+    }
+    it("should fail when name has a space"){
+      expect{ subject.validate_plugin_name! 'abc ' }.to raise_error
+      expect{ subject.validate_plugin_name! ' abc' }.to raise_error
+      expect{ subject.validate_plugin_name! 'a bc' }.to raise_error
+    }
+    it("should fail when name has a colon"){
+      expect{ subject.validate_plugin_name! 'abc:' }.to raise_error
+      expect{ subject.validate_plugin_name! ':abc' }.to raise_error
+      expect{ subject.validate_plugin_name! 'a:bc' }.to raise_error
+    }
+    it("should fail when name is empty"){
+      expect{ subject.validate_plugin_name! '' }.to raise_error
     }
   end
 end

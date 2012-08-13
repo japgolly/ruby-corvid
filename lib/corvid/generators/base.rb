@@ -257,8 +257,13 @@ module Corvid
       # @return [void]
       # @raise If failed to read client's version and installed features.
       # @raise If the feature isn't available at the current version of resources (i.e. update required).
-      def install_feature(name, options={})
+      def install_feature(plugin_name, feature_name, options={})
         options= DEFAULT_OPTIONS_FOR_INSTALL_FEATURE.merge options
+
+        # Validate names
+        plugin_registry.validate_plugin_name! plugin_name
+        feature_registry.validate_feature_name! feature_name
+        name= "#{plugin_name}:#{feature_name}"
 
         # Read client details
         ver= read_client_version!
@@ -277,8 +282,10 @@ module Corvid
           end
 
           # Install feature
+          # TODO doesn't use plugin resources
+          # TODO remember that plugins can call install_feature 'corvid:test_unit' & install feature of a diff plugin
           with_resources(ver) {|ver|
-            feature_installer!(name).install
+            feature_installer!(feature_name).install
             add_feature name
             yield ver if block_given?
             run_bundle() if options[:run_bundle]

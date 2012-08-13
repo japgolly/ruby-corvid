@@ -6,6 +6,9 @@ module Corvid
   class PluginRegistry
     include GollyUtils::Singleton
 
+    PLUGIN_NAME_FMT= '[^ :]+'.freeze
+    PLUGIN_NAME_REGEX= /^#{PLUGIN_NAME_FMT}$/
+
     def initialize
       clear_cache
     end
@@ -55,6 +58,16 @@ module Corvid
     def instances_for_installed#(force=false)
       load_client_plugins unless @instance_cache
       @instance_cache
+    end
+
+    def validate_plugin_name!(plugin_name)
+      unless plugin_name.is_a? String
+        raise "Invalid plugin name: #{plugin_name.inspect}. String expected."
+      end
+      unless PLUGIN_NAME_REGEX === plugin_name
+        raise "Invalid plugin name: '#{plugin_name}'. Must match regex: #{PLUGIN_NAME_REGEX}"
+      end
+      true
     end
 
     protected

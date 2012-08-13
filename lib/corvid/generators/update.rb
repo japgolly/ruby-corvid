@@ -38,6 +38,8 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       from.upto(to) {|v|
         installers[v]= {}
         features.each {|f|
+          # TODO update doesn't handle multiple plugins
+          f= f.split(/:/)[1] # TODO manual splitting of full-feature name
           if code= feature_installer_code(rpm.ver_dir(v), f)
             deployable_files.concat extract_deployable_files(code, f, v)
             installer= dynamic_installer(code, f, v)

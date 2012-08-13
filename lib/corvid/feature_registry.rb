@@ -6,6 +6,10 @@ module Corvid
   class FeatureRegistry
     include GollyUtils::Singleton
 
+    FEATURE_NAME_FMT= PluginRegistry::PLUGIN_NAME_FMT
+    FEATURE_NAME_ONLY_REGEX= /^#{FEATURE_NAME_FMT}$/
+    FEATURE_NAME_FULL_REGEX= /^#{PluginRegistry::PLUGIN_NAME_FMT}:#{FEATURE_NAME_FMT}$/
+
     # @!attribute [rw] plugin_registry
     #   @return [PluginRegistry]
     PluginRegistry.def_accessor(self)
@@ -28,7 +32,7 @@ module Corvid
       if File.exists? Constants::FEATURES_FILE
         v= YAML.load_file Constants::FEATURES_FILE
         raise "Invalid #{Constants::FEATURES_FILE}. Array expected but got #{v.class}." unless v.is_a?(Array)
-        raise "Invalid #{Constants::FEATURES_FILE}. At least 1 feature expected but not defined." if v.empty?
+        raise "Invalid #{Constants::FEATURES_FILE}. At least 1 feature expected but not defined." if v.empty? #TODO del this
         v
       else
         nil
@@ -51,25 +55,26 @@ module Corvid
       if @feature_manifest.nil?
         @feature_manifest= {}
 
-        plugins= plugin_registry.instances_for_installed().values
-        plugins.each do |p|
-          register_features p.feature_manifest
+        plugins= plugin_registry.instances_for_installed()
+        plugins.each do |name,p|
+          register_features name, p.feature_manifest
         end
 
       end
       @feature_manifest
     end
 
-    def use_feature_manifest(manifest, clear_existing=true)
+    def use_feature_manifest(plugin_name, manifest, clear_existing=true)
       @feature_manifest= {} if clear_existing
       @feature_manifest ||= {}
-      register_features manifest
+      register_features plugin_name, manifest
       @feature_manifest
     end
 
     # @param [String] name
     # @return [nil,Feature]
     def instance_for(name)
+      raise "Invalid feature: '#{name}'. Must be in the format of '<plugin name>:<feature name>'." unless FEATURE_NAME_FULL_REGEX === name
       return @instance_cache[name] if @instance_cache.has_key?(name)
 
       raise "Unknown feature: #{name}. It isn't specified in any manifests." unless feature_manifest.has_key?(name)
@@ -99,22 +104,34 @@ module Corvid
       )
     end
 
-    private
+    def validate_feature_name!(feature_name_without_plugin_prefix)
+      unless feature_name_without_plugin_prefix.is_a? String
+        raise "Invalid plugin name: #{feature_name_without_plugin_prefix.inspect}. String expected."
+      end
+      unless FEATURE_NAME_ONLY_REGEX === feature_name_without_plugin_prefix
+        raise "Invalid feature name: '#{feature_name_without_plugin_prefix}'. Must match regex: #{FEATURE_NAME_ONLY_REGEX}"
+      end
+      true
+    end
 
-    # @param [Hash<String|Symbol, Array<String>>] feature_hash Feature manifest for a single plugin. See {#register_feature} for key
+    # @param [String] plugin_name The plugin name.
+    # @param [Hash<String, Array<String>>] feature_hash Feature manifest for a single plugin. See {#register_feature} for key
     #   and value explanations.
-    def register_features(feature_hash)
+    def register_features(plugin_name, feature_hash)
       feature_hash.each do |name, data|
-        register_feature name, data
+        register_feature plugin_name, name, data
       end
     end
 
-    # @param [String, Symbol] name The feature name.
+    # @param [String] plugin_name The plugin name.
+    # @param [String] feature_name The feature name.
     # @param [nil, Array<String>] data An array of the require-path, and class name of the feature.
-    def register_feature(name, data)
+    def register_feature(plugin_name, feature_name, data)
 
-      # Check name
-      name= name.to_s if name.is_a?(Symbol)
+      # Check names
+      plugin_registry.validate_plugin_name! plugin_name
+      validate_feature_name! feature_name
+      name= "#{plugin_name}:#{feature_name}"
       STDERR.puts "WARNING: Feature '#{name}' already registered." if @feature_manifest.has_key?(name)
 
       # Check data

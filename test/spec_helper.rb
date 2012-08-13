@@ -38,21 +38,30 @@ module TestHelpers
   end
 
   def assert_corvid_features(*expected)
-    CONST::FEATURES_FILE.should exist_as_file
-    f= YAML.load_file(CONST::FEATURES_FILE)
-    f.should be_kind_of(Array)
-    f.should == expected.flatten
+    client_features.should == expected.flatten
   end
 
   def assert_plugins(expected)
-    CONST::PLUGINS_FILE.should exist_as_file
-    f= YAML.load_file(CONST::PLUGINS_FILE)
-    f.should be_kind_of(Hash)
+    f= client_plugins
     if expected.is_a?(Array)
       f.keys.should equal_array expected
     else
       f.should == expected
     end
+  end
+
+  def client_features
+    CONST::FEATURES_FILE.should exist_as_file
+    f= YAML.load_file(CONST::FEATURES_FILE)
+    f.should be_kind_of(Array)
+    f
+  end
+
+  def client_plugins
+    CONST::PLUGINS_FILE.should exist_as_file
+    f= YAML.load_file(CONST::PLUGINS_FILE)
+    f.should be_kind_of(Hash)
+    f
   end
 
   def invoke_sh(cmd,env=nil)

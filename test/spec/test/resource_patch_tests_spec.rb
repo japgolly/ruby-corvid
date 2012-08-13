@@ -10,11 +10,11 @@ describe Corvid::ResourcePatchTests do
 
   it("should fail when update() has an extra step that's not in install()"){
     @rpm= Corvid::ResPatchManager.new "#{Fixtures::FIXTURE_ROOT}/invalid_res_patch-extra_update_step"
-    expect{ test_feature_updates_match_install 'corvid' }.to raise_error /wtfff/
+    expect{ test_feature_updates_match_install 'corvid', 'corvid' }.to raise_error /wtfff/
   }
 
   it("should fail when update() is missing a step that's in install()"){
     @rpm= Corvid::ResPatchManager.new "#{Fixtures::FIXTURE_ROOT}/invalid_res_patch-missing_update_step"
-    expect{ test_feature_updates_match_install 'corvid' }.to raise_error /wtfff/
+    expect{ test_feature_updates_match_install 'corvid', 'corvid' }.to raise_error /wtfff/
   }
 end

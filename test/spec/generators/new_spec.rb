@@ -35,7 +35,7 @@ describe HappyPlugin do
   include Corvid::ResourcePatchTests
   res_patch_dir "#\{APP_ROOT}/resources"
 
-  include_feature_update_install_tests HappyPlugin.new
+  include_feature_update_install_tests 'happy', HappyPlugin.new
 end
       EOB
     }

@@ -78,7 +78,7 @@ Plugins: The Plan
 * Existing state changes
   * ![Done](done.png) `plugins.yml` contains: `plugin -> :require -> string`
   * ![TODO](pin-red.png) `version.yml` update to structure: `plugin -> version` and rename to `versions.yml`
-  * ![TODO](pin-red.png) `features.yml` and feature names: update to `<plugin>:<name>`
+  * ![Done](done.png) `features.yml` and feature names: update to `<plugin>:<name>`
   * ![TODO](pin-red.png) `corvid-features/*` to specify dependencies on feature and/or res versions.
 * ![Done](done.png) Provide ext points
   * test bootstraps
@@ -95,4 +95,3 @@ Plugins: The Plan
 #### Other
 * Doco on how plugins work, how to write one.
 * Test Corvid and a plugin both modifying the same file.
-

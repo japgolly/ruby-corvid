@@ -22,7 +22,7 @@ describe Corvid::Generator::Init do
         it("should create Gemfile"){ 'Gemfile'.should exist_as_a_file }
         it("should store the resource version"){ assert_corvid_version_is_latest }
         it("should store the corvid plugin"){ assert_plugins BUILTIN_PLUGIN_DETAILS }
-        it("should store the corvid feature"){ assert_corvid_features 'corvid' }
+        it("should store the corvid feature"){ assert_corvid_features 'corvid:corvid' }
       end
       context 'with additional features' do
         run_all_in_empty_dir {
@@ -30,7 +30,7 @@ describe Corvid::Generator::Init do
         }
         it("should create Gemfile"){ 'Gemfile'.should exist_as_a_file }
         it("should store the resource version"){ assert_corvid_version_is_latest }
-        it("should store the corvid and test features"){ assert_corvid_features %w[corvid test_unit test_spec] }
+        it("should store the corvid and test features"){ assert_corvid_features %w[corvid:corvid corvid:test_unit corvid:test_spec] }
       end
     end
 
@@ -56,7 +56,7 @@ describe Corvid::Generator::Init do
 
     it("should do nothing if already installed"){
       copy_fixture 'bare'
-      add_feature! 'plugin'
+      add_feature! 'corvid:plugin'
       expect{ run! }.not_to change{ get_dir_entries }
     }
 
@@ -68,7 +68,7 @@ describe Corvid::Generator::Init do
         run!
       }
       it("should install the plugin feature"){
-        File.read(CONST::FEATURES_FILE).should include('plugin')
+        client_features.should include 'corvid:plugin'
       }
       it("should create resource directories"){
         'resources'.should exist_as_dir
@@ -76,7 +76,7 @@ describe Corvid::Generator::Init do
       }
       it("should add rspec support"){
         'test/spec'.should exist_as_dir
-        File.read(CONST::FEATURES_FILE).should include('spec')
+        client_features.should include 'corvid:test_spec'
       }
       it("should add res-patch validity tests"){
         tests= get_files('test/spec')
@@ -102,7 +102,7 @@ describe Corvid::Generator::Init::Test do
       run_generator described_class, "unit"
       test_bootstraps true, true, false
       Dir.exists?('test/unit').should == true
-      assert_corvid_features %w[corvid test_unit]
+      assert_corvid_features %w[corvid:corvid corvid:test_unit]
     }
 
     it("should preserve the common bootstrap"){
@@ -120,7 +120,7 @@ describe Corvid::Generator::Init::Test do
       run_generator described_class, "spec"
       test_bootstraps true, false, true
       Dir.exists?('test/spec').should == true
-      assert_corvid_features %w[corvid test_spec]
+      assert_corvid_features %w[corvid:corvid corvid:test_spec]
     }
 
     it("should preserve the common bootstrap"){
@@ -183,10 +183,10 @@ describe 'Installing features' do
             assert_installation #{inst_ver}, #{inst_ver}
           }
           it("should preserve the existing features in the registry"){
-            @features.should include('corvid')
+            @features.should include('corvid:corvid')
           }
           it("should register the new feature"){
-            @features.should include('test_unit')
+            @features.should include('corvid:test_unit')
           }
         end
       EOB
@@ -204,8 +204,7 @@ describe 'Installing features' do
 
     it("should do nothing if feature already installed"){
       with_sandbox_copy_of(2) do
-        f= YAML.load_file(CONST::FEATURES_FILE) + ['test_unit']
-        File.write CONST::FEATURES_FILE, f.to_yaml
+        add_feature! 'corvid:test_unit'
         run_init_test_unit_task
         assert_installation 2, 0
       end
