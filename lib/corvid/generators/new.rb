@@ -1,6 +1,6 @@
 require 'corvid/generators/base'
 
-class Corvid::Generator::New < Corvid::Generator::Base
+class Corvid::Generator::New < ::Corvid::Generator::Base
 
   argument :plugin_name, type: :string
   desc 'plugin', 'Creates a new Corvid plugin.'
@@ -19,7 +19,7 @@ class Corvid::Generator::New < Corvid::Generator::Base
 
   #---------------------------------------------------------------------------------------------------------------------
 
-  class Plugin < Corvid::Generator::Base
+  class Plugin < ::Corvid::Generator::Base
     argument :feature_name, type: :string
 
     desc 'feature', 'Generates a new plugin feature.'
@@ -61,7 +61,7 @@ class Corvid::Generator::New < Corvid::Generator::Base
 
   #---------------------------------------------------------------------------------------------------------------------
 
-  class Test < Corvid::Generator::Base
+  class Test < ::Corvid::Generator::Base
     argument :name, type: :string
 
     desc 'unit', 'Generates a new unit test.'
