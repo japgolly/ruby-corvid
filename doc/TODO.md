@@ -56,14 +56,14 @@ Plugins: The Plan
   * ![Done](done.png) creates `test/spec/corvid/NAME_plugin_spec.rb` which
   * creates `bin/NAME`
   * creates `test/spec/corvid/NAME_bin_spec.rb` which
-* `corvid new:plugin:feature NAME` which
-  * finds an existing plugin
-    * prompts/fails if none
+* ![Done](done.png) `corvid new:plugin:feature NAME` which
+  * ![Done](done.png) finds an existing plugin
+    * ![Done](done.png) uses one if found
     * prompts if more than one
-  * creates `resources/latest/corvid-features/NAME.rb`
-  * creates `lib/corvid/NAME_feature.rb`
+  * ![Done](done.png) creates `resources/latest/corvid-features/NAME.rb`
+  * ![Done](done.png) creates `lib/corvid/NAME_feature.rb`
   * creates `test/spec/corvid/NAME_features_spec.rb`
-  * adds feature to the plugin manifest (`lib/corvid/????_plugin.rb`)
+  * ![Done](done.png) adds feature to the plugin manifest (`lib/corvid/????_plugin.rb`)
 * Create a plugin bin/CLI delegate
   * `<plugin> init`
   * `<plugin> update`
