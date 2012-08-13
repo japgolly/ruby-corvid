@@ -7,6 +7,8 @@ Fix or Enhance Existing Functionality
 * Allow `copy_file()` to deploy to a different filename (without breaking patches).
 * Should tasks be organised by content before function? i.e. `project:*, test:*, plugin:*` instead of `init:*, new:*` ![?](question.png)
 * Handle cases where installed = n and first version of feature installer is n+1
+* `bin/corvid` shouldn't just be loading everything. It should use `plugins.yml` to determine.
+* `corvid new:test:*` shouldn't be using latest resources. They should be using `version.yml`
 
 Documentation
 -------------
@@ -48,22 +50,19 @@ Plugins: The Plan
   * Check that feature requirements are met.
   * Add name and require-path to `plugins.yml`
   * Install features.
-* Create a `new:plugin NAME` task
+* ![Done](done.png) Create a `new:plugin NAME` task
   * ensures plugin feature installed
+  * ![Done](done.png) creates `lib/corvid/NAME_plugin.rb` which
+  * ![Done](done.png) creates `test/spec/corvid/NAME_plugin_spec.rb` which
   * creates `bin/NAME`
-  * creates `lib/corvid/NAME_plugin.rb` which
-    * loads and extends {Plugin}
-  * creates `test/spec/corvid/NAME_plugin_spec.rb` which
-    * loads plugin test-helpers
   * creates `test/spec/corvid/NAME_bin_spec.rb` which
-    * tests that the bin script works
-  * creates `test/spec/corvid/NAME_features_spec.rb`
 * `corvid new:plugin:feature NAME` which
   * finds an existing plugin
     * prompts/fails if none
     * prompts if more than one
   * creates `resources/latest/corvid-features/NAME.rb`
   * creates `lib/corvid/NAME_feature.rb`
+  * creates `test/spec/corvid/NAME_features_spec.rb`
   * adds feature to the plugin manifest (`lib/corvid/????_plugin.rb`)
 * Create a plugin bin/CLI delegate
   * `<plugin> init`

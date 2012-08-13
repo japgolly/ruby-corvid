@@ -54,6 +54,26 @@ module Corvid
         updated
       end
 
+      # Easier way of calling Thor's `template` method.
+      #
+      # @param [String] file The filename of the template. Normally ends in `.tt`.
+      # @param args If a Hash is provided then it is a map of template variable names to values. If anything else then
+      #   (String, array of symbols) it is assumed to be one or more variable names with instance methods that can be
+      #   called to provide the value.
+      # @return (see Thor::Actions#template)
+      def template2(file, args)
+        src= file
+        target= file.sub /\.tt$/, ''
+        unless args.is_a?(Hash)
+          names= [args].flatten
+          args= names.inject({}){|h,name| h[name]= send name.to_sym; h}
+        end
+        args.each do |k,v|
+          target.gsub! "%#{k}%", v
+        end
+        template src, target
+      end
+
     end
   end
 end
