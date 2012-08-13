@@ -10,9 +10,7 @@ describe Corvid::Generator::New do
     }
 
     it("should create a plugin"){
-      # TODO create be_file_with_contents(str|regex).and().and()
-      'lib/corvid/happy_plugin.rb'.should exist_as_file
-      File.read('lib/corvid/happy_plugin.rb').should == <<-EOB
+      'lib/corvid/happy_plugin.rb'.should be_file_with_contents <<-EOB
 require 'corvid/plugin'
 
 class HappyPlugin < Corvid::Plugin
@@ -26,9 +24,7 @@ end
       EOB
     }
     it("should create a plugin"){
-      # TODO create be_file_with_contents(str|regex).and().and()
-      'test/spec/happy_plugin_spec.rb'.should exist_as_file
-      File.read('test/spec/happy_plugin_spec.rb').should == <<-EOB
+      'test/spec/happy_plugin_spec.rb'.should be_file_with_contents <<-EOB
 # encoding: utf-8
 require_relative '../bootstrap/spec'
 require 'corvid/test/resource_patch_tests'
@@ -55,7 +51,7 @@ describe Corvid::Generator::New::Test do
   describe 'new:test:unit' do
     it("simplest case"){
       run_generator described_class, 'unit hehe'
-      File.read('test/unit/hehe_test.rb').should == <<-EOB
+      'test/unit/hehe_test.rb'.should be_file_with_contents <<-EOB
 # encoding: utf-8
 require_relative '../bootstrap/unit'
 require 'hehe'
@@ -68,7 +64,7 @@ end
 
     it("with leading slash, subdir, module and file ext"){
       run_generator described_class, 'unit /what/say::good.rb'
-      File.read('test/unit/what/say/good_test.rb').should == <<-EOB
+      'test/unit/what/say/good_test.rb'.should be_file_with_contents <<-EOB
 # encoding: utf-8
 require_relative '../../../bootstrap/unit'
 require 'what/say/good'
@@ -83,7 +79,7 @@ end
   describe 'new:test:spec' do
     it("simplest case"){
       run_generator described_class, 'spec hehe'
-      File.read('test/spec/hehe_spec.rb').should == <<-EOB
+      'test/spec/hehe_spec.rb'.should be_file_with_contents <<-EOB
 # encoding: utf-8
 require_relative '../bootstrap/spec'
 require 'hehe'
@@ -96,7 +92,7 @@ end
 
     it("with leading slash, subdir, module and file ext"){
       run_generator described_class, 'spec /what/say::good.rb'
-      File.read('test/spec/what/say/good_spec.rb').should == <<-EOB
+      'test/spec/what/say/good_spec.rb'.should be_file_with_contents <<-EOB
 # encoding: utf-8
 require_relative '../../../bootstrap/spec'
 require 'what/say/good'
