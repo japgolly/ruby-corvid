@@ -45,41 +45,41 @@ Plugins: The Plan
   * ![Done](done.png) Adds `res` rake tasks
   * ![Done](done.png) Adds rspec feature
   * ![Done](done.png) Adds res-patch validity test
-* Plugin installation
+* ![TODO](pin-red.png) Plugin installation
   * Add ability to install plugins.
   * Check that feature requirements are met.
   * Add name and require-path to `plugins.yml`
   * Install features.
 * ![Done](done.png) Create a `new:plugin NAME` task
-  * ensures plugin feature installed
+  * ![TODO](pin-red.png) ensures plugin feature installed
   * ![Done](done.png) creates `lib/corvid/NAME_plugin.rb` which
   * ![Done](done.png) creates `test/spec/corvid/NAME_plugin_spec.rb` which
-  * creates `bin/NAME`
-  * creates `test/spec/corvid/NAME_bin_spec.rb` which
+  * ![TODO](pin-yellow.png) creates `bin/NAME`
+  * ![TODO](pin-yellow.png) creates `test/spec/corvid/NAME_bin_spec.rb` which
 * ![Done](done.png) `corvid new:plugin:feature NAME` which
   * ![Done](done.png) finds an existing plugin
     * ![Done](done.png) uses one if found
-    * prompts if more than one
+    * ![TODO](pin-yellow.png) prompts if more than one
   * ![Done](done.png) creates `resources/latest/corvid-features/NAME.rb`
   * ![Done](done.png) creates `lib/corvid/NAME_feature.rb`
-  * creates `test/spec/corvid/NAME_features_spec.rb`
+  * ![TODO](pin-blue.png) creates `test/spec/corvid/NAME_features_spec.rb`
   * ![Done](done.png) adds feature to the plugin manifest (`lib/corvid/????_plugin.rb`)
-* Create a plugin bin/CLI delegate
+* ![TODO](pin-yellow.png) Create a plugin bin/CLI delegate
   * `<plugin> init`
   * `<plugin> update`
 
 #### Modify
-* Feature installation
+* ![TODO](pin-red.png) Feature installation
   * Check that requirements are met.
   * Use plugin resources.
-* Feature updating
+* ![TODO](pin-red.png) Feature updating
   * Update plugins' features.
   * Check requirements already met for latest version of all installed plugin features.
 * Existing state changes
   * ![Done](done.png) `plugins.yml` contains: `plugin -> :require -> string`
-  * `version.yml` update to structure: `plugin -> version` and rename to `versions.yml`
-  * `features.yml` and feature names: update to `<plugin>:<name>`
-  * `corvid-features/*` to specify dependencies on feature and/or res versions.
+  * ![TODO](pin-red.png) `version.yml` update to structure: `plugin -> version` and rename to `versions.yml`
+  * ![TODO](pin-red.png) `features.yml` and feature names: update to `<plugin>:<name>`
+  * ![TODO](pin-red.png) `corvid-features/*` to specify dependencies on feature and/or res versions.
 * ![Done](done.png) Provide ext points
   * test bootstraps
   * test helpers
@@ -87,9 +87,10 @@ Plugins: The Plan
   * `Guardfile`
   * code coverage settings
   * ![Done](done.png) Rake tasks
-* `corvid` bin should also load and expose (namespaced) plugins' tasks.
+* ![TODO](pin-red.png) `corvid` bin should also load and expose (namespaced) plugins' tasks.
 * ![Done](done.png) Make `init:project` add corvid to `plugins.yml` and delete (most) special built-in logic.
   Should only load built-in if no `plugins.yml` found.
+* ![TODO](pin-red.png) Don't load feature for plugins that aren't installed.
 
 #### Other
 * Doco on how plugins work, how to write one.
