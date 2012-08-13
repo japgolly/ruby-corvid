@@ -363,7 +363,7 @@ module Corvid
 
     # Returns the filename of a resource patch for a given version.
     #
-    # @param [Fixnum] The resource patch version.
+    # @param [Fixnum] ver The resource patch version.
     # @return [String] The resource patch filename.
     def res_patch_filename(ver)
       '%s/%05d.patch' % [res_patch_dir,ver]
