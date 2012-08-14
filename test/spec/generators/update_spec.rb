@@ -28,6 +28,46 @@ describe Corvid::Generator::Update do
     }
   end
 
+  describe 'update:project' do
+    let :g do
+      g= quiet_generator(described_class)
+      g.plugin_registry= Corvid::PluginRegistry.send :new
+      g.stub(:rpm_for).and_raise('rpm_for() called with wrong args')
+      g
+    end
+
+    def mock_plugin(name, latest_version)
+      p1= stub(name).tap{|p| p.stub name: name }
+      rpm1= Corvid::ResPatchManager.new
+      rpm1.stub latest_version: latest_version
+      g.stub(:rpm_for).with(p1).and_return(rpm1)
+      g.plugin_registry.use_plugin p1, false
+      p1
+    end
+
+    def test(*expected)
+      g.instance_eval "def upgrade!(*a); (@u ||= []) << a; end"
+      g.project
+      g.instance_variable_get(:@u).should equal_array expected
+    end
+
+    it("updates all installed features of installed plugins"){
+      g.stub read_client_versions!: {'p1'=>2,'p2'=>4}
+      g.stub read_client_features!: %w[p1:1a p1:1c p2:2a p2:2b]
+      p1= mock_plugin 'p1', 6
+      p2= mock_plugin 'p2', 7
+      test [p1, 2, 6, %w[1a 1c]], [p2, 4, 7, %w[2a 2b]]
+    }
+
+    it("does nothing for up-to-date plugins"){
+      g.stub read_client_versions!: {'p1'=>2,'p2'=>4}
+      g.stub read_client_features!: %w[p1:1a p1:1c p2:2a p2:2b]
+      p1= mock_plugin 'p1', 2
+      p2= mock_plugin 'p2', 7
+      test [p2, 4, 7, %w[2a 2b]]
+    }
+  end
+
   #---------------------------------------------------------------------------------------------------------------------
 
   describe 'Real Updating With Sample Resources' do

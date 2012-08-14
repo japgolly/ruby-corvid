@@ -130,7 +130,7 @@ module Corvid
       Dir.chdir 'upgrade' do
         quiet_generator(TestInstaller).install plugin, feature_name, starting_version
         g= quiet_generator(Corvid::Generator::Update)
-        g.send :upgrade!, plugin, starting_version, g.rpm_for(plugin).latest_version, [feature_id_for(plugin.name, feature_name)]
+        g.send :upgrade!, plugin, starting_version, g.rpm_for(plugin).latest_version, [feature_name]
         File.delete Corvid::Constants::VERSIONS_FILE
       end
 

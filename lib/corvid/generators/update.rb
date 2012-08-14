@@ -7,21 +7,30 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
     # Read client details
     vers= read_client_versions!
-    features= read_client_features!
+    feature_ids= read_client_features!
 
-    # TODO update only updates corvid
-    plugin= builtin_plugin
-    ver= vers[plugin.name]
+    # Group features by plugin
+    features_by_plugin= {}
+    feature_ids.each {|id|
+      p,f = split_feature_id(id)
+      (features_by_plugin[p] ||= [])<< f
+    }
 
-    # Corvid installation confirmed - now check if already up-to-date
-    if rpm_for(plugin).latest? ver
-      say "Upgrading #{plugin.name}: Already up-to-date."
-    else
-      # Perform upgrade
-      from= ver
-      to= rpm_for(plugin).latest_version
-      say "Upgrading #{plugin.name} from v#{from} to v#{to}..."
-      upgrade! plugin, from, to, features
+    # Update each plugin
+    features_by_plugin.each do |plugin_name, features|
+      plugin= plugin_registry[plugin_name]
+      ver= vers[plugin_name] || 0
+
+      # Check if already up-to-date
+      if rpm_for(plugin).latest? ver
+        say "Upgrading #{plugin.name}: Already up-to-date."
+      else
+        # Perform upgrade
+        from= ver
+        to= rpm_for(plugin).latest_version
+        say "Upgrading #{plugin.name} from v#{from} to v#{to}..."
+        upgrade! plugin, from, to, features
+      end
     end
   end
 
@@ -30,10 +39,9 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   # @param [Plugin] plugin The plugin whose resources are being updated.
   # @param [Fixnum] from The version already installed.
   # @param [Fixnum] to The target version to upgrade to.
-  # @param [Array<String>] features The features to upgrade.
+  # @param [Array<String>] feature_names The names of features to upgrade.
   # @return [void]
-  # # TODO dont pass feature_ids, pass feature_names, already know plugin
-  def upgrade!(plugin, from, to, features)
+  def upgrade!(plugin, from, to, feature_names)
     #TODO update or upgrade - make up mind!
     rpm= rpm_for(plugin)
 
@@ -45,10 +53,9 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       installers= {}
       from.upto(to) {|v|
         installers[v]= {}
-        features.each {|feature_id|
-          # TODO update doesn't handle multiple plugins
-          feature_name= split_feature_id(feature_id)[1]
+        feature_names.each {|feature_name|
           if code= feature_installer_code(rpm.ver_dir(v), feature_name)
+            feature_id= feature_id_for(plugin.name, feature_name)
             deployable_files.concat extract_deployable_files(code, feature_id, v)
             installer= dynamic_installer(code, feature_id, v)
             installers[v][feature_name]= installer if installer.respond_to?(:update)

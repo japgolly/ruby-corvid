@@ -73,8 +73,8 @@ Plugins: The Plan
 * ![TODO](pin-red.png) Feature installation
   * Check that requirements are met.
   * Use plugin resources.
-* ![TODO](pin-red.png) Feature updating
-  * Update plugins' features.
+* ![Done](done.png) Feature updating
+  * ![Done](done.png) Update plugins' features.
   * Check requirements already met for latest version of all installed plugin features.
 * Existing state changes
   * ![Done](done.png) `plugins.yml` contains: `plugin -> :require -> string`

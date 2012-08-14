@@ -50,6 +50,7 @@ module Corvid
 
       @instance_cache[name]
     end
+    alias :[] :instance_for
 
     # TODO
     #

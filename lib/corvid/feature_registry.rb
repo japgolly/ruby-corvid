@@ -94,6 +94,7 @@ module Corvid
 
       @instance_cache[feature_id]= instance
     end
+    alias :[] :instance_for
 
     # TODO
     #
