@@ -4,7 +4,6 @@ require 'corvid/test/resource_patch_tests'
 
 describe Corvid::ResourcePatchTests do
   include Corvid::ResourcePatchTests
-  use_resources_path BUILTIN_PLUGIN.new.resources_path
 
   run_each_in_empty_dir
 

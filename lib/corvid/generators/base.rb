@@ -66,6 +66,10 @@ module Corvid
       #   @return [PluginRegistry]
       ::Corvid::PluginRegistry.def_accessor(self)
 
+      def builtin_plugin
+        @@builtin_plugin ||= ::Corvid::Builtin::BuiltinPlugin.new
+      end
+
       # @see Corvid::FeatureRegistry#read_client_features
       def read_client_features
         feature_registry.read_client_features
@@ -238,10 +242,10 @@ module Corvid
 
       # TODO
       #
-      # @param [String] name The plugin name.
       # @param [Plugin] plugin The plugin instance.
       # @return [true]
-      def add_plugin(name, plugin)
+      def add_plugin(plugin)
+        name= plugin.name
         validate_plugin_name! name
         pdata= plugin_registry.read_client_plugin_details
         pdata ||= {}
@@ -254,7 +258,7 @@ module Corvid
       #
       # If the feature is already installed then this tells the user thus and stops.
       #
-      # @param [String] plugin_name The name of the plugin that the feature belongs to.
+      # @param [String,Plugin] plugin_or_name The plugin, or name of, that the feature belongs to.
       # @param [String] feature_name The feature name to install.
       # @option options [Boolean] :run_bundle (false) If enabled, then {#run_bundle} will be called after the feature is
       #   added.
@@ -263,8 +267,9 @@ module Corvid
       # @return [void]
       # @raise If failed to read client's version and installed features.
       # @raise If the feature isn't available at the current version of resources (i.e. update required).
-      def install_feature(plugin_name, feature_name, options={})
+      def install_feature(plugin_or_name, feature_name, options={})
         options= DEFAULT_OPTIONS_FOR_INSTALL_FEATURE.merge options
+        plugin_name= plugin_or_name.is_a?(Plugin) ? plugin_or_name.name : plugin_or_name
         feature_id= feature_id_for(plugin_name, feature_name)
 
         # Read client details
@@ -277,9 +282,9 @@ module Corvid
         else
 
           # Ensure resources up-to-date
+          # TODO ver needs to be ver of plugin
           f= feature_registry.instance_for(feature_id)
           if f and f.since_ver > ver
-            plugin_name= 'corvid' # TODO plugin name hardcoded to corvid
             raise "The #{feature_id} feature requires at least v#{f.since_ver} of #{plugin_name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
           end
 
@@ -448,6 +453,7 @@ module Corvid
       # @param [Fixnum] ver The version to write to the file.
       # @return [self]
       def write_client_version(ver)
+        # TODO hardcoded to only work with corvid plugin
         rpm.validate_version! ver, 1
         create_file Constants::VERSION_FILE, ver.to_s, force: true
         self

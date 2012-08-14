@@ -4,6 +4,8 @@ require 'corvid/extension'
 class MockPlugin < Corvid::Plugin
   include Corvid::Extension
 
+  name 'mock_plugin'
+
   rake_tasks {
     extend Rake::DSL
 

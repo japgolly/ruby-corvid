@@ -12,8 +12,8 @@ class Corvid::Generator::Init < ::Corvid::Generator::Base
     with_latest_resources {|ver|
       feature_installer!('corvid').install
       write_client_version ver
-      add_plugin 'corvid', ::Corvid::Builtin::BuiltinPlugin.new
-      add_feature 'corvid:corvid'
+      add_plugin builtin_plugin
+      add_feature feature_id_for(builtin_plugin.name,'corvid')
 
       invoke 'init:test:unit', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
       invoke 'init:test:spec', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'
@@ -25,7 +25,7 @@ class Corvid::Generator::Init < ::Corvid::Generator::Base
   desc 'plugin', 'Adds plugin development support.'
   declare_option_to_run_bundle(self)
   def plugin
-    install_feature 'corvid', 'plugin'
+    install_feature builtin_plugin, 'plugin'
   end
 
   class Test < ::Corvid::Generator::Base
@@ -33,13 +33,13 @@ class Corvid::Generator::Init < ::Corvid::Generator::Base
     desc 'unit', 'Adds support for unit tests.'
     declare_option_to_run_bundle(self)
     def unit
-      install_feature 'corvid', 'test_unit', run_bundle: true
+      install_feature builtin_plugin, 'test_unit', run_bundle: true
     end
 
     desc 'spec', 'Adds support for specifications.'
     declare_option_to_run_bundle(self)
     def spec
-      install_feature 'corvid', 'test_spec', run_bundle: true
+      install_feature builtin_plugin, 'test_spec', run_bundle: true
     end
 
   end # class Init::Test

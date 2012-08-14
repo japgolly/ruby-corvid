@@ -4,6 +4,8 @@ module Corvid
   module Builtin
     class BuiltinPlugin < Corvid::Plugin
 
+      name 'corvid'
+
       require_path 'corvid/builtin/builtin_plugin'
 
       resources_path File.expand_path('../../../../resources', __FILE__)

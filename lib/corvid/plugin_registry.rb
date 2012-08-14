@@ -53,9 +53,8 @@ module Corvid
 
     # TODO
     #
-    # @param [Boolean] force If enabled, then the cached value will be discarded.
     # @return [Hash<String,nil|Plugin>] An instance of each client-installed feature. May return an empty array but never `nil`.
-    def instances_for_installed#(force=false)
+    def instances_for_installed
       load_client_plugins unless @instance_cache
       @instance_cache
     end
@@ -74,7 +73,10 @@ module Corvid
           path,class_name = data[:path],data[:class]
           require path if path
           klass= eval(class_name.sub /^(?!::)/,'::')
-          @instance_cache[name]= klass.new
+          plugin= klass.new
+
+          raise "Plugin name mismatch. #{name.inspect} does not match #{plugin.name.inspect}." unless name == plugin.name
+          @instance_cache[name]= plugin
         }
       end
 

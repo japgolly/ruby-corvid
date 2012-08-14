@@ -1,0 +1,12 @@
+Before: f8c2796eacf63aeef6d4ddccbd6a36ec35c4d6a512e3ab653f602a56a49d2ae2
+After: 603c76a37c963eeab6022ea176217f7e376de26219eb87663264982b9d68c6fc
+Patch: 48c0f01ca62b9ac32377305e4def3e49893cfda562e5845ee68cde882486dd71
+--- test/spec/%name%_plugin_spec.rb.tt	2012-08-14 12:13:25.233024770 +1000
++++ test/spec/%name%_plugin_spec.rb.tt	2012-08-14 12:13:29.419684525 +1000
+@@ -7,5 +7,5 @@
+   include Corvid::ResourcePatchTests
+   use_resources_path <%= class_name %>.new.resources_path
+ 
+-  include_feature_update_install_tests <%= class_name %>.new
++  include_feature_update_install_tests '<%= name %>', <%= class_name %>.new
+ end

@@ -21,9 +21,15 @@ module Corvid
     module ClassMethods
       include Corvid::NamingPolicy
 
-      def include_patch_validity_tests(&block)
+      # Includes tests that assert the validity of resource patches.
+      #
+      # @param [nil,Proc] ver1_test_block An optional block of additional checks to run to confirm the exploded state of resources
+      #   at version 1.
+      # @yieldparam [String] dir The directory containing the exploded v1 resources.
+      # @return [void]
+      def include_patch_validity_tests(&ver1_test_block)
 
-        $__corvid_resource_test_p1_block= block
+        $__corvid_resource_test_ver1_test_block= ver1_test_block
 
         class_eval <<-EOB
           describe "Patches" do
@@ -32,7 +38,7 @@ module Corvid
             # Test that we can explode n->1 without errors being raised.
             it("should be reconstructable back to v1"){
               rpm.with_resource_versions 1 do |dir|
-                b= $__corvid_resource_test_p1_block
+                b= $__corvid_resource_test_ver1_test_block
                 instance_exec dir, &b if b
               end
             }
@@ -40,16 +46,30 @@ module Corvid
         EOB
       end
 
-      # @param [Plugin|Hash<String,Array>] manifest Either a plugin instance or a feature manifest.
-      # @see Plugin#feature_manifest
-      def include_feature_update_install_tests(plugin_name, manifest_or_plugin)
-        manifest= if manifest_or_plugin.is_a?(Plugin)
-                    plugin= manifest_or_plugin
-                    use_resources_path plugin.resources_path
-                    plugin.feature_manifest
-                  else
-                    manifest_or_plugin
-                  end
+      # Includes tests that confirm that for features provided, updating from the earliest available version gives the
+      # same results as install the feature at the latest version. Any missing steps in `update` or `install` of the
+      # feature installer will be caught here.
+      #
+      # @overload include_feature_update_install_tests(plugin)
+      #   @param [Plugin] plugin A plugin instance.
+      # @overload include_feature_update_install_tests(plugin_name, feature_manifest)
+      #   @param [String] plugin_name The name of the plugin that provides the features.
+      #   @param [Hash<String,Array>] feature_manifest A map of features to require path and class names.
+      #   @see Plugin#feature_manifest
+      # @return [void]
+      def include_feature_update_install_tests(arg1, arg2=nil)
+        plugin_name, manifest = nil,nil
+        if arg2
+          # args = plugin_name, feature_manifest
+          plugin_name= arg1
+          manifest= arg2
+        else
+          # args = plugin
+          plugin= arg1
+          plugin_name= plugin.name
+          manifest= plugin.feature_manifest
+          use_resources_path plugin.resources_path
+        end
         features= manifest.keys
 
         latest_resource_version= rpm.latest_version
@@ -78,22 +98,29 @@ module Corvid
         end
       end
 
+      # Specifies the path containing resource patches.
+      #
+      # @param [String] dir
+      # @return [void]
       def use_resources_path(dir)
         raise "Directory doesn't exist: #{dir}" unless Dir.exists? dir
         define_rpm Corvid::ResPatchManager.new(dir)
       end
 
+      # @!visibility private
       def define_rpm(value)
         # Safe to use a global here because a) this test is meant to be shared between corvid and plugin providing
         # projects and within the same project i dont foresee any reason for them to run twice, and b) i'm busy AND lazy.
         $corvid_respatch_test_rpm= value
       end
 
+      # @return [nil,ResPatchManager]
       def rpm
         $corvid_respatch_test_rpm
       end
     end
 
+    # @return [nil,ResPatchManager]
     def rpm
       @rpm ||= self.class.rpm
     end

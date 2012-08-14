@@ -5,6 +5,11 @@ module Corvid
     # Plugins can be extensions but are not by default.
     # include Extension
 
+    # @!attribute [rw] name
+    #   The name of the plugin. Must conform to format enforced by {Corvid::NamingPolicy#validate_plugin_name!}.
+    #   @return [String] The plugin name.
+    attr_declarative :name, required: true
+
     # @!attribute [rw] require_path
     #   The path for Ruby to `require` in order to load this plugin.
     #   @return [String] The path to require, usually relative to your `lib` dir.
