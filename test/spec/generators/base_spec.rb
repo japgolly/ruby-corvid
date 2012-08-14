@@ -110,7 +110,6 @@ describe Corvid::Generator::Base do
       f= mock 'feature b'
       f.should_receive(:since_ver).at_least(:once).and_return(4)
       subject.feature_registry= fr= mock 'feature registry'
-      fr.should_receive(:validate_feature_name!).once.with('b')
       fr.should_receive(:instance_for).with('a:b').once.and_return(f)
       subject.should_not_receive :with_resources
       expect{

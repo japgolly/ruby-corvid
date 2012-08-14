@@ -1,6 +1,7 @@
 require 'corvid/constants'
 require 'corvid/feature_registry'
 require 'corvid/generators/update'
+require 'corvid/naming_policy'
 require 'corvid/res_patch_manager'
 require 'corvid/test/helpers/plugins'
 require 'golly-utils/testing/rspec/arrays'
@@ -10,6 +11,7 @@ require 'yaml'
 module Corvid
   module ResourcePatchTests
     include PluginTestHelpers
+    include Corvid::NamingPolicy
 
     # @!visibility private
     def self.included(base)
@@ -17,6 +19,8 @@ module Corvid
     end
 
     module ClassMethods
+      include Corvid::NamingPolicy
+
       def include_patch_validity_tests(&block)
 
         $__corvid_resource_test_p1_block= block
@@ -46,13 +50,13 @@ module Corvid
         feature_registry= ::Corvid::FeatureRegistry #.send :new - Generators need to use same instance. Easier to just set singleton and clear afterwards.
         feature_registry.use_feature_manifest plugin_name, manifest
 
-        tests= features.map {|name|
-                 f= feature_registry.instance_for("#{plugin_name}:#{name}")
+        tests= features.map {|feature_name|
+                 f= feature_registry.instance_for(feature_id_for(plugin_name, feature_name))
                  unless f.since_ver == latest_resource_version
                    %[
-                     it("Testing feature: #{name}"){
+                     it("Testing feature: #{feature_name}"){
                        @rpm= rpm
-                       test_feature_updates_match_install '#{plugin_name}', '#{name}', #{f.since_ver}
+                       test_feature_updates_match_install '#{plugin_name}', '#{feature_name}', #{f.since_ver}
                      }
                    ]
                  end
@@ -93,16 +97,17 @@ module Corvid
       no_tasks{
         def install(plugin_name, feature_name, ver=nil)
           ver ||= rpm.latest_version
+          feature_id= feature_id_for(plugin_name, feature_name)
           # Hardcoded-logic here but all features apart from corvid, requrie corvid to be installed first.
-          full_feature_name= "#{plugin_name}:#{feature_name}"
-          unless full_feature_name == 'corvid:corvid'
+          corvid_feature_id= feature_id_for('corvid','corvid')
+          unless feature_id == corvid_feature_id
             Dir.mkdir '.corvid' unless Dir.exists?('.corvid')
             File.write Corvid::Constants::VERSION_FILE, ver
-            File.write Corvid::Constants::FEATURES_FILE, %w[corvid].to_yaml
+            File.write Corvid::Constants::FEATURES_FILE, [corvid_feature_id].to_yaml
           end
           with_resources(ver) {
             feature_installer!(feature_name).install
-            add_feature full_feature_name
+            add_feature feature_id
           }
           File.delete Corvid::Constants::VERSION_FILE if File.exists?(Corvid::Constants::VERSION_FILE)
         end
@@ -121,7 +126,7 @@ module Corvid
       Dir.mkdir 'upgrade'
       Dir.chdir 'upgrade' do
         quiet_generator(TestInstaller).install plugin_name, feature_name, starting_version
-        quiet_generator(Corvid::Generator::Update).send :upgrade!, starting_version, @rpm.latest_version, ["#{plugin_name}:#{feature_name}"]
+        quiet_generator(Corvid::Generator::Update).send :upgrade!, starting_version, @rpm.latest_version, [feature_id_for(plugin_name, feature_name)]
         File.delete Corvid::Constants::VERSION_FILE
       end
 
@@ -130,7 +135,7 @@ module Corvid
       files.should equal_array get_files('install')
       get_dirs('upgrade').should equal_array get_dirs('install')
       files.each do |f|
-        File.read("upgrade/#{f}").should == File.read("install/#{f}")
+        "upgrade/#{f}".should be_file_with_contents File.read("install/#{f}")
       end
     end
 

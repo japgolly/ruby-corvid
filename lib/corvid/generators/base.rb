@@ -2,6 +2,7 @@ require 'corvid/environment'
 require 'corvid/constants'
 require 'corvid/feature_registry'
 require 'corvid/plugin_registry'
+require 'corvid/naming_policy'
 require 'corvid/res_patch_manager'
 require 'corvid/generators/actions'
 
@@ -25,6 +26,7 @@ module Corvid
     class Base < Thor
       include Thor::Actions
       include ActionExtentions
+      include ::Corvid::NamingPolicy
 
       # Name of the option that users can use on the CLI to opt-out of Bundler being run at the end of certain tasks.
       RUN_BUNDLE= :'run_bundle'
@@ -205,20 +207,22 @@ module Corvid
         end
       end
 
-      # Adds features to the client's {Constants::FEATURES_FILE FEATURES_FILE}.
+      # Adds feature ids to the client's {Constants::FEATURES_FILE FEATURES_FILE}.
       #
-      # Only features not already in the file will be added, and {Constants::FEATURES_FILE FEATURES_FILE} will only be
-      # updated if there are new features to add.
+      # Only feature ids not already in the file will be added, and {Constants::FEATURES_FILE FEATURES_FILE} will only
+      # be updated if there are new feature ids to add.
       #
-      # @param [Array<String>] features
+      # @param [Array<String>] feature_ids
       # @return [Boolean] `true` if new features were added to the client's features, else `false`.
-      def add_features(*features)
+      def add_features(*feature_ids)
+        validate_feature_ids! *feature_ids
+
         # Read currently installed features
         installed= read_client_features || []
         size_before= installed.size
 
         # Add features
-        features.flatten.each do |feature|
+        feature_ids.flatten.each do |feature|
           installed<< feature unless installed.include?(feature)
         end
 
@@ -238,6 +242,7 @@ module Corvid
       # @param [Plugin] plugin The plugin instance.
       # @return [true]
       def add_plugin(name, plugin)
+        validate_plugin_name! name
         pdata= plugin_registry.read_client_plugin_details
         pdata ||= {}
         pdata[name]= {path: plugin.require_path, class: plugin.class.to_s}
@@ -249,7 +254,8 @@ module Corvid
       #
       # If the feature is already installed then this tells the user thus and stops.
       #
-      # @param [String] name The feature name to install.
+      # @param [String] plugin_name The name of the plugin that the feature belongs to.
+      # @param [String] feature_name The feature name to install.
       # @option options [Boolean] :run_bundle (false) If enabled, then {#run_bundle} will be called after the feature is
       #   added.
       # @option options [Boolean] :say_if_installed (true) If enabled and feature is already installed, then display a message
@@ -259,26 +265,22 @@ module Corvid
       # @raise If the feature isn't available at the current version of resources (i.e. update required).
       def install_feature(plugin_name, feature_name, options={})
         options= DEFAULT_OPTIONS_FOR_INSTALL_FEATURE.merge options
-
-        # Validate names
-        plugin_registry.validate_plugin_name! plugin_name
-        feature_registry.validate_feature_name! feature_name
-        name= "#{plugin_name}:#{feature_name}"
+        feature_id= feature_id_for(plugin_name, feature_name)
 
         # Read client details
         ver= read_client_version!
-        features= read_client_features!
+        feature_ids= read_client_features!
 
         # Corvid installation confirmed - now check if feature already installed
-        if features.include? name
-          say "Feature '#{name}' already installed." if options[:say_if_installed]
+        if feature_ids.include? feature_id
+          say "Feature '#{feature_id}' already installed." if options[:say_if_installed]
         else
 
           # Ensure resources up-to-date
-          f= feature_registry.instance_for(name)
+          f= feature_registry.instance_for(feature_id)
           if f and f.since_ver > ver
             plugin_name= 'corvid' # TODO plugin name hardcoded to corvid
-            raise "The #{name} feature requires at least v#{f.since_ver} of #{plugin_name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
+            raise "The #{feature_id} feature requires at least v#{f.since_ver} of #{plugin_name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
           end
 
           # Install feature
@@ -286,7 +288,7 @@ module Corvid
           # TODO remember that plugins can call install_feature 'corvid:test_unit' & install feature of a diff plugin
           with_resources(ver) {|ver|
             feature_installer!(feature_name).install
-            add_feature name
+            add_feature feature_id
             yield ver if block_given?
             run_bundle() if options[:run_bundle]
           }
@@ -299,31 +301,32 @@ module Corvid
       }.freeze
 
       # @return [String] The installer filename.
-      def feature_installer_file(dir = res_dir(), feature)
-        "#{dir}/corvid-features/#{feature}.rb"
+      def feature_installer_file(dir = res_dir(), feature_name)
+        validate_feature_name! feature_name
+        "#{dir}/corvid-features/#{feature_name}.rb"
       end
       # @return [String] The installer filename.
       # @raise If the installer file doesn't exist.
-      def feature_installer_file!(dir = res_dir(), feature)
-        filename= feature_installer_file(dir, feature)
+      def feature_installer_file!(dir = res_dir(), feature_name)
+        filename= feature_installer_file(dir, feature_name)
         raise "File not found: #{filename}" unless File.exists?(filename)
         filename
       end
 
       # @return [nil,String] The installer file contents or `nil` if the file doesn't exist.
-      def feature_installer_code(dir = res_dir(), feature)
-        file= feature_installer_file(dir, feature)
+      def feature_installer_code(dir = res_dir(), feature_name)
+        file= feature_installer_file(dir, feature_name)
         return nil unless File.exist?(file)
         code= File.read(file) # TODO encoding
-        allow_declarative_feature_installer_config code, feature
+        allow_declarative_feature_installer_config(code, feature_name)
       end
       # @return [String] The installer file contents.
       # @raise If the installer file doesn't exist.
-      def feature_installer_code!(dir = res_dir(), feature)
-        code= feature_installer_code(dir, feature)
+      def feature_installer_code!(dir = res_dir(), feature_name)
+        code= feature_installer_code(dir, feature_name)
         code or (
-          feature_installer_file!(dir, feature) # This will raise its own error if file not found
-          raise "Unable to read feature installer code for '#{feature}'."
+          feature_installer_file!(dir, feature_name) # This will raise its own error if file not found
+          raise "Unable to read feature installer code for '#{feature_name}'."
         )
       end
 
@@ -383,17 +386,17 @@ module Corvid
 
       # @return [nil, GollyUtils::Delegator<Base>] An instance of the feature installer, unless any forseeable exception
       #   (such as the installer file not existing) occurs.
-      def feature_installer(dir = res_dir(), feature)
-        code= feature_installer_code(dir, feature)
-        code && dynamic_installer(code, feature)
+      def feature_installer(dir = res_dir(), feature_name)
+        code= feature_installer_code(dir, feature_name)
+        code && dynamic_installer(code, feature_name)
       end
       # @return [GollyUtils::Delegator<Base>] An instance of the feature installer.
       # @raise If the installer file doesn't exist or any other problem occurs.
-      def feature_installer!(dir = res_dir(), feature)
-        installer= feature_installer(dir, feature)
+      def feature_installer!(dir = res_dir(), feature_name)
+        installer= feature_installer(dir, feature_name)
         installer or (
-          feature_installer_file!(dir, feature) # This will raise its own error if file not found
-          raise "Unable to create feature installer for '#{feature}'."
+          feature_installer_file!(dir, feature_name) # This will raise its own error if file not found
+          raise "Unable to create feature installer for '#{feature_name}'."
         )
       end
 
@@ -414,7 +417,7 @@ module Corvid
       #
       # @param [Object] obj The object to embelish with given code.
       # @param [String] code The Ruby code to evaluate.
-      # @param [String] feature The name of the feature that the code belongs to.
+      # @param [String] feature The name of the feature that the code belongs to (for generating clear error-messages).
       # @param [nil,Fixnum] ver The version of the resources that the code belongs to.
       # @return the same object that was provided in `obj`.
       def add_dynamic_code!(obj, code, feature, ver=nil)
@@ -452,11 +455,12 @@ module Corvid
 
       # Creates or replaces the client's {Constants::FEATURES_FILE FEATURES_FILE}.
       #
-      # @param [Array<String>] features The features to write to the file
+      # @param [Array<String>] feature_ids The feature_ids to write to the file
       # @return [self]
-      def write_client_features(features)
-        raise "Invalid features. Array expected. Got: #{features.inspect}" unless features.is_a?(Array)
-        create_file Constants::FEATURES_FILE, features.to_yaml, force: true
+      def write_client_features(feature_ids)
+        raise "Invalid features. Array expected. Got: #{feature_ids.inspect}" unless feature_ids.is_a?(Array)
+        validate_feature_ids! *feature_ids
+        create_file Constants::FEATURES_FILE, feature_ids.to_yaml, force: true
         self
       end
 

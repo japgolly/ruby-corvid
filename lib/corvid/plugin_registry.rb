@@ -1,13 +1,12 @@
 require 'golly-utils/singleton'
 require 'corvid/constants'
 require 'corvid/plugin'
+require 'corvid/naming_policy'
 
 module Corvid
   class PluginRegistry
     include GollyUtils::Singleton
-
-    PLUGIN_NAME_FMT= '[^ :]+'.freeze
-    PLUGIN_NAME_REGEX= /^#{PLUGIN_NAME_FMT}$/
+    include Corvid::NamingPolicy
 
     def initialize
       clear_cache
@@ -42,6 +41,7 @@ module Corvid
     # @param [String] name
     # @return [nil,Plugin]
     def instance_for(name)
+      validate_plugin_name! name
       load_client_plugins unless @instance_cache
 
       unless @instance_cache.has_key?(name)
@@ -60,16 +60,6 @@ module Corvid
       @instance_cache
     end
 
-    def validate_plugin_name!(plugin_name)
-      unless plugin_name.is_a? String
-        raise "Invalid plugin name: #{plugin_name.inspect}. String expected."
-      end
-      unless PLUGIN_NAME_REGEX === plugin_name
-        raise "Invalid plugin name: '#{plugin_name}'. Must match regex: #{PLUGIN_NAME_REGEX}"
-      end
-      true
-    end
-
     protected
 
     def load_client_plugins
@@ -78,6 +68,7 @@ module Corvid
       # Add client plugins
       if plugin_manifest= read_client_plugin_details
         plugin_manifest.each {|name,data|
+          validate_plugin_name! name
 
           # Create a new instance
           path,class_name = data[:path],data[:class]

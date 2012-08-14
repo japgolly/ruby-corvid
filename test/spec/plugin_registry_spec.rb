@@ -18,7 +18,7 @@ describe Corvid::PluginRegistry do
     end
 
     it("should fail when plugin is unknown"){
-      expect{ subject.instance_for('porn!') }.to raise_error
+      expect{ subject.instance_for('porn') }.to raise_error
     }
 
     it("should create a new instance"){
@@ -50,28 +50,6 @@ describe Corvid::PluginRegistry do
       pf= subject.instances_for_installed()['corvid']
       pf.should_not be_nil
       pf.should be_a BUILTIN_PLUGIN
-    }
-  end
-
-  describe '#validate_plugin_name!' do
-    it("should pass with valid names"){
-      subject.validate_plugin_name! 'a'
-      subject.validate_plugin_name! 'corvid'
-      subject.validate_plugin_name! 'omg_hehe'
-      subject.validate_plugin_name! 'b-123'
-    }
-    it("should fail when name has a space"){
-      expect{ subject.validate_plugin_name! 'abc ' }.to raise_error
-      expect{ subject.validate_plugin_name! ' abc' }.to raise_error
-      expect{ subject.validate_plugin_name! 'a bc' }.to raise_error
-    }
-    it("should fail when name has a colon"){
-      expect{ subject.validate_plugin_name! 'abc:' }.to raise_error
-      expect{ subject.validate_plugin_name! ':abc' }.to raise_error
-      expect{ subject.validate_plugin_name! 'a:bc' }.to raise_error
-    }
-    it("should fail when name is empty"){
-      expect{ subject.validate_plugin_name! '' }.to raise_error
     }
   end
 end

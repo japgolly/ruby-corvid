@@ -82,7 +82,6 @@ describe Corvid::FeatureRegistry do
       p1= stub feature_manifest: {'happy'=>[nil,'Happy'], 'tired'=>['tired','Tired']}
       p2= stub feature_manifest: {'eat'=>[nil,'Eat']}
       subject.plugin_registry.stub instances_for_installed: {'p1'=>p1, 'p2'=>p2}
-      subject.plugin_registry.should_receive(:validate_plugin_name!).with(/p[12]/).at_least(2).times
       subject.feature_manifest.keys.should equal_array %w[p1:happy p1:tired p2:eat]
     }
 
@@ -90,7 +89,6 @@ describe Corvid::FeatureRegistry do
       p2= stub feature_manifest: {'eat'=>[nil,'Eat']}
       expect{
         subject.plugin_registry.stub instances_for_installed: {'p2:no'=>p2}
-        subject.plugin_registry.should_receive(:validate_plugin_name!).with('p2:no').and_raise
         subject.feature_manifest
       }.to raise_error
     }
@@ -99,7 +97,6 @@ describe Corvid::FeatureRegistry do
       p2= stub feature_manifest: {'eat:no'=>[nil,'Eat']}
       expect{
         subject.plugin_registry.stub instances_for_installed: {'p2'=>p2}
-        subject.plugin_registry.should_receive(:validate_plugin_name!).with('p2')
         subject.feature_manifest
       }.to raise_error /eat:no/
     }

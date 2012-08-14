@@ -1,14 +1,12 @@
 require 'golly-utils/singleton'
 require 'corvid/constants'
 require 'corvid/plugin_registry'
+require 'corvid/naming_policy'
 
 module Corvid
   class FeatureRegistry
     include GollyUtils::Singleton
-
-    FEATURE_NAME_FMT= PluginRegistry::PLUGIN_NAME_FMT
-    FEATURE_NAME_ONLY_REGEX= /^#{FEATURE_NAME_FMT}$/
-    FEATURE_NAME_FULL_REGEX= /^#{PluginRegistry::PLUGIN_NAME_FMT}:#{FEATURE_NAME_FMT}$/
+    include Corvid::NamingPolicy
 
     # @!attribute [rw] plugin_registry
     #   @return [PluginRegistry]
@@ -27,7 +25,7 @@ module Corvid
 
     # Reads and parses the contents of the client's {Constants::FEATURES_FILE FEATURES_FILE} if it exists.
     #
-    # @return [nil,Array<String>] A list of features or `nil` if the file wasn't found.
+    # @return [nil,Array<String>] A list of feature ids or `nil` if the file wasn't found.
     def read_client_features
       if File.exists? Constants::FEATURES_FILE
         v= YAML.load_file Constants::FEATURES_FILE
@@ -41,7 +39,7 @@ module Corvid
 
     # Reads and parses the contents of the client's {Constants::FEATURES_FILE FEATURES_FILE}.
     #
-    # @return [Array<String>] A list of features.
+    # @return [Array<String>] A list of feature ids.
     # @raise If file not found.
     # @see #read_client_features
     def read_client_features!
@@ -71,47 +69,33 @@ module Corvid
       @feature_manifest
     end
 
-    # @param [String] name
+    # @param [String] feature_id
     # @return [nil,Feature]
-    def instance_for(name)
-      raise "Invalid feature: '#{name}'. Must be in the format of '<plugin name>:<feature name>'." unless FEATURE_NAME_FULL_REGEX === name
-      return @instance_cache[name] if @instance_cache.has_key?(name)
+    def instance_for(feature_id)
+      validate_feature_id! feature_id
+      return @instance_cache[feature_id] if @instance_cache.has_key?(feature_id)
 
-      raise "Unknown feature: #{name}. It isn't specified in any manifests." unless feature_manifest.has_key?(name)
+      raise "Unknown feature: #{feature_id}. It isn't specified in any manifests." unless feature_manifest.has_key?(feature_id)
 
-      data= feature_manifest[name]
+      data= feature_manifest[feature_id]
       instance= if data
           # Create a new instance
-          path,class_name = data
+          path,class_feature_id = data
           require path if path
-          klass= eval(class_name.sub /^(?!::)/,'::')
+          klass= eval(class_feature_id.sub /^(?!::)/,'::')
           klass.new
         else
           nil
         end
 
-      @instance_cache[name]= instance
+      @instance_cache[feature_id]= instance
     end
 
     # TODO
     #
-    # @param [Boolean] force If enabled, then the cached value will be discarded.
     # @return [Hash<String,nil|Feature>] An instance of each client-installed feature. May return an empty array but never `nil`.
-    def instances_for_installed#(force=false)
-#      @instances_for_installed= nil if force
-      @instances_for_installed ||= (
-        (read_client_features || []).inject({}) {|h,f| h[f]= instance_for f; h }
-      )
-    end
-
-    def validate_feature_name!(feature_name_without_plugin_prefix)
-      unless feature_name_without_plugin_prefix.is_a? String
-        raise "Invalid plugin name: #{feature_name_without_plugin_prefix.inspect}. String expected."
-      end
-      unless FEATURE_NAME_ONLY_REGEX === feature_name_without_plugin_prefix
-        raise "Invalid feature name: '#{feature_name_without_plugin_prefix}'. Must match regex: #{FEATURE_NAME_ONLY_REGEX}"
-      end
-      true
+    def instances_for_installed
+      @instances_for_installed ||= (read_client_features || []).inject({}) {|h,f| h[f]= instance_for f; h }
     end
 
     # @param [String] plugin_name The plugin name.
@@ -129,9 +113,9 @@ module Corvid
     def register_feature(plugin_name, feature_name, data)
 
       # Check names
-      plugin_registry.validate_plugin_name! plugin_name
+      validate_plugin_name! plugin_name
       validate_feature_name! feature_name
-      name= "#{plugin_name}:#{feature_name}"
+      name= feature_id_for(plugin_name, feature_name)
       STDERR.puts "WARNING: Feature '#{name}' already registered." if @feature_manifest.has_key?(name)
 
       # Check data
