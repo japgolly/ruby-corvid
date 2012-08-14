@@ -8,7 +8,7 @@ describe 'Plugin Integration Test' do
   end
 
   it("should only load specified plugins"){
-    File.delete CONST::PLUGINS_FILE
+    File.write CONST::PLUGINS_FILE, BUILTIN_PLUGIN_DETAILS.to_yaml
     expect{ invoke_rake! 'mock:hello' }.to raise_error
   }
 
