@@ -31,7 +31,7 @@ module Corvid
     def read_client_plugin_details
       if File.exists? Constants::PLUGINS_FILE
         p= YAML.load_file Constants::PLUGINS_FILE
-        raise "Invalid #{Constants::PLUGINS_FILE}. Hash expected but got #{v.class}." unless p.is_a?(Hash)
+        raise "Invalid #{Constants::PLUGINS_FILE}. Hash expected but got #{p.class}." unless p.is_a?(Hash)
         p
       else
         nil
