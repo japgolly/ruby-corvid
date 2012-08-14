@@ -11,9 +11,9 @@ class Corvid::Generator::Init < ::Corvid::Generator::Base
   def project
     with_latest_resources {|ver|
       feature_installer!('corvid').install
-      write_client_version ver
-      add_plugin builtin_plugin
-      add_feature feature_id_for(builtin_plugin.name,'corvid')
+      write_client_versions builtin_plugin.name => ver
+      add_plugin            builtin_plugin
+      add_feature           feature_id_for(builtin_plugin.name,'corvid')
 
       invoke 'init:test:unit', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
       invoke 'init:test:spec', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'

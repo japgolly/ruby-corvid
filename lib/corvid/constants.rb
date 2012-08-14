@@ -4,7 +4,7 @@ module Corvid
     VERSION = "0.0.1"
 
     # Filename of the client-side file that stores the version of Corvid resources last deployed.
-    VERSION_FILE = '.corvid/version.yml'
+    VERSIONS_FILE = '.corvid/versions.yml'
 
     # Filename of the client-side file that stores the Corvid features that are enabled in the client's project.
     FEATURES_FILE = '.corvid/features.yml'

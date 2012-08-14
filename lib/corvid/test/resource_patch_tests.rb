@@ -131,18 +131,18 @@ module Corvid
         def install(plugin_name, feature_name, ver=nil)
           ver ||= rpm.latest_version
           feature_id= feature_id_for(plugin_name, feature_name)
-          # Hardcoded-logic here but all features apart from corvid, requrie corvid to be installed first.
+          # TODO Hardcoded-logic here but all features apart from corvid, requrie corvid to be installed first.
           corvid_feature_id= feature_id_for('corvid','corvid')
           unless feature_id == corvid_feature_id
             Dir.mkdir '.corvid' unless Dir.exists?('.corvid')
-            File.write Corvid::Constants::VERSION_FILE, ver
+            File.write Corvid::Constants::VERSIONS_FILE, {'corvid'=>ver}.to_yaml
             File.write Corvid::Constants::FEATURES_FILE, [corvid_feature_id].to_yaml
           end
           with_resources(ver) {
             feature_installer!(feature_name).install
             add_feature feature_id
           }
-          File.delete Corvid::Constants::VERSION_FILE if File.exists?(Corvid::Constants::VERSION_FILE)
+          File.delete Corvid::Constants::VERSIONS_FILE if File.exists?(Corvid::Constants::VERSIONS_FILE)
         end
       }
     end
@@ -159,8 +159,9 @@ module Corvid
       Dir.mkdir 'upgrade'
       Dir.chdir 'upgrade' do
         quiet_generator(TestInstaller).install plugin_name, feature_name, starting_version
-        quiet_generator(Corvid::Generator::Update).send :upgrade!, starting_version, @rpm.latest_version, [feature_id_for(plugin_name, feature_name)]
-        File.delete Corvid::Constants::VERSION_FILE
+        quiet_generator(Corvid::Generator::Update).send :upgrade!, \
+          plugin_name, starting_version, @rpm.latest_version, [feature_id_for(plugin_name, feature_name)]
+        File.delete Corvid::Constants::VERSIONS_FILE
       end
 
       # Compare directories

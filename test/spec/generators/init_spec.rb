@@ -9,9 +9,9 @@ describe Corvid::Generator::Init do
   describe 'init:project' do
 
     def assert_corvid_version_is_latest
-      v= YAML.load_file(CONST::VERSION_FILE)
-      v.should be_kind_of(Fixnum)
-      v.should == Corvid::ResPatchManager.new.latest_version
+      v= YAML.load_file(CONST::VERSIONS_FILE)
+      v.should be_kind_of(Hash)
+      v['corvid'].should == Corvid::ResPatchManager.new.latest_version
     end
 
     context 'in an empty directory' do
@@ -37,7 +37,7 @@ describe Corvid::Generator::Init do
     it("should overwrite the resource version when it exists"){
       inside_empty_dir {
         Dir.mkdir '.corvid'
-        File.write CONST::VERSION_FILE, '0'
+        File.write CONST::VERSIONS_FILE, {'corvid'=>0}.to_yaml
         run_generator described_class, "project --no-test-unit --no-test-spec"
         assert_corvid_version_is_latest
       }
@@ -64,7 +64,7 @@ describe Corvid::Generator::Init do
       run_all_in_empty_dir {
         copy_fixture 'bare'
         # TODO fix bare version being out of date
-        File.write CONST::VERSION_FILE, Corvid::ResPatchManager.new.latest_version
+        File.write CONST::VERSIONS_FILE, {'corvid'=>Corvid::ResPatchManager.new.latest_version}.to_yaml
         run!
       }
       it("should install the plugin feature"){

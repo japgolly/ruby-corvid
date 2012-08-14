@@ -79,28 +79,42 @@ module Corvid
         feature_registry.read_client_features!
       end
 
-      # Reads and parses the contents of the client's {Constants::VERSION_FILE VERSION_FILE} if it exists.
+      # Reads and parses the contents of the client's {Constants::VERSIONS_FILE VERSIONS_FILE} if it exists.
       #
-      # @return [nil,Fixnum] The version number or `nil` if the file wasn't found.
-      def read_client_version
-        if File.exists?(Constants::VERSION_FILE)
-          v= YAML.load_file(Constants::VERSION_FILE)
-          raise "Invalid version: #{v.inspect}\nNumber expected. Check your #{Constants::VERSION_FILE}." unless v.is_a? Fixnum
-          v
+      # @return [nil,Hash<String,Fixnum>] The version numbers for each plugin or `nil` if the file wasn't found.
+      def read_client_versions
+        if File.exists?(Constants::VERSIONS_FILE)
+          vers= YAML.load_file(Constants::VERSIONS_FILE)
+          validate_versions! vers, "\nCheck your #{Constants::VERSIONS_FILE} file."
+          vers
         else
           nil
         end
       end
 
-      # Reads and parses the contents of the client's {Constants::VERSION_FILE VERSION_FILE} if it exists.
+      # Validates the (potential) contents of a client's {Constants::VERSIONS_FILE VERSIONS_FILE}.
       #
-      # @return [Fixnum] The version number.
+      # @param [Hash<String,Fixnum>] vers A hash of plugins to the version of corresponding resources installed.
+      # @param [String] errmsg_suffix Optional text to append to error messages when validation fails.
+      # @return [void]
+      def validate_versions!(vers, errmsg_suffix=nil)
+        s= errmsg_suffix ? errmsg_suffix.sub(/\a(?!=\s)/,' ') : ''
+        raise "Invalid version settings, hash expected. Received: #{vers.inspect}.#{s}" unless vers.is_a? Hash
+        vers.each do |p,v|
+          raise "Invalid plugin name: #{p.inspect}." unless p.is_a? String
+          raise "Invalid version for #{p}: #{v.inspect}. Number expected." unless v.is_a? Fixnum
+        end
+      end
+
+      # Reads and parses the contents of the client's {Constants::VERSIONS_FILE VERSIONS_FILE} if it exists.
+      #
+      # @return [Hash<String,Fixnum>] The version numbers for each plugin.
       # @raise If file not found.
       # @see read_client_version
-      def read_client_version!
-        ver= read_client_version
-        raise "File not found: #{Constants::VERSION_FILE}\nYou must install Corvid first. Try corvid init:project." if ver.nil?
-        ver
+      def read_client_versions!
+        vers= read_client_versions
+        raise "File not found: #{Constants::VERSIONS_FILE}\nYou must install Corvid first. Try corvid init:project." if vers.nil?
+        vers
       end
 
       protected
@@ -254,6 +268,12 @@ module Corvid
         true
       end
 
+      def add_version(plugin_name, version)
+        vers= read_client_versions || {}
+        vers[plugin_name]= version
+        write_client_versions vers
+      end
+
       # Installs a feature into an existing Corvid project.
       #
       # If the feature is already installed then this tells the user thus and stops.
@@ -265,7 +285,7 @@ module Corvid
       # @option options [Boolean] :say_if_installed (true) If enabled and feature is already installed, then display a message
       #   indicating so to the user.
       # @return [void]
-      # @raise If failed to read client's version and installed features.
+      # @raise If failed to read client's installed features and resource versions.
       # @raise If the feature isn't available at the current version of resources (i.e. update required).
       def install_feature(plugin_or_name, feature_name, options={})
         options= DEFAULT_OPTIONS_FOR_INSTALL_FEATURE.merge options
@@ -273,32 +293,33 @@ module Corvid
         feature_id= feature_id_for(plugin_name, feature_name)
 
         # Read client details
-        ver= read_client_version!
+        vers= read_client_versions!
         feature_ids= read_client_features!
 
         # Corvid installation confirmed - now check if feature already installed
         if feature_ids.include? feature_id
           say "Feature '#{feature_id}' already installed." if options[:say_if_installed]
-        else
-
-          # Ensure resources up-to-date
-          # TODO ver needs to be ver of plugin
-          f= feature_registry.instance_for(feature_id)
-          if f and f.since_ver > ver
-            raise "The #{feature_id} feature requires at least v#{f.since_ver} of #{plugin_name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
-          end
-
-          # Install feature
-          # TODO doesn't use plugin resources
-          # TODO remember that plugins can call install_feature 'corvid:test_unit' & install feature of a diff plugin
-          with_resources(ver) {|ver|
-            feature_installer!(feature_name).install
-            add_feature feature_id
-            yield ver if block_given?
-            run_bundle() if options[:run_bundle]
-          }
+          return
         end
+
+        # Ensure resources up-to-date
+        ver= vers[plugin_name]
+        f= feature_registry.instance_for(feature_id)
+        if f and f.since_ver > ver
+          raise "The #{feature_id} feature requires at least v#{f.since_ver} of #{plugin_name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
+        end
+
+        # Install feature
+        # TODO doesn't use plugin resources
+        # TODO remember that plugins can call install_feature 'corvid:test_unit' & install feature of a diff plugin
+        with_resources(ver) {|ver|
+          feature_installer!(feature_name).install
+          add_feature feature_id
+          yield ver if block_given?
+          run_bundle() if options[:run_bundle]
+        }
       end
+
       # @!visibility private
       DEFAULT_OPTIONS_FOR_INSTALL_FEATURE= {
         run_bundle: false,
@@ -448,14 +469,14 @@ module Corvid
         obj
       end
 
-      # Creates or replaces the client's {Constants::VERSION_FILE VERSION_FILE}.
+      # Creates or replaces the client's {Constants::VERSIONS_FILE VERSIONS_FILE}.
       #
-      # @param [Fixnum] ver The version to write to the file.
+      # @param [Hash<String,Fixnum>] vers A hash of plugins to the version of corresponding resources installed.
       # @return [self]
-      def write_client_version(ver)
-        # TODO hardcoded to only work with corvid plugin
-        rpm.validate_version! ver, 1
-        create_file Constants::VERSION_FILE, ver.to_s, force: true
+      def write_client_versions(vers)
+        # TODO doesn't call rpm.validate_version! >>> rpm[plugin].validate_version! ver, 1
+        validate_versions! vers
+        create_file Constants::VERSIONS_FILE, vers.to_yaml, force: true
         self
       end
 

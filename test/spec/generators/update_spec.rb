@@ -53,7 +53,7 @@ describe Corvid::Generator::Update do
             assert_installation #{max_ver}, #{max_ver}
           }
           it("should update the client's version number"){
-            Corvid::Generator::Base.new.read_client_version.should == #{max_ver}
+            Corvid::Generator::Base.new.read_client_versions.should == {'corvid'=>#{max_ver}}
           }
           it("should ignore non-corvid files in the client dir"){
             @ignore_file.should exist_as_file
@@ -108,7 +108,7 @@ describe Corvid::Generator::Update do
         assert_installation 4, 4, %w[corvid.A]
       }
       it("should update the client's version number"){
-        Corvid::Generator::Base.new.read_client_version.should == 4
+        Corvid::Generator::Base.new.read_client_versions.should == {'corvid'=>4}
       }
     end
   end

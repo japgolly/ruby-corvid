@@ -105,7 +105,7 @@ describe Corvid::Generator::Base do
 
   describe "#install_feature" do
     it("should fail if client resource version is prior to first feature version"){
-      subject.stub read_client_version!: 3
+      subject.stub read_client_versions!: {'a'=>3}
       subject.stub read_client_features!: []
       f= mock 'feature b'
       f.should_receive(:since_ver).at_least(:once).and_return(4)
@@ -118,7 +118,7 @@ describe Corvid::Generator::Base do
     }
 
     it("should do nothing if feature already installed"){
-      subject.stub read_client_version!: 3
+      subject.stub read_client_versions!: {'a'=>3}
       subject.stub read_client_features!: ['a:b']
       subject.stub :say
       subject.should_not_receive :with_resources

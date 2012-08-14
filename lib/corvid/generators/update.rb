@@ -6,28 +6,34 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   def project
 
     # Read client details
-    ver= read_client_version!
+    vers= read_client_versions!
     features= read_client_features!
+
+    # TODO update only updates corvid
+    plugin_name= 'corvid'
+    ver= vers[plugin_name]
 
     # Corvid installation confirmed - now check if already up-to-date
     if rpm.latest? ver
-      say "Already up-to-date."
+      say "Upgrading #{plugin_name}: Already up-to-date."
     else
       # Perform upgrade
       from= ver
       to= rpm.latest_version
-      say "Upgrading from v#{from} to v#{to}..."
-      upgrade! from, to, features
+      say "Upgrading #{plugin_name} from v#{from} to v#{to}..."
+      upgrade! plugin_name, from, to, features
     end
   end
 
   protected
 
+  # @param [String] plugin_name The name of the plugin whose resources are being updated.
   # @param [Fixnum] from The version already installed.
   # @param [Fixnum] to The target version to upgrade to.
   # @param [Array<String>] features The features to upgrade.
   # @return [void]
-  def upgrade!(from, to, features)
+  def upgrade!(plugin_name, from, to, features)
+    #TODO update or upgrade - make up mind!
 
     # Expand versions m->n
     rpm.with_resource_versions from, to do
@@ -77,8 +83,8 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         end
       end
 
-      # Update version.yml
-      write_client_version to
+      # Update version file
+      add_version plugin_name, to
     end
   end
 
