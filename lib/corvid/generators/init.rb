@@ -9,7 +9,7 @@ class Corvid::Generator::Init < ::Corvid::Generator::Base
   method_option :'test-spec', type: :boolean
   declare_option_to_run_bundle(self)
   def project
-    with_latest_resources {|ver|
+    with_latest_resources(builtin_plugin) {|ver|
       feature_installer!('corvid').install
       write_client_versions builtin_plugin.name => ver
       add_plugin            builtin_plugin

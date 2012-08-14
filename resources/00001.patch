@@ -1,18 +1,17 @@
-Before: a75b7e5c2cf3b7a1458fc55ea89f0883c821ed0b4fcb8d655d0a13d98f9cb0ae
+Before: 731bfb1267ae6acb243bea5c9fd6bd65f6352703fc101c3c0a1a24862e7cc0ea
 After: 33bfbc981a0607f4ba3019729ce32d3a0171520c560873cc5a84d42f841bc3e9
-Patch: a584450ce434eec012f683053334fcb093e65dfad69010590e9f34d694b4abd4
---- corvid-features/plugin.rb	2012-08-13 19:24:43.319622766 +1000
-+++ /dev/null	2012-07-30 09:37:23.066384672 +1000
-@@ -1,7 +0,0 @@
+Patch: e8b2f1dc0933293e3285d6372beb4659f8e890c025f8de36a491dedf707d094e
+--- corvid-features/plugin.rb	2012-08-15 00:10:02.540364800 +1000
++++ /dev/null	2012-08-14 08:14:42.724947336 +1000
+@@ -1,6 +0,0 @@
 -install {
 -  empty_directory 'resources'
 -  empty_directory 'resources/latest'
 -  copy_file       'resources/.gitignore'
 -  install_feature 'corvid', 'test_spec', run_bundle: true, say_if_installed: false
--  copy_file       'test/spec/resources_spec.rb'
 -}
---- lib/corvid/%name%_feature.rb.tt	2012-08-13 16:20:51.157407448 +1000
-+++ /dev/null	2012-07-30 09:37:23.066384672 +1000
+--- lib/corvid/%name%_feature.rb.tt	2012-08-15 00:10:02.537031448 +1000
++++ /dev/null	2012-08-14 08:14:42.724947336 +1000
 @@ -1,10 +0,0 @@
 -require 'corvid/feature'
 -
@@ -24,25 +23,45 @@ Patch: a584450ce434eec012f683053334fcb093e65dfad69010590e9f34d694b4abd4
 -  }
 -
 -end
---- lib/corvid/%name%_plugin.rb.tt	2012-08-13 12:56:43.053579014 +1000
-+++ /dev/null	2012-07-30 09:37:23.066384672 +1000
-@@ -1,10 +0,0 @@
+--- lib/corvid/%name%_plugin.rb.tt	2012-08-15 00:10:02.537031448 +1000
++++ /dev/null	2012-08-14 08:14:42.724947336 +1000
+@@ -1,30 +0,0 @@
 -require 'corvid/plugin'
+-#require 'corvid/extension'
 -
 -class <%= class_name %> < Corvid::Plugin
+-  # Plugins can be extensions but are not by default.
+-  #include Corvid::Extension
 -
+-  # The name of the plugin. Must conform to format enforced by {Corvid::NamingPolicy#validate_plugin_name!}.
+-  #
+-  # @return [String] The plugin name.
+-  name '<%= name %>'
+-
+-  # The path for Ruby to require in order to load this plugin.
+-  #
+-  # @return [String] The path to require, usually relative to your lib dir.
 -  require_path '<%= require_path %>'
 -
+-  # The path to the directory containing the plugin's resources.
+-  #
+-  # @return [String] An absolute path.
+-  resources_path File.expand_path('../../../resources', __FILE__)
+-
+-  # A manifest of all features provided by the plugin.
+-  #
+-  # @return [Hash<String,Array<String>>] A hash with keys being feature names, and the values being a 2-element
+-  #   array of the feature's require-path, and class name, respectively.
 -  feature_manifest ({
 -  })
 -
 -end
---- resources/.gitignore	2012-08-09 13:34:14.000844233 +1000
-+++ /dev/null	2012-07-30 09:37:23.066384672 +1000
+--- resources/.gitignore	2012-08-15 00:10:02.537031448 +1000
++++ /dev/null	2012-08-14 08:14:42.724947336 +1000
 @@ -1 +0,0 @@
 -latest
---- resources/latest/corvid-features/%name%.rb.tt	2012-08-13 14:12:45.145097126 +1000
-+++ /dev/null	2012-07-30 09:37:23.066384672 +1000
+--- resources/latest/corvid-features/%name%.rb.tt	2012-08-15 00:10:02.537031448 +1000
++++ /dev/null	2012-08-14 08:14:42.724947336 +1000
 @@ -1,13 +0,0 @@
 -install {
 -  # empty_directory 'lib'
@@ -57,9 +76,9 @@ Patch: a584450ce434eec012f683053334fcb093e65dfad69010590e9f34d694b4abd4
 -#     empty_directory 'lib'
 -#   end
 -# }
---- test/spec/%name%_plugin_spec.rb.tt	2012-08-13 19:37:01.847395107 +1000
-+++ /dev/null	2012-07-30 09:37:23.066384672 +1000
-@@ -1,11 +0,0 @@
+--- test/spec/%name%_plugin_spec.rb.tt	2012-08-15 00:10:02.537031448 +1000
++++ /dev/null	2012-08-14 08:14:42.724947336 +1000
+@@ -1,12 +0,0 @@
 -# encoding: utf-8
 -require_relative '../bootstrap/spec'
 -require 'corvid/test/resource_patch_tests'
@@ -67,20 +86,8 @@ Patch: a584450ce434eec012f683053334fcb093e65dfad69010590e9f34d694b4abd4
 -
 -describe <%= class_name %> do
 -  include Corvid::ResourcePatchTests
--  res_patch_dir "#{APP_ROOT}/resources"
 -
--  include_feature_update_install_tests '<%= name %>', <%= class_name %>.new
--end
---- test/spec/resources_spec.rb	2012-08-11 12:03:08.949488981 +1000
-+++ /dev/null	2012-07-30 09:37:23.066384672 +1000
-@@ -1,10 +0,0 @@
--# encoding: utf-8
--require_relative '../bootstrap/spec'
--require 'corvid/test/resource_patch_tests'
+-  include_resource_patch_tests
 -
--describe "Actual Resources" do
--  include Corvid::ResourcePatchTests
--  res_patch_dir "#{APP_ROOT}/resources"
--
--  include_patch_validity_tests
+-  include_feature_update_install_tests
 -end

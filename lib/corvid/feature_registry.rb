@@ -62,6 +62,10 @@ module Corvid
       @feature_manifest
     end
 
+    def use_feature_manifest_from(plugin, clear_existing=true)
+      use_feature_manifest plugin.name, plugin.feature_manifest, clear_existing
+    end
+
     def use_feature_manifest(plugin_name, manifest, clear_existing=true)
       @feature_manifest= {} if clear_existing
       @feature_manifest ||= {}

@@ -21,7 +21,7 @@ module Corvid
 
     def decorate_generator(g)
       # Use a test res-patch manager if available
-      g.rpm= @rpm if @rpm
+      g.instance_variable_set :@rpms, @rpms if @rpms
       g
     end
 

@@ -13,17 +13,17 @@ describe Corvid::Generator::New do
     it("should create a plugin"){
       'lib/corvid/happy_plugin.rb'.should be_file_with_contents(/class HappyPlugin < Corvid::Plugin/)
         .and(%r|name 'happy'|)
-        .and(%r|require_path 'lib/corvid/happy_plugin'|)
+        .and(%r|require_path 'corvid/happy_plugin'|)
         .and(%r|feature_manifest|)
         .and(%r|resources_path|)
     }
 
     it("should create a plugin test"){
-      'test/spec/happy_plugin_spec.rb'.should be_file_with_contents(%r|require 'lib/corvid/happy_plugin'|)
+      'test/spec/happy_plugin_spec.rb'.should be_file_with_contents(%r|require 'corvid/happy_plugin'|)
         .and(%r|describe HappyPlugin do|)
         .and(%r|include Corvid::ResourcePatchTests|)
-        .and(%r|include_feature_update_install_tests HappyPlugin.new|)
-        .and(%r|use_resources_path HappyPlugin.new.resources_path|)
+        .and(%r|include_resource_patch_tests|)
+        .and(%r|include_feature_update_install_tests|)
     }
   end
 end

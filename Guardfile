@@ -26,7 +26,7 @@ group :spec do
     watch('test/helpers/fixture-upgrading.rb'){upgrading}
 
     # Exceptional cases
-    watch(%r'^lib/corvid/test/resource_patch_tests\.rb') {'test/spec/resources_spec.rb'}
+    watch(%r'^lib/corvid/test/resource_patch_tests\.rb') {'test/spec/builtin/builtin_plugin_spec.rb'}
   end
 end
 

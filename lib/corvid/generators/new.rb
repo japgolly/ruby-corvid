@@ -5,7 +5,7 @@ class Corvid::Generator::New < ::Corvid::Generator::Base
   argument :plugin_name, type: :string
   desc 'plugin', 'Creates a new Corvid plugin.'
   def plugin
-    with_latest_resources do
+    with_latest_resources(builtin_plugin) do
       template2 'lib/corvid/%name%_plugin.rb.tt', :name
       template2 'test/spec/%name%_plugin_spec.rb.tt', :name
     end
@@ -15,7 +15,7 @@ class Corvid::Generator::New < ::Corvid::Generator::Base
   private
   def name; plugin_name.underscore.gsub(/^.*[\\\/]+|\.rb$/,'') end
   def class_name; name.camelize + 'Plugin' end
-  def require_path; "lib/corvid/#{name}_plugin" end
+  def require_path; "corvid/#{name}_plugin" end
 
   #---------------------------------------------------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ class Corvid::Generator::New < ::Corvid::Generator::Base
 
     desc 'feature', 'Generates a new plugin feature.'
     def feature
-      with_latest_resources do
+      with_latest_resources(builtin_plugin) do
         template2 'lib/corvid/%name%_feature.rb.tt', :name
         #template2 'test/spec/%name%_feature_spec.rb.tt', :name
         template2 'resources/latest/corvid-features/%name%.rb.tt', :name
@@ -66,14 +66,14 @@ class Corvid::Generator::New < ::Corvid::Generator::Base
 
     desc 'unit', 'Generates a new unit test.'
     def unit
-      with_latest_resources do
+      with_latest_resources(builtin_plugin) do
         template2 'test/unit/%src%_test.rb.tt', :src
       end
     end
 
     desc 'spec', 'Generates a new specification.'
     def spec
-      with_latest_resources do
+      with_latest_resources(builtin_plugin) do
         template2 'test/spec/%src%_spec.rb.tt', :src
       end
     end

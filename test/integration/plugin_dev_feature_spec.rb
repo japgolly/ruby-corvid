@@ -8,6 +8,7 @@ describe 'Plugin Development Feature' do
     invoke_corvid! %(
       init:project --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec
       init:plugin --no-#{RUN_BUNDLE}
+      new:plugin cool
     )
     patch_corvid_gemfile
     patch_corvid_deps
@@ -24,11 +25,11 @@ describe 'Plugin Development Feature' do
   }
 
   it("should add tests that verify resource patch validity"){
-    @quiet_sh= true
     invoke_rake('test').should == true
 
     p= 'resources/00001.patch'
     File.write p, File.read(p).sub(/[0-9]/,'f') # Corrupt a res-patch checksum
+    @quiet_sh= true
     invoke_rake('test').should == false
   }
 

@@ -49,14 +49,14 @@ module Corvid
       # Not using no_tasks{} because it stops Yard seeing the methods.
       @no_tasks= true
 
-      def rpm()
-        @rpm ||= ::Corvid::ResPatchManager.new
+      # Returns a resource-patch manager setup to use the resources of a given plugin.
+      #
+      # @param [Plugin] plugin
+      # @return [ResPatchManager]
+      def rpm_for(plugin)
+        @rpms ||= {}
+        @rpms[plugin.name] ||= ::Corvid::ResPatchManager.new(plugin.resources_path)
       end
-      # @!attribute [rw] rpm
-      #   @return [ResPatchManager] The resource-patch manager that the generator will use.
-      attr_writer :rpm
-
-      @no_tasks= true # Shutup Thor, you idiot!
 
       # @!attribute [rw] feature_registry
       #   @return [FeatureRegistry]
@@ -124,10 +124,19 @@ module Corvid
       #
       # @return [String]
       # @raise If resources aren't available.
-      # @see #with_latest_resources
       # @see #with_resources
       def res_dir
         $corvid_global_thor_source_root || raise("Resources not available. Call with_resources() first.")
+      end
+
+      # The current resource-patch manager (as specified by {#with_resources}) that the generator will use.
+      #
+      # @return [ResPatchManager]
+      # @raise If resources aren't available.
+      # @see #with_resources
+      def rpm
+        return @@rpm if @@rpm
+        raise("Resources not available. Call with_resources() first.")
       end
 
       # Makes available to generators the latest version of Corvid resources.
@@ -135,30 +144,53 @@ module Corvid
       # @yieldparam [Fixnum] ver The version of the resources being used.
       # @return The return result of `block`.
       # @see #with_resources
-      def with_latest_resources(&block)
-        with_resources :latest, &block
+      def with_latest_resources(plugin, &block)
+        with_resources plugin, :latest, &block
       end
 
       # Works with {ResPatchManager} to provide generators with an specified version of Corvid resources.
       #
       # @note Only one version of resources can be made available at one time. Nested calls to this method requesting
-      #   the same version (reentrancy) will be allowed, but a nested call for a differing version will fail.
-      # @raise If resources of a different version are already available.
+      #   the same plugin and version (reentrancy) will be allowed, but a nested call for a differing version will fail.
+      # @raise If resources of a different plugin or version are already available.
       #
-      # @return The return result of `block`.
       # @overload with_resources(dir, &block)
       #   @param [String] dir The directory where the resources can be found.
       #   @yieldparam [void]
-      # @overload with_resources(ver, &block)
+      # @overload with_resources(plugin, ver, &block)
+      #   @param [Plugin] plugin The plugin providing the resources.
       #   @param [Fixnum, :latest] ver The version of resources to use.
       #   @yieldparam [Fixnum] ver The version of the resources being used.
-      def with_resources(ver, &block)
+      # @return The return result of `block`.
+      def with_resources(arg1, arg2=nil, &block)
+        # Parse args
+        plugin= ver= dir= nil
+        if arg2
+         plugin= arg1
+         ver= arg2
+       else
+         ver= dir= arg1
+       end
+        plugin_rpm= plugin ? rpm_for(plugin) : nil
+        plugin_name= plugin ? plugin.name : 'Not provided.'
 
         # Check args
         raise "Block required." unless block
-        ver= rpm.latest_version if ver == :latest
-        raise "Invalid version: #{ver.inspect}" unless ver.is_a?(String) or ver.is_a?(Fixnum)
-        raise "Directory doesn't exist: #{ver}" if ver.is_a?(String) and !Dir.exists?(ver)
+        case ver
+        when Fixnum
+        when :latest
+          raise "Plugin required but not provided." unless plugin_rpm
+          ver= plugin_rpm.latest_version
+        when String
+          raise "Directory doesn't exist: #{ver}" unless Dir.exists?(ver)
+        else
+          raise "Invalid version: #{ver.inspect}"
+        end
+
+        # Make sure no conflict
+        if @@with_resource_plugin and plugin_name != @@with_resource_plugin
+          raise "Nested calls with different plugins not supported. This should never occur; BUG!\nInitial: #{@@with_resource_plugin.inspect}\nProposed: #{plugin_name.inspect}"
+        end
         if @@with_resource_version and ver != @@with_resource_version
           raise "Nested calls with different versions not supported. This should never occur; BUG!\nInitial: #{@@with_resource_version.inspect}\nProposed: #{ver.inspect}"
         end
@@ -166,36 +198,41 @@ module Corvid
         @@with_resource_depth += 1
         begin
 
+          # Run locally if resources already available (i.e. nested call)
           if @@with_resource_depth > 1
-            # Run locally if already pointing at desired resources
-            return block.call(ver)
-          else
-            # Prepare initial state
-            setup_proc= lambda {|dir|
-              @@with_resource_version= ver
-              @source_paths= [dir]
-              $corvid_global_thor_source_root= dir
-            }
+            return block.(ver)
+          end
 
-            if ver.is_a?(String)
-              # Use existing resource dir
-              setup_proc.call ver
-              return block.call()
-            else
-              # Deploy resources via RPM
-              rpm.with_resources(ver) {|dir|
-                setup_proc.call dir
-                return block.call(ver)
-              }
-            end
+          # Logic for setting initial state
+          setup_proc= lambda {|dir|
+            @@with_resource_plugin= plugin_name
+            @@with_resource_version= ver
+            @@rpm= plugin_rpm
+            @source_paths= [dir]
+            $corvid_global_thor_source_root= dir
+          }
+
+          # If dir already provided, use it
+          if ver.is_a?(String)
+            setup_proc.call ver
+            return block.()
+          else
+            # Deploy resources via RPM
+            plugin_rpm.with_resources(ver) {|dir|
+              setup_proc.call dir
+              return block.(ver)
+            }
           end
 
         ensure
           # Clean up when done
           if (@@with_resource_depth -= 1) == 0
-            $corvid_global_thor_source_root= nil
+            @@with_resource_plugin= nil
             @@with_resource_version= nil
+            @@rpm= nil
             @source_paths= nil
+            # TODO @@rpm vs $whatever
+            $corvid_global_thor_source_root= nil
           end
         end
       end
@@ -289,8 +326,8 @@ module Corvid
       # @raise If the feature isn't available at the current version of resources (i.e. update required).
       def install_feature(plugin_or_name, feature_name, options={})
         options= DEFAULT_OPTIONS_FOR_INSTALL_FEATURE.merge options
-        plugin_name= plugin_or_name.is_a?(Plugin) ? plugin_or_name.name : plugin_or_name
-        feature_id= feature_id_for(plugin_name, feature_name)
+        plugin= plugin_or_name.is_a?(Plugin) ? plugin_or_name : plugin_registry.instance_for(plugin_or_name)
+        feature_id= feature_id_for(plugin.name, feature_name)
 
         # Read client details
         vers= read_client_versions!
@@ -303,16 +340,15 @@ module Corvid
         end
 
         # Ensure resources up-to-date
-        ver= vers[plugin_name]
+        ver= vers[plugin.name]
         f= feature_registry.instance_for(feature_id)
         if f and f.since_ver > ver
-          raise "The #{feature_id} feature requires at least v#{f.since_ver} of #{plugin_name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
+          raise "The #{feature_id} feature requires at least v#{f.since_ver} of #{plugin.name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
         end
 
         # Install feature
-        # TODO doesn't use plugin resources
         # TODO remember that plugins can call install_feature 'corvid:test_unit' & install feature of a diff plugin
-        with_resources(ver) {|ver|
+        with_resources(plugin, ver) {|ver|
           feature_installer!(feature_name).install
           add_feature feature_id
           yield ver if block_given?
@@ -493,7 +529,9 @@ module Corvid
 
       private
       @@with_resource_depth= 0
+      @@with_resource_plugin= nil
       @@with_resource_version= nil
+      @@rpm= nil
 
       # Re-enable Thor's support for assuming all public methods are tasks
       no_tasks {}

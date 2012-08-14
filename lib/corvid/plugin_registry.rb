@@ -59,6 +59,13 @@ module Corvid
       @instance_cache
     end
 
+    def use_plugin(plugin, clear_existing=true)
+      @instance_cache= {} if clear_existing
+      @instance_cache ||= {}
+      @instance_cache[plugin.name]= plugin
+      self
+    end
+
     protected
 
     def load_client_plugins

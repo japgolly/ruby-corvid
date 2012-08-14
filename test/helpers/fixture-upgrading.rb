@@ -9,11 +9,11 @@ module Fixtures::Upgrading
 
   # Turn the r?? fixture directories into res-patches
   def prepare_res_patches
-    @rpms= [nil]
+    @rpm_at_ver= [nil]
     1.upto(MAX_VER) do |v|
-      @rpms<< create_patches(v)
+      @rpm_at_ver<< create_patches(v)
       # Make patching quiet for tests
-      @rpms.last.patch_exe += ' --quiet'
+      @rpm_at_ver.last.patch_exe += ' --quiet'
     end
   end
 
@@ -25,9 +25,9 @@ module Fixtures::Upgrading
       dir= "base.#{i}"
       Dir.mkdir dir
       Dir.chdir(dir){
-        @rpm= @rpms[i]
+        @rpms= {'corvid' => @rpm_at_ver[i]}
         yield i
-        @rpm= nil
+        @rpms= nil
       }
     end
   end
@@ -80,8 +80,12 @@ module Fixtures::Upgrading
 
     def run_all_with_corvid_resources_version(ver)
       eval <<-EOB
-        before(:all){ raise "Invalid version: #{ver}" unless @rpm= @rpms[#{ver}] }
-        after(:all){ @rpm= nil }
+        before(:all){
+          rpm= @rpm_at_ver[#{ver}]
+          raise "Invalid version: #{ver}" unless rpm
+          @rpms= {'corvid' => rpm}
+        }
+        after(:all){ @rpms= nil }
       EOB
     end
 

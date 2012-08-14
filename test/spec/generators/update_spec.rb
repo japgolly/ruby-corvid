@@ -113,7 +113,7 @@ describe Corvid::Generator::Update do
     end
   end
 
-  context '#extract_deployable_files' do
+  describe '#extract_deployable_files' do
     %w[
       copy_file
       copy_file_unless_exists

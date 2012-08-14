@@ -19,51 +19,40 @@ describe Corvid::Generator::Base do
   end
 
   describe '#with_latest_resources' do
+    let(:plugin){ BUILTIN_PLUGIN.new }
+    let(:x){ X.new }
+
+    it("should provide resources"){
+      x.rpm_for(plugin).should_not be_nil
+      x.rpm_for(plugin).should_receive(:with_resources).once
+      x.with_latest_resources(plugin) {}
+    }
+
     it("should reuse an existing res-patch deployment"){
-      x= X.new
-      y= Y.new
-      made_it_in= false
-
-      [x,y].each do |t|
-        t.rpm.instance_eval do
-          def count; @count; end
-          def with_resources(ver)
-            @count ||= 0
-            @count += 1
-            yield
-          end
-        end
-      end
-
-      def count(x,y); (x.rpm.count || 0) + (y.rpm.count || 0); end
-
-      x.with_latest_resources {
-        count(x,y).should == 1
-
-        y.with_latest_resources {
-          count(x,y).should == 1
-
-          x.with_latest_resources {
-            count(x,y).should == 1
-            made_it_in= true
-          }
+      made_y= false
+      x.with_latest_resources(plugin) {
+        x.rpm.should_not be_nil
+        x.rpm.should_not_receive(:with_resources)
+        Y.new.with_latest_resources(plugin) {
+          made_y= true
         }
       }
-      made_it_in.should == true
+      made_y.should == true
     }
 
     it("should reset the templates directory when done"){
-      Base= Corvid::Generator::Base
-      X.new.with_latest_resources {
+      made_deepest= false
+      X.new.with_latest_resources(plugin) {
         source_root.should_not be_nil
-        X.new.with_latest_resources {
+        X.new.with_latest_resources(plugin) {
           source_root.should_not be_nil
+          made_deepest= true
         }
         source_root.should_not be_nil
       }
+      made_deepest.should == true
       source_root.should be_nil
     }
-
   end
 
   describe '#feature_installer' do
@@ -112,6 +101,7 @@ describe Corvid::Generator::Base do
       subject.feature_registry= fr= mock 'feature registry'
       fr.should_receive(:instance_for).with('a:b').once.and_return(f)
       subject.should_not_receive :with_resources
+      subject.plugin_registry.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
       expect{
         subject.send :install_feature, 'a', 'b'
       }.to raise_error /update/
@@ -122,6 +112,7 @@ describe Corvid::Generator::Base do
       subject.stub read_client_features!: ['a:b']
       subject.stub :say
       subject.should_not_receive :with_resources
+      subject.plugin_registry.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
       subject.send :install_feature, 'a', 'b'
     }
   end

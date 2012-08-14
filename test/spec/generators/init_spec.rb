@@ -78,11 +78,6 @@ describe Corvid::Generator::Init do
         'test/spec'.should exist_as_dir
         client_features.should include 'corvid:test_spec'
       }
-      it("should add res-patch validity tests"){
-        tests= get_files('test/spec')
-        tests.size.should == 1
-        File.read("test/spec/#{tests[0]}").should include 'corvid/test/resource_patch_tests'
-      }
     end
   end
 end
