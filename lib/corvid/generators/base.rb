@@ -231,7 +231,6 @@ module Corvid
             @@with_resource_version= nil
             @@rpm= nil
             @source_paths= nil
-            # TODO @@rpm vs $whatever
             $corvid_global_thor_source_root= nil
           end
         end

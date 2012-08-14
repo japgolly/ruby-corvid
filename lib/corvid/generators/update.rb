@@ -32,6 +32,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   # @param [Fixnum] to The target version to upgrade to.
   # @param [Array<String>] features The features to upgrade.
   # @return [void]
+  # # TODO dont pass feature_ids, pass feature_names, already know plugin
   def upgrade!(plugin, from, to, features)
     #TODO update or upgrade - make up mind!
     rpm= rpm_for(plugin)
