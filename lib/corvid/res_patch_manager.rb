@@ -15,6 +15,8 @@ module Corvid
       res_patch_dir= "#{CORVID_ROOT}/resources"
     end
 
+    FILE_BLACKLIST= /^(?:\..*\.sw[p-z])$/
+
     # The directory where resource patches are located.
     # @return [String]
     attr_reader :res_patch_dir
@@ -380,7 +382,7 @@ module Corvid
       r= []
       Dir.chdir dir do
         Dir.glob("**/*", File::FNM_DOTMATCH).sort.each do |f|
-          if File.file?(f)
+          if File.file?(f) and File.basename(f) !~ FILE_BLACKLIST
             f= yield f if block_given?
             r<< f
           end
