@@ -33,6 +33,7 @@ Non-Functional / Under-The-Hood
 * In feature installers, is `update()` really needed? Currently it needs increments of `install()` without the `copy_file` stuff. That's stupid...
 * Reduce version granularity to feature?
 * Split `corvid/rake/tasks/test.rb` into unit, spec, all.
+* Check transient dependencies. Like do corvid apps really need Thor on _their_ runtime dep list?
 
 Plugins: The Plan
 -----------------
