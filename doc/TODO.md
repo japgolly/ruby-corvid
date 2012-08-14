@@ -34,6 +34,7 @@ Non-Functional / Under-The-Hood
 * Reduce version granularity to feature?
 * Split `corvid/rake/tasks/test.rb` into unit, spec, all.
 * Check transient dependencies. Like do corvid apps really need Thor on _their_ runtime dep list?
+* Separate client and core stuff in corvid dir stucture. `guard.rb` and `plugin.rb` shouldn't be beside each other.
 
 Plugins: The Plan
 -----------------
