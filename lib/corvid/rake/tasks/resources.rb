@@ -62,7 +62,7 @@ namespace CORIVD_RES_NS do
       patch= diff_latest_dir
       if !patch
         puts "No differences."
-      elsif STDOUT.tty? and (`colordiff --help` rescue nil; $?.success?)
+      elsif STDOUT.tty? and (`colordiff /dev/null /dev/null` rescue nil; $?.success?)
         require 'tempfile'
         Tempfile.open('res_diff') do |f|
           f.write patch
