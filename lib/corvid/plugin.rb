@@ -10,6 +10,11 @@ module Corvid
     #   @return [String] The path to require, usually relative to your `lib` dir.
     attr_declarative :require_path, required: true
 
+    # @!attribute [rw] resources_path
+    #   The path to the directory containing the plugin's resources.
+    #   @return [String] An absolute path.
+    attr_declarative :resources_path, required: true
+
     # @!attribute [rw] feature_manifest
     #   A manifest of all features provided by the plugin.
     #   @return [Hash<String,Array<String>>] A hash with keys being feature names, and the values being a 2-element

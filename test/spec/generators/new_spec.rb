@@ -11,33 +11,18 @@ describe Corvid::Generator::New do
     }
 
     it("should create a plugin"){
-      'lib/corvid/happy_plugin.rb'.should be_file_with_contents <<-EOB
-require 'corvid/plugin'
-
-class HappyPlugin < Corvid::Plugin
-
-  require_path 'lib/corvid/happy_plugin'
-
-  feature_manifest ({
-  })
-
-end
-      EOB
+      'lib/corvid/happy_plugin.rb'.should be_file_with_contents(/class HappyPlugin < Corvid::Plugin/)
+        .and(%r|require_path 'lib/corvid/happy_plugin'|)
+        .and(%r|feature_manifest|)
+        .and(%r|resources_path|)
     }
+
     it("should create a plugin test"){
-      'test/spec/happy_plugin_spec.rb'.should be_file_with_contents <<-EOB
-# encoding: utf-8
-require_relative '../bootstrap/spec'
-require 'corvid/test/resource_patch_tests'
-require 'lib/corvid/happy_plugin'
-
-describe HappyPlugin do
-  include Corvid::ResourcePatchTests
-  res_patch_dir "#\{APP_ROOT}/resources"
-
-  include_feature_update_install_tests 'happy', HappyPlugin.new
-end
-      EOB
+      'test/spec/happy_plugin_spec.rb'.should be_file_with_contents(%r|require 'lib/corvid/happy_plugin'|)
+        .and(%r|describe HappyPlugin do|)
+        .and(%r|include Corvid::ResourcePatchTests|)
+        .and(%r|include_feature_update_install_tests 'happy', HappyPlugin.new|)
+        .and(%r|use_resources_path HappyPlugin.new.resources_path|)
     }
   end
 end

@@ -42,8 +42,14 @@ module Corvid
 
       # @param [Plugin|Hash<String,Array>] manifest Either a plugin instance or a feature manifest.
       # @see Plugin#feature_manifest
-      def include_feature_update_install_tests(plugin_name, manifest)
-        manifest= manifest.feature_manifest if manifest.is_a?(Plugin)
+      def include_feature_update_install_tests(plugin_name, manifest_or_plugin)
+        manifest= if manifest_or_plugin.is_a?(Plugin)
+                    plugin= manifest_or_plugin
+                    use_resources_path plugin.resources_path
+                    plugin.feature_manifest
+                  else
+                    manifest_or_plugin
+                  end
         features= manifest.keys
 
         latest_resource_version= rpm.latest_version
@@ -72,7 +78,7 @@ module Corvid
         end
       end
 
-      def res_patch_dir(dir)
+      def use_resources_path(dir)
         raise "Directory doesn't exist: #{dir}" unless Dir.exists? dir
         define_rpm Corvid::ResPatchManager.new(dir)
       end

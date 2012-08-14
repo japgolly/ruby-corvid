@@ -6,6 +6,8 @@ module Corvid
 
       require_path 'corvid/builtin/builtin_plugin'
 
+      resources_path File.expand_path('../../../../resources', __FILE__)
+
       feature_manifest({
           'corvid'    => ['corvid/builtin/corvid_feature'   ,'Corvid::Builtin::CorvidFeature'],
           'test_unit' => ['corvid/builtin/test_unit_feature','Corvid::Builtin::TestUnitFeature'],
