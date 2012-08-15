@@ -5,6 +5,7 @@ require 'corvid/plugin_registry'
 require 'corvid/naming_policy'
 require 'corvid/res_patch_manager'
 require 'corvid/generators/actions'
+require 'corvid/generators/thor_monkey_patches'
 
 require 'active_support/core_ext/string/inflections'
 require 'active_support/inflections'
@@ -67,7 +68,10 @@ module Corvid
       ::Corvid::PluginRegistry.def_accessor(self)
 
       def builtin_plugin
-        @@builtin_plugin ||= ::Corvid::Builtin::BuiltinPlugin.new
+        @@builtin_plugin ||= (
+          require 'corvid/builtin/builtin_plugin'
+          ::Corvid::Builtin::BuiltinPlugin.new
+        )
       end
 
       # @see Corvid::FeatureRegistry#read_client_features
@@ -113,7 +117,7 @@ module Corvid
       # @see read_client_version
       def read_client_versions!
         vers= read_client_versions
-        raise "File not found: #{Constants::VERSIONS_FILE}\nYou must install Corvid first. Try corvid init:project." if vers.nil?
+        raise "File not found: #{Constants::VERSIONS_FILE}\nYou must install Corvid first." if vers.nil?
         vers
       end
 
@@ -304,7 +308,8 @@ module Corvid
         true
       end
 
-      def add_version(plugin_name, version)
+      def add_version(plugin_or_name, version)
+        plugin_name= plugin_or_name.is_a?(Plugin) ? plugin_or_name.name : plugin_or_name
         vers= read_client_versions || {}
         vers[plugin_name]= version
         write_client_versions vers

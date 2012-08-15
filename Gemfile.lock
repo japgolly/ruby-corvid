@@ -17,12 +17,12 @@ PATH
     corvid (0.0.1)
       activesupport
       golly-utils
-      thor
+      thor (~> 0.15.4)
 
 GEM
   remote: http://rubygems.org/
   specs:
-    activesupport (3.2.7)
+    activesupport (3.2.8)
       i18n (~> 0.6)
       multi_json (~> 1.0)
     builder (3.0.0)

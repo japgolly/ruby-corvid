@@ -2,8 +2,24 @@ require 'corvid/generators/base'
 
 class Corvid::Generator::Update < ::Corvid::Generator::Base
 
-  desc 'project', 'Updates all Corvid resources and features in the current project.'
-  def project
+  desc 'all', 'Update all features and plugins.'
+  def all
+    update nil
+  end
+
+  def self.add_tasks_for_installed_plugins!
+    plugin_names= ::Corvid::PluginRegistry.instances_for_installed.keys
+    class_eval plugin_names.map{|name|
+      %|
+        desc '#{name}', 'Update the #{name} plugin and its installed features.'
+        def #{name}; update '#{name}'; end
+      |}
+      .join(";")
+  end
+
+  protected
+
+  def update(plugin_filter)
 
     # Read client details
     vers= read_client_versions!
@@ -18,6 +34,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
     # Update each plugin
     features_by_plugin.each do |plugin_name, features|
+      next unless plugin_filter.nil? or plugin_filter === plugin_name
       plugin= plugin_registry[plugin_name]
       ver= vers[plugin_name] || 0
 
@@ -33,8 +50,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       end
     end
   end
-
-  protected
 
   # @param [Plugin] plugin The plugin whose resources are being updated.
   # @param [Fixnum] from The version already installed.

@@ -32,68 +32,62 @@ end
 
 module TestHelpers
 
-  def add_feature!(feature_name)
-    f= YAML.load_file(CONST::FEATURES_FILE) + [feature_name]
-    File.write CONST::FEATURES_FILE, f.to_yaml
-  end
-
-  def assert_corvid_features(*expected)
-    client_features.should == expected.flatten
-  end
-
-  def assert_plugins(expected)
-    f= client_plugins
-    if expected.is_a?(Array)
-      f.keys.should equal_array expected
-    else
-      f.should == expected
-    end
-  end
-
-  def client_features
-    CONST::FEATURES_FILE.should exist_as_file
-    f= YAML.load_file(CONST::FEATURES_FILE)
-    f.should be_kind_of(Array)
-    f
-  end
-
-  def client_plugins
-    CONST::PLUGINS_FILE.should exist_as_file
-    f= YAML.load_file(CONST::PLUGINS_FILE)
-    f.should be_kind_of(Hash)
-    f
-  end
-
   def invoke_sh(cmd,env=nil)
     cmd= cmd.map(&:inspect).join ' ' if cmd.kind_of?(Array)
     env ||= {}
     env['BUNDLE_GEMFILE'] ||= nil
     env['RUBYOPT'] ||= nil
-    cmd+= ' >/dev/null' if [true,1].include? @quiet_sh
-    cmd+= ' 2>/dev/null' if [true,2].include? @quiet_sh
-    system env, cmd
-    $?.success?
+    unless @capture_sh
+      cmd+= ' >/dev/null' if [true,1].include? @quiet_sh
+      cmd+= ' 2>/dev/null' if [true,2].include? @quiet_sh
+    end
+
+    @_sh_env,@_sh_cmd = env,cmd
+    if @capture_sh
+      require 'open3'
+      Open3.popen3 env, cmd do |stdin, stdout, stderr, wait_thr|
+        stdin.close
+        @_sh_process= wait_thr.value
+        @stdout= stdout.read
+        @stderr= stderr.read
+      end
+    else
+      system env, cmd
+      @_sh_process= $?
+    end
+
+    @_sh_process.success?
   end
-  def invoke_sh!(args,env=nil)
-    invoke_sh(args,env).should eq(true), 'Shell command failed.'
-  end
-  def invoke_corvid(args,env=nil)
+
+  def invoke_corvid(args='',env=nil)
     args= args.map(&:inspect).join ' ' if args.kind_of?(Array)
     args= args.gsub /^\s+|\s+$/, ''
     cmd= "#{CORVID_BIN_Q} #{args}"
     cmd.gsub! /\n| && /, " && #{CORVID_BIN_Q} "
     invoke_sh cmd, env
   end
-  def invoke_corvid!(args,env=nil)
-    invoke_corvid(args,env).should eq(true), 'Corvid failed.'
-  end
-  def invoke_rake(args,env=nil)
+
+  def invoke_rake(args='',env=nil)
     args= args.map(&:inspect).join ' ' if args.kind_of?(Array)
     cmd= "bundle exec rake #{args}"
     invoke_sh cmd, env
   end
-  def invoke_rake!(args,env=nil)
-    invoke_rake(args,env).should eq(true), 'Rake failed.'
+
+  def invoke_sh!    (args,   env=nil) validate_sh_success{ invoke_sh     args,env } end
+  def invoke_corvid!(args='',env=nil) validate_sh_success{ invoke_corvid args,env } end
+  def invoke_rake!  (args='',env=nil) validate_sh_success{ invoke_rake   args,env } end
+  def validate_sh_success
+    yield.should be_true
+  rescue => e
+    puts '>'*60
+    puts "ENV: #{@_sh_env}"
+    puts "CMD: #{@_sh_cmd}"
+    p @_sh_process
+    puts
+    puts @stdout if @stdout
+    puts @stderr if @stderr
+    puts '<'*60
+    raise e
   end
 
   # TODO remove files() and dirs() test helpers.
@@ -146,6 +140,21 @@ module TestHelpers
 
     decorate_generator g
     g.invoke_task task
+  end
+
+  def self.included base
+    base.extend ClassMethods
+  end
+  module ClassMethods
+
+    def run_each_in_fixture(fixture_name)
+      class_eval <<-EOB
+        around :each do |ex|
+          inside_fixture(#{fixture_name.inspect}){ ex.run }
+        end
+      EOB
+    end
+
   end
 end
 

@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative '../../spec_helper'
 require 'corvid/generators/update'
-require 'corvid/generators/init'
+require 'corvid/generators/init/corvid'
 require 'helpers/fixture-upgrading'
 
 describe Corvid::Generator::Update do
@@ -28,7 +28,7 @@ describe Corvid::Generator::Update do
     }
   end
 
-  describe 'update:project' do
+  describe 'update:all' do
     let :g do
       g= quiet_generator(described_class)
       g.plugin_registry= Corvid::PluginRegistry.send :new
@@ -47,7 +47,7 @@ describe Corvid::Generator::Update do
 
     def test(*expected)
       g.instance_eval "def upgrade!(*a); (@u ||= []) << a; end"
-      g.project
+      g.all
       g.instance_variable_get(:@u).should equal_array expected
     end
 
@@ -76,14 +76,14 @@ describe Corvid::Generator::Update do
     run_all_in_empty_dir {
       prepare_res_patches
       prepare_base_dirs do |ver|
-        run_generator Corvid::Generator::Init, "project --test-unit --no-test-spec"
+        run_generator Corvid::Generator::InitCorvid, "init --test-unit --no-test-spec"
         'Gemfile'.should_not exist_as_a_file # Make sure it's not using real res-patches
         assert_installation ver, ver
       end
     }
 
     def run_update_task
-      run_generator Corvid::Generator::Update, 'project'
+      run_generator Corvid::Generator::Update, 'all'
     end
 
     context 'corvid not installed' do

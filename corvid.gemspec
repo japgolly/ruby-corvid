@@ -13,7 +13,7 @@ Gem::Specification.new do |gem|
 
   gem.add_runtime_dependency 'golly-utils'
   gem.add_runtime_dependency 'activesupport'
-  gem.add_runtime_dependency 'thor'
+  gem.add_runtime_dependency 'thor', '~> 0.15.4'
   gem.add_development_dependency 'rspec'
   gem.add_development_dependency 'rake'
 

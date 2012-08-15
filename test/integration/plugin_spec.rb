@@ -3,17 +3,15 @@ require_relative '../spec_helper'
 
 describe 'Plugin Integration Test' do
 
-  around :each do |ex|
-    inside_fixture('plugin'){ ex.run }
-  end
+  run_each_in_fixture 'plugin'
 
   it("should only load specified plugins"){
     File.write CONST::PLUGINS_FILE, BUILTIN_PLUGIN_DETAILS.to_yaml
-    expect{ invoke_rake! 'mock:hello' }.to raise_error
+    invoke_rake('mock:hello').should be_false
   }
 
   it("should load plugins' rake tasks"){
     invoke_rake! 'mock:hello'
-    File.exist?('hello.txt').should == true
+    'hello.txt'.should exist_as_file
   }
 end

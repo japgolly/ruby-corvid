@@ -96,6 +96,8 @@ module Corvid
     # @!visibility private
     class TestInstaller < Corvid::Generator::Base
       no_tasks{
+        include Corvid::PluginTestHelpers
+
         def install(plugin, feature_name, ver=nil)
           ver ||= rpm_for(plugin).latest_version
           feature_id= feature_id_for(plugin.name, feature_name)
@@ -103,14 +105,15 @@ module Corvid
           corvid_feature_id= feature_id_for('corvid','corvid')
           unless feature_id == corvid_feature_id
             Dir.mkdir '.corvid' unless Dir.exists?('.corvid')
-            File.write Corvid::Constants::VERSIONS_FILE, {'corvid'=>ver}.to_yaml
-            File.write Corvid::Constants::FEATURES_FILE, [corvid_feature_id].to_yaml
+            add_plugin! 'corvid'
+            add_feature! corvid_feature_id
+            add_version! 'corvid', ver
           end
           with_resources(plugin, ver) {
             feature_installer!(feature_name).install
             add_feature feature_id
+            add_version plugin, ver
           }
-          File.delete Corvid::Constants::VERSIONS_FILE if File.exists?(Corvid::Constants::VERSIONS_FILE)
         end
       }
     end
@@ -131,7 +134,6 @@ module Corvid
         quiet_generator(TestInstaller).install plugin, feature_name, starting_version
         g= quiet_generator(Corvid::Generator::Update)
         g.send :upgrade!, plugin, starting_version, g.rpm_for(plugin).latest_version, [feature_name]
-        File.delete Corvid::Constants::VERSIONS_FILE
       end
 
       # Compare directories

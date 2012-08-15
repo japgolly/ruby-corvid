@@ -13,7 +13,7 @@ describe 'Client Functionality provided by Corvid' do
   end
 
   it("should install itself into new project"){
-    invoke_corvid! "init:project --no-#{RUN_BUNDLE} --test-unit --test-spec"
+    invoke_corvid! "init --no-#{RUN_BUNDLE} --test-unit --test-spec"
     'Gemfile.lock'.should_not exist_as_file
     patch_corvid_gemfile
     patch_corvid_deps

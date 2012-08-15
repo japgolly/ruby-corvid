@@ -6,7 +6,7 @@ describe 'Plugin Development Feature' do
 
   run_all_in_empty_dir {
     invoke_corvid! %(
-      init:project --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec
+      init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec
       init:plugin --no-#{RUN_BUNDLE}
       new:plugin cool
     )
@@ -19,7 +19,7 @@ describe 'Plugin Development Feature' do
     bin= File.join Dir.pwd, 'bin/cool'
     inside_empty_dir{
       invoke_sh! [bin, 'install']
-      assert_plugins({'cool'=>{path: 'corvid/cool_plugin', class: 'CoolPlugin'}})
+      assert_plugins_installed({'cool'=>{path: 'corvid/cool_plugin', class: 'CoolPlugin'}})
     }
   }
 
