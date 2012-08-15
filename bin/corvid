@@ -1,20 +1,11 @@
 #!/usr/bin/env ruby
 
-require 'pathname'
-ENV['BUNDLE_GEMFILE'] ||= File.expand_path("../../Gemfile", Pathname.new(__FILE__).realpath)
+ENV['BUNDLE_GEMFILE'] ||= (
+  require 'pathname'
+  File.expand_path("../../Gemfile", Pathname.new(__FILE__).realpath)
+)
 require 'rubygems'
 require 'bundler/setup'
 
-require 'corvid/environment'
-
-# Load generators
-require 'thor'
-Dir["#{CORVID_ROOT}/lib/corvid/generators/**/*.rb"].each {|f| Thor::Util.load_thorfile f }
-
-# Show available tasks by default
-ARGV<< '-T' if ARGV.empty?
-
-require 'thor/runner'
-$thor_runner = true
-Thor::Runner.start
-
+require 'corvid/cli/main'
+Corvid::CLI::Main.start
