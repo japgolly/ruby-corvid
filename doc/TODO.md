@@ -7,6 +7,7 @@ Fix or Enhance Existing Functionality
 * Allow `copy_file()` to deploy to a different filename (without breaking patches).
 * Should tasks be organised by content before function? i.e. `project:*, test:*, plugin:*` instead of `init:*, new:*` ![?](question.png)
 * Handle cases where installed = n and first version of feature installer is n+1
+* Put guard lib stuff in its own group and require 1.3.2+
 
 Documentation
 -------------
