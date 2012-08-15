@@ -29,7 +29,7 @@ describe Corvid::Generator::New do
     it("should create a CLI"){
       'bin/happy'.should be_file_with_contents(%r|'corvid/happy_plugin'|)
         .and(%r|HappyPlugin|)
-        .and(%r|plugin_cli|)
+        .and(%r|require 'corvid/cli/plugin'|)
       File.executable?('bin/happy').should be_true
     }
   end
