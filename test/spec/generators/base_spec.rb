@@ -3,6 +3,8 @@ require_relative '../../spec_helper'
 require 'corvid/generators/base'
 
 describe Corvid::Generator::Base do
+  let(:subject){ quiet_generator described_class }
+
   def source_root; $corvid_global_thor_source_root; end
 
   class X < Corvid::Generator::Base
@@ -10,7 +12,6 @@ describe Corvid::Generator::Base do
       public :rpm, :with_latest_resources
     }
   end
-
   class Y < Corvid::Generator::Base
     no_tasks {
       public :rpm, :with_latest_resources

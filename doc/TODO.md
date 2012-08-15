@@ -47,17 +47,16 @@ Plugins: The Plan
   * ![Done](done.png) Adds `res` rake tasks
   * ![Done](done.png) Adds rspec feature
   * ![Done](done.png) Adds res-patch validity test
-* ![TODO](pin-red.png) Plugin installation
-  * Add ability to install plugins.
-  * Check that feature requirements are met.
-  * Add name and require-path to `plugins.yml`
-  * Install features.
+* ![Done](done.png) Plugin installation
+  * ![Done](done.png) Add ability to install plugins.
+  * ![Done](done.png) Add name and require-path to `plugins.yml`
+  * ![TODO](pin-red.png) Install features on plugin installation.
 * ![Done](done.png) Create a `new:plugin NAME` task
   * ![TODO](pin-red.png) ensures plugin feature installed
   * ![Done](done.png) creates `lib/corvid/NAME_plugin.rb` which
   * ![Done](done.png) creates `test/spec/corvid/NAME_plugin_spec.rb` which
-  * ![TODO](pin-yellow.png) creates `bin/NAME`
-  * ![TODO](pin-yellow.png) creates `test/spec/corvid/NAME_bin_spec.rb` which
+  * ![Done](done.png) creates `bin/NAME`
+  * ![TODO](pin-blue.png) creates `test/spec/corvid/NAME_bin_spec.rb` which
 * ![Done](done.png) `corvid new:plugin:feature NAME` which
   * ![Done](done.png) finds an existing plugin
     * ![Done](done.png) uses one if found
@@ -66,9 +65,9 @@ Plugins: The Plan
   * ![Done](done.png) creates `lib/corvid/NAME_feature.rb`
   * ![TODO](pin-blue.png) creates `test/spec/corvid/NAME_features_spec.rb`
   * ![Done](done.png) adds feature to the plugin manifest (`lib/corvid/????_plugin.rb`)
-* ![TODO](pin-yellow.png) Create a plugin bin/CLI delegate
-  * `<plugin> init`
-  * `<plugin> update`
+* ![Done](done.png) Create a plugin bin/CLI delegate
+  * ![Done](done.png) `<plugin> install`
+  * ![TODO](pin-red.png) `<plugin> update`
 
 #### Modify
 * ![TODO](pin-red.png) Feature installation
@@ -76,7 +75,7 @@ Plugins: The Plan
   * Use plugin resources.
 * ![Done](done.png) Feature updating
   * ![Done](done.png) Update plugins' features.
-  * Check requirements already met for latest version of all installed plugin features.
+  * ![TODO](pin-red.png) Check requirements already met for latest version of all installed plugin features.
 * Existing state changes
   * ![Done](done.png) `plugins.yml` contains: `plugin -> :require -> string`
   * ![Done](done.png) `version.yml` update to structure: `plugin -> version` and rename to `versions.yml`
@@ -97,3 +96,4 @@ Plugins: The Plan
 #### Other
 * Doco on how plugins work, how to write one.
 * Test Corvid and a plugin both modifying the same file.
+* Test `template/template2` in context of install/update.

@@ -57,9 +57,10 @@ module Corvid
       # Easier way of calling Thor's `template` method.
       #
       # @param [String] file The filename of the template. Normally ends in `.tt`.
-      # @param args If a Hash is provided then it is a map of template variable names to values. If anything else then
-      #   (String, array of symbols) it is assumed to be one or more variable names with instance methods that can be
-      #   called to provide the value.
+      # @param [Hash,String,Symbol,Array<String|Symbol>] args If a Hash is provided then it is a map of template
+      #   variable names to values. If anything else then (String, array of symbols) it is assumed to be one or more
+      #   variable names with instance methods that can be called to provide the value.
+      # @option args [Fixnum] :perms (nil) If provided, the new file will be chmod'd with the given permissions here.
       # @return (see Thor::Actions#template)
       def template2(file, args)
         src= file
@@ -68,10 +69,14 @@ module Corvid
           names= [args].flatten
           args= names.inject({}){|h,name| h[name]= send name.to_sym; h}
         end
+
+        perms= args.delete :perms
         args.each do |k,v|
           target.gsub! "%#{k}%", v
         end
+
         template src, target
+        chmod target, perms if perms
       end
 
     end

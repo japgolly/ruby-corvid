@@ -300,7 +300,7 @@ module Corvid
         pdata= plugin_registry.read_client_plugin_details
         pdata ||= {}
         pdata[name]= {path: plugin.require_path, class: plugin.class.to_s}
-        File.write Constants::PLUGINS_FILE, pdata.to_yaml
+        create_file Constants::PLUGINS_FILE, pdata.to_yaml, force: true
         true
       end
 

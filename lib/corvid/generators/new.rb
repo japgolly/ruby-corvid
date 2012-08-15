@@ -8,6 +8,7 @@ class Corvid::Generator::New < ::Corvid::Generator::Base
     with_latest_resources(builtin_plugin) do
       template2 'lib/corvid/%name%_plugin.rb.tt', :name
       template2 'test/spec/%name%_plugin_spec.rb.tt', :name
+      template2 'bin/%plugin_name%.tt', plugin_name: name, perms: 0755
     end
   end
 

@@ -13,9 +13,9 @@ module Corvid
       config
     end
 
-    def quiet_generator(generator_class)
+    def quiet_generator(generator_class, cli_args=[])
       config= generator_config(true)
-      g= generator_class.new([], [], config)
+      g= generator_class.new(cli_args, [], config)
       decorate_generator g
     end
 

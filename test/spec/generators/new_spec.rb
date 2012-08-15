@@ -25,6 +25,13 @@ describe Corvid::Generator::New do
         .and(%r|include_resource_patch_tests|)
         .and(%r|include_feature_update_install_tests|)
     }
+
+    it("should create a CLI"){
+      'bin/happy'.should be_file_with_contents(%r|'corvid/happy_plugin'|)
+        .and(%r|HappyPlugin|)
+        .and(%r|plugin_cli|)
+      File.executable?('bin/happy').should be_true
+    }
   end
 end
 
