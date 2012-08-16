@@ -17,8 +17,7 @@ module Corvid
       self
     end
 
-    # @return [nil,Hash<String,Hash<Symbol,Object>>] A map of plugins to their propreties, or `nil` if the file wasn't
-    #   found.
+    # @return [nil,Array<String>] An array of installed plugins, or `nil` if the file wasn't found.
     def read_client_plugins
       pd= read_client_plugin_details
       pd && pd.keys
