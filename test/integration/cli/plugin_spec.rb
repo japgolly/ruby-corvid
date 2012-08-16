@@ -5,21 +5,13 @@ require 'corvid/cli/plugin'
 describe Corvid::CLI::Plugin do
   include IntegrationTestDecoration
 
-# TODO Make something like dynamic & reusable fixtures
   run_all_in_empty_dir {
-    invoke_corvid! %(
-      init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec
-      init:plugin --no-#{RUN_BUNDLE}
-      new:plugin cool
-    )
-    patch_corvid_gemfile
-    patch_corvid_deps
-    invoke_sh! 'bundle install --quiet'
-
+    copy_dynamic_fixture :new_cool_plugin
     Dir.mkdir 'ah'
   }
-
-  around(:each){|ex| Dir.chdir('ah'){ ex.run }}
+  around(:each){|ex|
+    Dir.chdir('ah'){ ex.run }
+  }
 
   def invoke_plugin_cli!(*args)
     invoke_sh! ['../bin/cool'] + args.flatten

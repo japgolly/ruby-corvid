@@ -9,6 +9,7 @@ require 'corvid/constants'
 require 'corvid/builtin/builtin_plugin'
 require 'corvid/test/helpers/plugins'
 require 'helpers/gemfile_patching'
+require 'helpers/dynamic_fixtures'
 require 'golly-utils/testing/rspec/files'
 require 'golly-utils/testing/rspec/arrays'
 require 'fileutils'
@@ -171,8 +172,24 @@ module IntegrationTestDecoration
   end
 end
 
+module DynamicFixtures
+  def_fixture :new_cool_plugin do
+    invoke_corvid! %(
+      init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec
+      init:plugin --no-#{RUN_BUNDLE}
+      new:plugin cool
+    )
+    'Gemfile.lock'.should_not exist_as_file
+    patch_corvid_gemfile
+    patch_corvid_deps
+    invoke_sh! 'bundle install --quiet'
+    'Gemfile.lock'.should exist_as_file
+  end
+end
+
 RSpec.configure do |config|
   config.include Corvid::PluginTestHelpers
   config.include GemfilePatching
   config.include TestHelpers
+  config.include DynamicFixtures
 end

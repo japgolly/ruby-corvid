@@ -5,14 +5,7 @@ describe 'Plugin Development Feature' do
   include IntegrationTestDecoration
 
   run_all_in_empty_dir {
-    invoke_corvid! %(
-      init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec
-      init:plugin --no-#{RUN_BUNDLE}
-      new:plugin cool
-    )
-    patch_corvid_gemfile
-    patch_corvid_deps
-    invoke_sh! 'bundle install --quiet'
+    copy_dynamic_fixture :new_cool_plugin
   }
 
   it("should provide resource Rake tasks"){
