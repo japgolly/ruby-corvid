@@ -38,5 +38,8 @@ group :int do
 
     # Each spec
     watch(%r'^test/integration/.+_spec\.rb$')
+
+    # Lib
+    watch(%r'^lib/corvid/(.+)\.rb$') {|m| "test/integration/#{m[1]}_spec.rb"}
   end
 end
