@@ -27,4 +27,13 @@ describe Corvid::Generator::PluginCli do
       subject.install
     }
   end
+
+  describe '#update' do
+    it("updates the specified plugin"){
+      ug= mock 'update generator'
+      ::Corvid::Generator::Update.should_receive(:new).once.and_return(ug)
+      ug.should_receive(:update).once.with('fake')
+      subject.update
+    }
+  end
 end

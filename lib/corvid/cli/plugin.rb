@@ -24,13 +24,20 @@ module Corvid
         plugin_class_name   = options.delete :plugin_class_name
         raise "Unknown options: #{options.keys}" unless options.empty?
 
+        # Load CLI
+        gen= ::Corvid::Generator::PluginCli
+
         # Load plugin
         plugin ||= load_plugin(project_root, plugin_require_path, plugin_class_name)
+        raise "Invalid plugin: #{plugin.inspect}" unless plugin.is_a?(Corvid::Plugin)
+        gen.plugin(plugin)
+
+        # Customise CLI
+        plugins= PluginRegistry.read_client_plugins || []
+        gen.remove_task 'install' if     plugins.include? plugin.name
+        gen.remove_task 'update'  unless plugins.include? plugin.name
 
         # Start CLI
-        raise "Invalid plugin: #{plugin.inspect}" unless plugin.is_a?(Corvid::Plugin)
-        gen= ::Corvid::Generator::PluginCli
-        gen.plugin(plugin)
         gen.start
       end
 

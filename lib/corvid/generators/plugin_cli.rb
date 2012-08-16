@@ -1,4 +1,5 @@
 require 'corvid/generators/base'
+require 'corvid/generators/update'
 require 'golly-utils/attr_declarative'
 
 # Generator to be used specifically by {Corvid::PluginCli}.
@@ -20,5 +21,8 @@ class Corvid::Generator::PluginCli < ::Corvid::Generator::Base
     add_plugin plugin
   end
 
+  desc 'update', 'Update this plugin.'
+  def update
+    ::Corvid::Generator::Update.new.update plugin.name
+  end
 end
-

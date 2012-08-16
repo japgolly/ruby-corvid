@@ -17,26 +17,39 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       .join(";")
   end
 
-  protected
+  # Stupid Thor. Not using no_tasks{} cos then yard won't see this method.
+  @no_tasks= true
 
   def update(plugin_filter)
 
     # Read client details
-    vers= read_client_versions!
-    feature_ids= read_client_features!
+    vers= read_client_versions
+    feature_ids= read_client_features
 
     # Group features by plugin
     features_by_plugin= {}
     feature_ids.each {|id|
       p,f = split_feature_id(id)
-      (features_by_plugin[p] ||= [])<< f
-    }
+      (features_by_plugin[p] ||= [])<< f if vers[p]
+    } if vers && feature_ids
+
+    # Apply plugin filter
+    if plugin_filter
+      features_by_plugin.delete_if {|plugin_name,_| not plugin_filter === plugin_name }
+    end
+
+    # Check if anything left to update
+    if features_by_plugin.empty?
+      plugin_msg= "for the '#{plugin_filter}' plugin " if plugin_filter.is_a?(String)
+      say "There is nothing installed #{plugin_msg}that can be updated."
+      return
+    end
 
     # Update each plugin
     features_by_plugin.each do |plugin_name, features|
       next unless plugin_filter.nil? or plugin_filter === plugin_name
       plugin= plugin_registry[plugin_name]
-      ver= vers[plugin_name] || 0
+      ver= vers[plugin_name]
 
       # Check if already up-to-date
       if rpm_for(plugin).latest? ver
@@ -50,6 +63,8 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       end
     end
   end
+
+  protected
 
   # @param [Plugin] plugin The plugin whose resources are being updated.
   # @param [Fixnum] from The version already installed.
@@ -144,4 +159,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     end
   end
 
+  # Re-enable Thor's support for assuming all public methods are tasks
+  no_tasks {}
 end

@@ -15,14 +15,6 @@ describe 'Plugin Development Feature' do
     invoke_sh! 'bundle install --quiet'
   }
 
-  it("should have a CLI that can install itself"){
-    bin= File.join Dir.pwd, 'bin/cool'
-    inside_empty_dir{
-      invoke_sh! [bin, 'install']
-      assert_plugins_installed({'cool'=>{path: 'corvid/cool_plugin', class: 'CoolPlugin'}})
-    }
-  }
-
   it("should provide resource Rake tasks"){
     File.write 'resources/latest/symphony_x.txt', 'Iconoclast, 2011, TN#7, When All Is Lost <-- awesome song!'
     'resources/00001.patch'.should_not exist_as_file
@@ -40,6 +32,4 @@ describe 'Plugin Development Feature' do
     @quiet_sh= true
     invoke_rake('test').should == false
   }
-
 end
-

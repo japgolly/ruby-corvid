@@ -67,7 +67,7 @@ Plugins: The Plan
   * ![Done](done.png) adds feature to the plugin manifest (`lib/corvid/????_plugin.rb`)
 * ![Done](done.png) Create a plugin bin/CLI delegate
   * ![Done](done.png) `<plugin> install`
-  * ![TODO](pin-red.png) `<plugin> update`
+  * ![Done](done.png) `<plugin> update`
 
 #### Modify
 * ![TODO](pin-red.png) Feature installation
