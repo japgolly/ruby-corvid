@@ -30,7 +30,7 @@ module Corvid
     #   add 'corvid:corvid', 'corvid:plugin' # Require features
     #   add 'corvid' => 3                    # Require resource versions
     #
-    # @param [Array<String|Hash>] args Requirements.
+    # @param [nil, String, Hash<String,Fixnum|Range|Array<Fixnum>>, Array] args Requirements.
     #
     #   A String specifies a requirement for a certain plugin or feature_id to be installed.
     #
@@ -41,7 +41,7 @@ module Corvid
     #   * An array of acceptable versions. eg. `[3, 4, 8]`
     # @return [self]
     def add(*args)
-      args.flatten.each {|arg|
+      args.flatten.compact.each {|arg|
         arg= {arg => nil} unless arg.is_a? Hash
         arg.each {|k,v|
           req= parse_req_arg(k,v)

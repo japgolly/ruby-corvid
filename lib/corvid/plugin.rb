@@ -20,6 +20,13 @@ module Corvid
     #   @return [String] An absolute path.
     attr_declarative :resources_path, required: true
 
+    # @!attribute [rw] requirements
+    #   Requirements that must be satisfied before the plugin can be installed.
+    #   @return [nil, String, Hash<String,Fixnum|Range|Array<Fixnum>>, Array] Requirements that can be provided to
+    #     {RequirementValidator}.
+    #   @see RequirementValidator#add
+    attr_declarative :requirements
+
     # @!attribute [rw] feature_manifest
     #   A manifest of all features provided by the plugin.
     #   @return [Hash<String,Array<String>>] A hash with keys being feature names, and the values being a 2-element

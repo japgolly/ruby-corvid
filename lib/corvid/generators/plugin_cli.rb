@@ -18,7 +18,7 @@ class Corvid::Generator::PluginCli < ::Corvid::Generator::Base
 
   desc 'install', 'Install this plugin.'
   def install
-    add_plugin plugin
+    install_plugin plugin
   end
 
   desc 'update', 'Update this plugin.'

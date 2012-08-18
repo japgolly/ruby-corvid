@@ -111,7 +111,6 @@ describe Corvid::Generator::Base do
       subject.stub read_client_versions!: {'a'=>3}
       pr.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
       fr.stub read_client_features!: ['a:b']
-      subject.stub :say
       subject.should_not_receive :with_resources
       subject.send :install_feature, 'a', 'b'
     }
@@ -138,5 +137,41 @@ describe Corvid::Generator::Base do
       subject.send :add_plugin, BUILTIN_PLUGIN.new
       assert_plugins_installed BUILTIN_PLUGIN_DETAILS
     }
+  end
+
+  describe '#install plugin' do
+    it("should do nothing if plugin already installed"){
+      pr.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
+      pr.should_receive(:read_client_plugins).once.and_return(%w[a b])
+      subject.should_not_receive :add_plugin
+      subject.send :install_plugin, 'a'
+    }
+
+    it("should update the plugins file when plugin not installed yet"){
+      p1= stub name: 'a', requirements: nil
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      pr.should_receive(:read_client_plugins).once.and_return(%w[b])
+      subject.should_receive(:add_plugin).once.with(p1)
+      subject.send :install_plugin, 'a'
+    }
+
+    it("should update the plugins file when nothing installed yet"){
+      p1= stub name: 'a', requirements: nil
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      pr.should_receive(:read_client_plugins).once.and_return(nil)
+      subject.should_receive(:add_plugin).once.with(p1)
+      subject.send :install_plugin, 'a'
+    }
+
+    it("should validate plugin requirements"){
+      p1= mock 'plugin 1'
+      p1.stub name: 'a'
+      p1.stub(:requirements).and_return({'p2'=>391})
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      mock_client_state_once %w[p2], %w[p2:a], {'p2'=>1}
+      subject.should_not_receive :add_plugin
+      expect{ subject.send :install_plugin, 'a' }.to raise_error /[Rr]equire.+391/
+    }
+
   end
 end

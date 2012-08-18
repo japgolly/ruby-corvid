@@ -28,6 +28,11 @@ describe Corvid::RequirementValidator do
       test 'what', [{plugin:'what'}]
     }
 
+    it("ignores nils"){
+      test nil, []
+      test [nil,nil], []
+    }
+
     it("fails if plugin name is invalid"){
       expect{ subject.add 'what is this' }.to raise_error /plugin/
     }

@@ -143,6 +143,16 @@ module TestHelpers
     g.invoke_task task
   end
 
+  def mock_new(klass, real=false)
+    instance= case real
+              when false then mock "Mock #{klass}"
+              when true  then klass.new
+              else real
+              end
+    klass.should_receive(:new).and_return(instance)
+    instance
+  end
+
   def self.included base
     base.extend ClassMethods
   end
@@ -165,8 +175,19 @@ module TestHelpers
           g.plugin_registry= pr
           g.feature_registry= fr
           g.stub(:rpm_for).and_raise('rpm_for() called with wrong args')
+          g.stub :say
           g
         }
+        def mock_client_state_once(plugins, features, versions)
+          pr     .should_receive(:read_client_plugins ).once.and_return plugins
+          fr     .should_receive(:read_client_features).once.and_return features
+          subject.should_receive(:read_client_versions).once.and_return versions
+        end
+        def stub_client_state(plugins, features, versions)
+          pr.stub      read_client_plugins:  plugins
+          fr.stub      read_client_feature:  features
+          subject.stub read_client_versions: versions
+        end
       EOB
     end
 

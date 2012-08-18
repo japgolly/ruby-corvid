@@ -3,6 +3,7 @@ require 'corvid/constants'
 require 'corvid/feature_registry'
 require 'corvid/plugin_registry'
 require 'corvid/naming_policy'
+require 'corvid/requirement_validator'
 require 'corvid/res_patch_manager'
 require 'corvid/generators/actions'
 require 'corvid/generators/thor_monkey_patches'
@@ -304,6 +305,26 @@ module Corvid
         vers= read_client_versions || {}
         vers[plugin_name]= version
         write_client_versions vers
+      end
+
+      def install_plugin(plugin_or_name)
+        plugin= plugin_or_name.is_a?(Plugin) ? plugin_or_name : plugin_registry.instance_for(plugin_or_name)
+
+        # Check if plugin installed yet
+        installed= plugin_registry.read_client_plugins || []
+        unless installed.include? plugin.name
+
+          # Validate plugin requirements
+          rv= ::Corvid::RequirementValidator.new
+          rv.add plugin.requirements
+          rv.set_client_state installed, feature_registry.read_client_features, read_client_versions
+          rv.validate!
+
+          # Install plugin
+          add_plugin plugin
+        end
+
+        true
       end
 
       # Installs a feature into an existing Corvid project.
