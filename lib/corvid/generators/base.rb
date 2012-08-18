@@ -74,15 +74,6 @@ module Corvid
         )
       end
 
-      # @see Corvid::FeatureRegistry#read_client_features
-      def read_client_features
-        feature_registry.read_client_features
-      end
-      # @see Corvid::FeatureRegistry#read_client_features!
-      def read_client_features!
-        feature_registry.read_client_features!
-      end
-
       # Reads and parses the contents of the client's {Constants::VERSIONS_FILE VERSIONS_FILE} if it exists.
       #
       # @return [nil,Hash<String,Fixnum>] The version numbers for each plugin or `nil` if the file wasn't found.
@@ -276,7 +267,7 @@ module Corvid
         validate_feature_ids! *feature_ids
 
         # Read currently installed features
-        installed= read_client_features || []
+        installed= feature_registry.read_client_features || []
         size_before= installed.size
 
         # Add features
@@ -335,7 +326,7 @@ module Corvid
 
         # Read client details
         vers= read_client_versions!
-        feature_ids= read_client_features!
+        feature_ids= feature_registry.read_client_features!
 
         # Corvid installation confirmed - now check if feature already installed
         if feature_ids.include? feature_id

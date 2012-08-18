@@ -3,7 +3,7 @@ require_relative '../../spec_helper'
 require 'corvid/generators/base'
 
 describe Corvid::Generator::Base do
-  let(:subject){ quiet_generator described_class }
+  add_generator_lets
 
   def source_root; $corvid_global_thor_source_root; end
 
@@ -96,13 +96,12 @@ describe Corvid::Generator::Base do
   describe "#install_feature" do
     it("should fail if client resource version is prior to first feature version"){
       subject.stub read_client_versions!: {'a'=>3}
-      subject.stub read_client_features!: []
+      fr.stub read_client_features!: []
       f= mock 'feature b'
       f.should_receive(:since_ver).at_least(:once).and_return(4)
-      subject.feature_registry= fr= mock 'feature registry'
       fr.should_receive(:instance_for).with('a:b').once.and_return(f)
+      pr.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
       subject.should_not_receive :with_resources
-      subject.plugin_registry.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
       expect{
         subject.send :install_feature, 'a', 'b'
       }.to raise_error /update/
@@ -110,10 +109,10 @@ describe Corvid::Generator::Base do
 
     it("should do nothing if feature already installed"){
       subject.stub read_client_versions!: {'a'=>3}
-      subject.stub read_client_features!: ['a:b']
+      pr.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
+      fr.stub read_client_features!: ['a:b']
       subject.stub :say
       subject.should_not_receive :with_resources
-      subject.plugin_registry.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
       subject.send :install_feature, 'a', 'b'
     }
   end

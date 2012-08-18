@@ -24,7 +24,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
     # Read client details
     vers= read_client_versions
-    feature_ids= read_client_features
+    feature_ids= feature_registry.read_client_features
 
     # Group features by plugin
     features_by_plugin= {}

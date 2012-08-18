@@ -156,6 +156,20 @@ module TestHelpers
       EOB
     end
 
+    def add_generator_lets
+      class_eval <<-EOB
+        let(:fr){ Corvid::FeatureRegistry.send :new }
+        let(:pr){ Corvid::PluginRegistry.send :new }
+        let(:subject){
+          g= quiet_generator(described_class)
+          g.plugin_registry= pr
+          g.feature_registry= fr
+          g.stub(:rpm_for).and_raise('rpm_for() called with wrong args')
+          g
+        }
+      EOB
+    end
+
   end
 end
 

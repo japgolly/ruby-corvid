@@ -27,7 +27,7 @@ describe 'Feature Installation' do
         context 'installation of a feature on top of v#{inst_ver}' do
           run_all_in_sandbox_copy_of(#{inst_ver}) do
             run_init_test_unit_task
-            @features= Corvid::Generator::Base.new.read_client_features
+            @features= Corvid::FeatureRegistry.send(:new).read_client_features
           end
 
           it("should install v#{inst_ver} of the feature"){

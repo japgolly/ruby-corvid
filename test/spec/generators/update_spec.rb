@@ -28,55 +28,50 @@ describe Corvid::Generator::Update do
     }
   end
 
-  let :g do
-    g= quiet_generator(described_class)
-    g.plugin_registry= Corvid::PluginRegistry.send :new
-    g.stub(:rpm_for).and_raise('rpm_for() called with wrong args')
-    g
-  end
+  add_generator_lets
 
   def mock_plugin(name, latest_version)
     p1= stub(name).tap{|p| p.stub name: name }
     rpm1= Corvid::ResPatchManager.new
     rpm1.stub latest_version: latest_version
-    g.stub(:rpm_for).with(p1).and_return(rpm1)
-    g.plugin_registry.use_plugin p1, false
+    subject.stub(:rpm_for).with(p1).and_return(rpm1)
+    pr.use_plugin p1, false
     p1
   end
 
   describe 'update:all' do
     def test(*expected)
-      g.instance_eval "@u= []; def upgrade!(*a); @u<< a; end"
-      g.all
-      g.instance_variable_get(:@u).should equal_array expected
+      subject.instance_eval "@u= []; def upgrade!(*a); @u<< a; end"
+      subject.all
+      subject.instance_variable_get(:@u).should equal_array expected
     end
 
     it("updates all installed features of installed plugins"){
-      g.stub read_client_versions: {'p1'=>2,'p2'=>4}
-      g.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
+      subject.stub read_client_versions: {'p1'=>2,'p2'=>4}
+      fr.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
       p1= mock_plugin 'p1', 6
       p2= mock_plugin 'p2', 7
       test [p1, 2, 6, %w[1a 1c]], [p2, 4, 7, %w[2a 2b]]
     }
 
     it("does nothing for up-to-date plugins"){
-      g.stub read_client_versions: {'p1'=>2,'p2'=>4}
-      g.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
+      subject.stub read_client_versions: {'p1'=>2,'p2'=>4}
+      fr.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
       p1= mock_plugin 'p1', 2
       p2= mock_plugin 'p2', 7
       test [p2, 4, 7, %w[2a 2b]]
     }
 
     it("does nothing when features are installed without a versions file"){
-      g.stub read_client_versions: nil
-      g.stub read_client_features: %w[p1:1a p1:1c]
+      subject.stub read_client_versions: nil
+      fr.stub read_client_features: %w[p1:1a p1:1c]
       p1= mock_plugin 'p1', 6
       test
     }
 
     it("does nothing for plugins that dont have an installed version yet"){
-      g.stub read_client_versions: {'p2'=>4}
-      g.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
+      subject.stub read_client_versions: {'p2'=>4}
+      fr.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
       p1= mock_plugin 'p1', 6
       p2= mock_plugin 'p2', 7
       test [p2, 4, 7, %w[2a 2b]]
@@ -85,14 +80,14 @@ describe Corvid::Generator::Update do
 
   describe '#update(plugin_filter)' do
     def test(plugin_filter, *expected)
-      g.instance_eval "@u= []; def upgrade!(*a); @u<< a; end"
-      g.update(plugin_filter)
-      g.instance_variable_get(:@u).should equal_array expected
+      subject.instance_eval "@u= []; def upgrade!(*a); @u<< a; end"
+      subject.update(plugin_filter)
+      subject.instance_variable_get(:@u).should equal_array expected
     end
 
     it("updates installed plugins matching given filter name"){
-      g.stub read_client_versions: {'p1'=>2,'p2'=>4}
-      g.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
+      subject.stub read_client_versions: {'p1'=>2,'p2'=>4}
+      fr.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
       p1= mock_plugin 'p1', 6
       p2= mock_plugin 'p2', 7
       test p1.name, [p1, 2, 6, %w[1a 1c]]
@@ -100,8 +95,8 @@ describe Corvid::Generator::Update do
     }
 
     it("does nothing when plugin matching filter doesnt have an installed version yet"){
-      g.stub read_client_versions: {'p2'=>4}
-      g.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
+      subject.stub read_client_versions: {'p2'=>4}
+      fr.stub read_client_features: %w[p1:1a p1:1c p2:2a p2:2b]
       p1= mock_plugin 'p1', 6
       p2= mock_plugin 'p2', 7
       test p1.name
@@ -131,8 +126,8 @@ describe Corvid::Generator::Update do
 
       it("should refuse to update"){
         g= quiet_generator(Corvid::Generator::Update)
-        g.should_not_receive :upgrade!
-        g.all
+        subject.should_not_receive :upgrade!
+        subject.all
         get_files().should be_empty
       }
     end
