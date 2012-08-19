@@ -227,4 +227,8 @@ RSpec.configure do |config|
   config.include GemfilePatching
   config.include TestHelpers
   config.include DynamicFixtures
+  config.after(:each){
+    Corvid::PluginRegistry.clear_cache if defined? Corvid::PluginRegistry
+    Corvid::FeatureRegistry.clear_cache if defined? Corvid::FeatureRegistry
+  }
 end

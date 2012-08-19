@@ -12,11 +12,6 @@ describe Corvid::ResourcePatchTests do
     Corvid::PluginRegistry.use_plugin @plugin
   end
 
-  after :all do
-    Corvid::FeatureRegistry.clear_cache
-    Corvid::PluginRegistry.clear_cache
-  end
-
   it("should fail when update() has an extra step that's not in install()"){
     @plugin.should_receive(:resources_path).at_least(:once).and_return "#{Fixtures::FIXTURE_ROOT}/invalid_res_patch-extra_update_step"
     expect{ test_feature_updates_match_install @plugin, 'corvid' }.to raise_error /wtfff/

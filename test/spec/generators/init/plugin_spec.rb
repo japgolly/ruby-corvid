@@ -6,13 +6,6 @@ describe Corvid::Generator::InitPlugin do
   describe 'init:plugin' do
     run_each_in_empty_dir_unless_in_one_already
 
-    # TODO: Clear caches in spec_helper
-    # TODO: Make run_generator not use singletons
-    before(:each){
-      Corvid::PluginRegistry.clear_cache
-      Corvid::FeatureRegistry.clear_cache
-    }
-
     def run!; run_generator described_class, 'plugin' end
 
     it("should fail if corvid isn't installed yet"){
