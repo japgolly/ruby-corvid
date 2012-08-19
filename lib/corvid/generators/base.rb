@@ -37,7 +37,7 @@ module Corvid
       FEATURE_INSTALLER_CODE_DEFS= %w[install update].map(&:freeze).freeze
 
       # Methods provided to feature installer that each take a single value.
-      FEATURE_INSTALLER_VALUES_DEFS= %w[].map(&:freeze).freeze
+      FEATURE_INSTALLER_VALUES_DEFS= %w[requirements].map(&:freeze).freeze
 
       # @!visibility private
       def self.inherited(c)
@@ -315,9 +315,8 @@ module Corvid
         unless installed.include? plugin.name
 
           # Validate plugin requirements
-          rv= ::Corvid::RequirementValidator.new
+          rv= new_requirement_validator
           rv.add plugin.requirements
-          rv.set_client_state installed, feature_registry.read_client_features, read_client_versions
           rv.validate!
 
           # Install plugin
@@ -325,6 +324,16 @@ module Corvid
         end
 
         true
+      end
+
+      def new_requirement_validator
+        rv= ::Corvid::RequirementValidator.new
+        rv.set_client_state(
+          plugin_registry.read_client_plugins,
+          feature_registry.read_client_features,
+          read_client_versions
+        )
+        rv
       end
 
       # Installs a feature into an existing Corvid project.
@@ -346,26 +355,37 @@ module Corvid
         feature_id= feature_id_for(plugin.name, feature_name)
 
         # Read client details
-        vers= read_client_versions!
-        feature_ids= feature_registry.read_client_features!
+        vers= read_client_versions || {}
+        feature_ids= feature_registry.read_client_features || []
 
-        # Corvid installation confirmed - now check if feature already installed
+        # Check if feature already installed
         if feature_ids.include? feature_id
           say "Feature '#{feature_id}' already installed." if options[:say_if_installed]
           return
         end
 
+        # TODO ensure plugin installed
+
         # Ensure resources up-to-date
         ver= vers[plugin.name]
         f= feature_registry.instance_for(feature_id)
-        if f and f.since_ver > ver
+        if ver and f and f.since_ver > ver
           raise "The #{feature_id} feature requires at least v#{f.since_ver} of #{plugin.name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
         end
 
         # Install feature
         # TODO remember that plugins can call install_feature 'corvid:test_unit' & install feature of a diff plugin
-        with_resources(plugin, ver) {|ver|
-          feature_installer!(feature_name).install
+        with_resources(plugin, ver || :latest) {|ver|
+          fi= feature_installer!(feature_name)
+
+          # Validate feature requirements
+          rv= new_requirement_validator
+          rv.add f.requirements
+          rv.add fi.requirements if fi.respond_to?(:requirements)
+          rv.validate!
+
+          # Install
+          fi.install
           add_feature feature_id
           yield ver if block_given?
           run_bundle() if options[:run_bundle]

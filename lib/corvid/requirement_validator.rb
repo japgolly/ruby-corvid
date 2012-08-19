@@ -19,6 +19,9 @@ module Corvid
   class RequirementValidator
     include NamingPolicy
 
+    # This error is raised when validation discovers requirements that the client's state doesn't satisfy.
+    class UnsatisfiedRequirementsError < StandardError; end
+
     def initialize
       @requirements= []
     end
@@ -77,6 +80,7 @@ module Corvid
     #   number.
     # @return [self]
     def set_client_state(plugin_names, feature_ids, versions)
+      plugin_names ||= []
       raise "Invalid plugin list, Array<String> expected: #{plugin_names.inspect}" unless plugin_names.is_a? Array
       feature_ids ||= []
       raise "Invalid feature id list, Array<String> expected: #{feature_ids.inspect}" unless feature_ids.is_a? Array
@@ -130,13 +134,13 @@ module Corvid
 
     # Ensures all requirements are being met.
     #
-    # @raise If any requirements are not satisfied.
+    # @raise UnsatisfiedRequirementsError If any requirements are not satisfied.
     # @return [self]
     def validate!
       errors= self.errors
       unless errors.empty?
         detail= errors.size == 1 ? errors[0] : "\n" + errors.map{|e| "  * #{e}" }.join("\n")
-        raise "There are unsatisfied requirements: " + detail
+        raise UnsatisfiedRequirementsError, "There are unsatisfied requirements: " + detail
       end
       self
     end

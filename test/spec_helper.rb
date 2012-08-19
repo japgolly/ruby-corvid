@@ -178,15 +178,15 @@ module TestHelpers
           g.stub :say
           g
         }
-        def mock_client_state_once(plugins, features, versions)
-          pr     .should_receive(:read_client_plugins ).once.and_return plugins
-          fr     .should_receive(:read_client_features).once.and_return features
-          subject.should_receive(:read_client_versions).once.and_return versions
+        def mock_client_state(plugins, features, versions)
+          pr     .should_receive(:read_client_plugins ).at_least(:once).and_return plugins
+          fr     .should_receive(:read_client_features).at_least(:once).and_return features
+          subject.should_receive(:read_client_versions).at_least(:once).and_return versions
         end
         def stub_client_state(plugins, features, versions)
-          pr.stub      read_client_plugins:  plugins
-          fr.stub      read_client_feature:  features
-          subject.stub read_client_versions: versions
+          pr.stub      read_client_plugins:   plugins
+          fr.stub      read_client_features:  features
+          subject.stub read_client_versions:  versions
         end
       EOB
     end

@@ -3,6 +3,8 @@ require_relative '../../spec_helper'
 require 'corvid/generators/base'
 
 describe Corvid::Generator::Base do
+  UnsatisfiedRequirementsError= Corvid::RequirementValidator::UnsatisfiedRequirementsError
+
   add_generator_lets
 
   def source_root; $corvid_global_thor_source_root; end
@@ -95,8 +97,7 @@ describe Corvid::Generator::Base do
 
   describe "#install_feature" do
     it("should fail if client resource version is prior to first feature version"){
-      subject.stub read_client_versions!: {'a'=>3}
-      fr.stub read_client_features!: []
+      stub_client_state %w[a], [], {'a'=>3}
       f= mock 'feature b'
       f.should_receive(:since_ver).at_least(:once).and_return(4)
       fr.should_receive(:instance_for).with('a:b').once.and_return(f)
@@ -108,11 +109,49 @@ describe Corvid::Generator::Base do
     }
 
     it("should do nothing if feature already installed"){
-      subject.stub read_client_versions!: {'a'=>3}
+      stub_client_state %w[a], %w[a:b], {'a'=>3}
       pr.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
-      fr.stub read_client_features!: ['a:b']
       subject.should_not_receive :with_resources
       subject.send :install_feature, 'a', 'b'
+    }
+
+    it("should validate requirements in the feature class"){
+      stub_client_state %w[a], nil, nil
+      p= stub name: 'a'
+      pr.should_receive(:instance_for).with('a').once.and_return(p)
+      f= stub requirements: 'x'
+      fr.should_receive(:instance_for).with('a:b').once.and_return(f)
+      subject.stub feature_installer!: mock('fi')
+      subject.stub(:with_resources).and_yield(7)
+
+      rv= mock 'rv'
+      subject.should_receive(:new_requirement_validator).once.and_return(rv)
+      rv.stub :add
+      rv.should_receive(:add).with('x')
+      rv.should_receive(:validate!).once.and_raise(UnsatisfiedRequirementsError)
+      subject.should_not_receive :add_feature
+      expect{ subject.send :install_feature, 'a', 'b' }.to raise_error UnsatisfiedRequirementsError
+    }
+
+    class FakeFeatureInstaller
+      def requirements; 'y' end
+    end
+    it("should validate requirements in the feature installer"){
+      stub_client_state %w[a], nil, nil
+      p= stub name: 'a'
+      pr.should_receive(:instance_for).with('a').once.and_return(p)
+      f= stub requirements: nil
+      fr.should_receive(:instance_for).with('a:b').once.and_return(f)
+      subject.should_receive(:feature_installer!).with('b').once.and_return(FakeFeatureInstaller.new)
+      subject.should_receive(:with_resources).with(p,:latest).once.and_yield(7)
+
+      rv= mock 'rv'
+      subject.should_receive(:new_requirement_validator).once.and_return(rv)
+      rv.stub :add
+      rv.should_receive(:add).once.with('y')
+      rv.should_receive(:validate!).once.and_raise(UnsatisfiedRequirementsError)
+      subject.should_not_receive :add_feature
+      expect{ subject.send :install_feature, 'a', 'b' }.to raise_error UnsatisfiedRequirementsError
     }
   end
 
@@ -150,7 +189,7 @@ describe Corvid::Generator::Base do
     it("should update the plugins file when plugin not installed yet"){
       p1= stub name: 'a', requirements: nil
       pr.should_receive(:instance_for).with('a').once.and_return(p1)
-      pr.should_receive(:read_client_plugins).once.and_return(%w[b])
+      pr.should_receive(:read_client_plugins).at_least(:once).and_return(%w[b])
       subject.should_receive(:add_plugin).once.with(p1)
       subject.send :install_plugin, 'a'
     }
@@ -158,7 +197,7 @@ describe Corvid::Generator::Base do
     it("should update the plugins file when nothing installed yet"){
       p1= stub name: 'a', requirements: nil
       pr.should_receive(:instance_for).with('a').once.and_return(p1)
-      pr.should_receive(:read_client_plugins).once.and_return(nil)
+      pr.should_receive(:read_client_plugins).at_least(:once).and_return(nil)
       subject.should_receive(:add_plugin).once.with(p1)
       subject.send :install_plugin, 'a'
     }
@@ -168,10 +207,9 @@ describe Corvid::Generator::Base do
       p1.stub name: 'a'
       p1.stub(:requirements).and_return({'p2'=>391})
       pr.should_receive(:instance_for).with('a').once.and_return(p1)
-      mock_client_state_once %w[p2], %w[p2:a], {'p2'=>1}
+      mock_client_state %w[p2], %w[p2:a], {'p2'=>1}
       subject.should_not_receive :add_plugin
       expect{ subject.send :install_plugin, 'a' }.to raise_error /[Rr]equire.+391/
     }
-
   end
 end
