@@ -49,6 +49,15 @@ describe Corvid::Generator::NewFeature do
         'resources/latest/corvid-features/small.rb'.should be_file_with_contents /^install\s*{/
       }
 
+      (Corvid::Generator::Base::FEATURE_INSTALLER_VALUES_DEFS +
+       Corvid::Generator::Base::FEATURE_INSTALLER_CODE_DEFS).each do |name|
+        class_eval <<-EOB
+          it("should include in feature installer: #{name}"){
+            'resources/latest/corvid-features/small.rb'.should be_file_with_contents /#{name}/
+          }
+        EOB
+      end
+
       it("should add the feature to the plugin manifest"){
         'lib/corvid/big_plugin.rb'.should be_file_with_contents \
           /feature_manifest\s*\(\{\n\s+'small'\s*=>\s*\['corvid\/small_feature'\s*,\s*'::SmallFeature'\],\n/

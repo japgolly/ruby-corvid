@@ -21,6 +21,8 @@ describe Corvid::Generator::InitPlugin do
 
     it("should fail if corvid:corvid isn't installed yet"){
       copy_fixture 'bare'
+      # TODO fix bare version being out of date
+      File.write CONST::VERSIONS_FILE, {'corvid'=>Corvid::ResPatchManager.new.latest_version}.to_yaml
       File.delete CONST::FEATURES_FILE
       expect{ run! }.to raise_error Corvid::RequirementValidator::UnsatisfiedRequirementsError
     }

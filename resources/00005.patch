@@ -1,0 +1,511 @@
+Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+After: b23a60f243c439d9316eab179162b22e7506fc2a61fbd3c8526f3edb7eb197b0
+Patch: 169677932a3dd3dc21f6f25e70247f63325b0581d9c947c65c457036439056fb
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ .corvid/Gemfile	2012-08-19 10:33:19.340013966 +0530
+@@ -0,0 +1,30 @@
++# vim:ft=ruby et ts=2 sw=2:
++
++gem 'corvid'
++
++gem 'rake', group: :rake
++
++group :test do
++  gem 'ci_reporter', require: false
++  gem 'simplecov', '>= 0.6.4', require: false
++end if Dir.exists?('test')
++
++group :test_unit do
++  gem 'minitest'
++  gem 'guard-minitest', '>= 0.5.0', require: false
++  gem 'turn', '>= 0.9.4'
++end if Dir.exists?('test/unit')
++
++group :test_spec do
++  gem 'rspec'
++  gem 'guard-rspec', require: false
++end if Dir.exists?('test/spec')
++
++group :doc do
++  gem 'yard'
++end
++
++group :debug do
++  gem 'debugger', platforms: :mri
++end
++
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ .gitignore	2012-08-19 10:33:19.340013966 +0530
+@@ -0,0 +1,17 @@
++~*
++.~*
++*.bak
++*.log
++*.tmp
++*.out
++*.err
++*.pid
++.*.swp
++.*.swo
++.*.swn
++
++.settings
++.metadata
++.idea
++target
++sloccount.sc
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ .rspec	2012-08-19 10:33:19.340013966 +0530
+@@ -0,0 +1,8 @@
++--color
++
++--order random
++#--order random:12321 # Use a specific seed value
++
++#--format progress
++--format documentation
++
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ .simplecov	2012-08-19 10:33:19.340013966 +0530
+@@ -0,0 +1,14 @@
++SimpleCov.start do
++  # project_name 'My Awesome Project'
++
++  # add_group 'Models', 'app/model'
++  # add_group 'Plugins', '(app|lib)/plugins'
++
++  # Remove test code from coverage
++  add_filter 'test'
++
++  # Add files that don't get required to coverage too
++  add_files_to_coverage_at_exit '{app,lib}/**/*.rb'
++end
++
++# vim:ft=ruby et ts=2 sw=2:
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ .yardopts	2012-08-19 10:33:19.340013966 +0530
+@@ -0,0 +1,6 @@
++--db         target/yardoc.db
++--output-dir target/doc
++--markup     markdown
++--readme     README.md
++--files      CHANGELOG.md
++{app,lib}/**/*.rb
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ CHANGELOG.md	2012-08-19 10:33:19.340013966 +0530
+@@ -0,0 +1,6 @@
++My Project: Changelog
++=====================
++
++## 0.0.1 (WIP)
++
++Initial version.
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ Gemfile	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,11 @@
++source :rubygems
++
++# Load Corvid dependencies
++eval File.read(File.expand_path '../.corvid/Gemfile', __FILE__)
++
++# Parser for Markdown documentation
++group :doc do
++  gem 'rdiscount', platforms: :mri
++  gem 'kramdown', platforms: :jruby
++end
++
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ Guardfile	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,44 @@
++require 'corvid/guard'
++
++########################################################################################################################
++# test/unit
++
++group :unit do
++  guard 'minitest', test_folders: 'test/unit', test_file_patterns: '*_test.rb' do
++
++    # Src files
++    watch(%r'^lib/(.+)\.rb$') {|m| "test/unit/#{m[1]}_test.rb"}
++
++    # Each test
++    watch(%r'^test/unit/.+_test\.rb$')
++
++    if bulk?
++      # Test stuff affecting everything
++      watch(%r'^test/bootstrap/(?:all|unit).rb') {"test/unit"}
++      watch(%r'^test/helpers/.+$')               {"test/unit"}
++      watch(%r'^test/factories/.+$')             {"test/unit"}
++    end
++  end
++end if Dir.exists?('test/unit')
++
++########################################################################################################################
++# test/spec
++
++rspec_options= read_rspec_options(File.dirname __FILE__)
++group :spec do
++  guard 'rspec', binstubs: true, spec_paths: ['test/spec'], cli: rspec_options, all_on_start: false, all_after_pass: false do
++
++    # Src files
++    watch(%r'^lib/(.+)\.rb$') {|m| "test/spec/#{m[1]}_spec.rb"}
++
++    # Each spec
++    watch(%r'^test/spec/.+_spec\.rb$')
++
++    if bulk?
++      # Test stuff affecting everything
++      watch(%r'^test/bootstrap/(?:all|spec).rb') {"test/spec"}
++      watch(%r'^test/helpers/.+$')               {"test/spec"}
++      watch(%r'^test/factories/.+$')             {"test/spec"}
++    end
++  end
++end if Dir.exists?('test/spec')
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ README.md	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,6 @@
++# My Project [![Build Status](https://secure.travis-ci.org/myusername/myproject.png?branch=master)](http://travis-ci.org/myusername/myproject) [![Dependency Status](https://gemnasium.com/myusername/myproject.png)](https://gemnasium.com/myusername/myproject)
++
++For the above Travis CI and Gemnasium buttons to work you must replace:
++* `myusername` with your Github username.
++* `myproject` with your project's name on Github.
++
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ Rakefile	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,6 @@
++raise "Rake must not be run directly. Either run via Bundler (bundle exec rake) or via bin/rake." unless defined?(Bundler)
++APP_ROOT ||= File.expand_path(File.dirname(__FILE__))
++require 'corvid/rake/tasks'
++
++# Set default task to test
++task :default => :test
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ bin/%plugin_name%.tt	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,21 @@
++#!/usr/bin/env ruby
++# This file is generated by Corvid.
++
++# Determine project root
++require 'pathname'
++project_root= File.expand_path('../..', Pathname.new(__FILE__).realpath)
++
++# Load Bundler
++ENV['BUNDLE_GEMFILE'] ||= (
++  gemfile= File.join(project_root, 'Gemfile')
++  File.exists?(gemfile) && gemfile
++)
++require 'rubygems'
++require 'bundler/setup' if ENV['BUNDLE_GEMFILE']
++
++# Start CLI
++require 'corvid/cli/plugin'
++Corvid::CLI::Plugin.start project_root:        project_root,
++                          plugin_require_path: '<%= require_path %>',
++                          plugin_class_name:   '<%= class_name %>'
++
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ bin/guard	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,16 @@
++#!/usr/bin/env ruby
++#
++# This file was generated by Bundler.
++#
++# The application 'guard' is installed as part of a gem, and
++# this file is here to facilitate running it.
++#
++
++require 'pathname'
++ENV['BUNDLE_GEMFILE'] ||= File.expand_path("../../Gemfile",
++  Pathname.new(__FILE__).realpath)
++
++require 'rubygems'
++require 'bundler/setup'
++
++load Gem.bin_path('guard', 'guard')
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ bin/rake	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,16 @@
++#!/usr/bin/env ruby
++#
++# This file was generated by Bundler.
++#
++# The application 'rake' is installed as part of a gem, and
++# this file is here to facilitate running it.
++#
++
++require 'pathname'
++ENV['BUNDLE_GEMFILE'] ||= File.expand_path("../../Gemfile",
++  Pathname.new(__FILE__).realpath)
++
++require 'rubygems'
++require 'bundler/setup'
++
++load Gem.bin_path('rake', 'rake')
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ bin/rspec	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,16 @@
++#!/usr/bin/env ruby
++#
++# This file was generated by Bundler.
++#
++# The application 'rspec' is installed as part of a gem, and
++# this file is here to facilitate running it.
++#
++
++require 'pathname'
++ENV['BUNDLE_GEMFILE'] ||= File.expand_path("../../Gemfile",
++  Pathname.new(__FILE__).realpath)
++
++require 'rubygems'
++require 'bundler/setup'
++
++load Gem.bin_path('rspec-core', 'rspec')
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ bin/yard	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,16 @@
++#!/usr/bin/env ruby
++#
++# This file was generated by Bundler.
++#
++# The application 'yard' is installed as part of a gem, and
++# this file is here to facilitate running it.
++#
++
++require 'pathname'
++ENV['BUNDLE_GEMFILE'] ||= File.expand_path("../../Gemfile",
++  Pathname.new(__FILE__).realpath)
++
++require 'rubygems'
++require 'bundler/setup'
++
++load Gem.bin_path('yard', 'yard')
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ bin/yardoc	2012-08-19 10:33:19.343347274 +0530
+@@ -0,0 +1,16 @@
++#!/usr/bin/env ruby
++#
++# This file was generated by Bundler.
++#
++# The application 'yardoc' is installed as part of a gem, and
++# this file is here to facilitate running it.
++#
++
++require 'pathname'
++ENV['BUNDLE_GEMFILE'] ||= File.expand_path("../../Gemfile",
++  Pathname.new(__FILE__).realpath)
++
++require 'rubygems'
++require 'bundler/setup'
++
++load Gem.bin_path('yard', 'yardoc')
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ bin/yri	2012-08-19 10:33:19.346680586 +0530
+@@ -0,0 +1,16 @@
++#!/usr/bin/env ruby
++#
++# This file was generated by Bundler.
++#
++# The application 'yri' is installed as part of a gem, and
++# this file is here to facilitate running it.
++#
++
++require 'pathname'
++ENV['BUNDLE_GEMFILE'] ||= File.expand_path("../../Gemfile",
++  Pathname.new(__FILE__).realpath)
++
++require 'rubygems'
++require 'bundler/setup'
++
++load Gem.bin_path('yard', 'yri')
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ corvid-features/corvid.rb	2012-08-19 10:33:19.346680586 +0530
+@@ -0,0 +1,17 @@
++install {
++  empty_directory '.corvid'
++  copy_file       '.corvid/Gemfile'
++  copy_file       '.gitignore'
++  copy_file       '.simplecov'
++  copy_file       '.yardopts'
++  copy_file       'CHANGELOG.md'
++  copy_file       'Gemfile'
++  copy_file       'Guardfile'
++  copy_file       'Rakefile'
++  copy_file       'README.md'
++  copy_executable 'bin/rake'
++  copy_executable 'bin/yard'
++  copy_executable 'bin/yardoc'
++  copy_executable 'bin/yri'
++  empty_directory 'lib'
++}
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ corvid-features/plugin.rb	2012-08-19 10:35:11.405867101 +0530
+@@ -0,0 +1,8 @@
++requirements 'corvid:corvid'
++
++install {
++  empty_directory 'resources'
++  empty_directory 'resources/latest'
++  copy_file       'resources/.gitignore'
++  install_feature 'corvid', 'test_spec', run_bundle: true, say_if_installed: false
++}
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ corvid-features/test_spec.rb	2012-08-19 10:35:11.832530417 +0530
+@@ -0,0 +1,10 @@
++requirements 'corvid:corvid'
++
++install {
++  copy_file               '.rspec'
++  copy_executable         'bin/guard'
++  copy_executable         'bin/rspec'
++  copy_file_unless_exists 'test/bootstrap/all.rb'
++  copy_file               'test/bootstrap/spec.rb'
++  empty_directory         'test/spec'
++}
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ corvid-features/test_unit.rb	2012-08-19 10:35:11.865863321 +0530
+@@ -0,0 +1,8 @@
++requirements 'corvid:corvid'
++
++install {
++  copy_executable         'bin/guard'
++  copy_file_unless_exists 'test/bootstrap/all.rb'
++  copy_file               'test/bootstrap/unit.rb'
++  empty_directory         'test/unit'
++}
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ lib/corvid/%name%_feature.rb.tt	2012-08-19 10:33:19.346680586 +0530
+@@ -0,0 +1,10 @@
++require 'corvid/feature'
++
++class <%= class_name %> < Corvid::Feature
++
++  since_ver <%= since_ver %>
++
++  rake_tasks {
++  }
++
++end
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ lib/corvid/%name%_plugin.rb.tt	2012-08-19 10:33:19.346680586 +0530
+@@ -0,0 +1,30 @@
++require 'corvid/plugin'
++#require 'corvid/extension'
++
++class <%= class_name %> < Corvid::Plugin
++  # Plugins can be extensions but are not by default.
++  #include Corvid::Extension
++
++  # The name of the plugin. Must conform to format enforced by {Corvid::NamingPolicy#validate_plugin_name!}.
++  #
++  # @return [String] The plugin name.
++  name '<%= name %>'
++
++  # The path for Ruby to require in order to load this plugin.
++  #
++  # @return [String] The path to require, usually relative to your lib dir.
++  require_path '<%= require_path %>'
++
++  # The path to the directory containing the plugin's resources.
++  #
++  # @return [String] An absolute path.
++  resources_path File.expand_path('../../../resources', __FILE__)
++
++  # A manifest of all features provided by the plugin.
++  #
++  # @return [Hash<String,Array<String>>] A hash with keys being feature names, and the values being a 2-element
++  #   array of the feature's require-path, and class name, respectively.
++  feature_manifest ({
++  })
++
++end
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ resources/.gitignore	2012-08-19 10:33:19.346680586 +0530
+@@ -0,0 +1 @@
++latest
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ resources/latest/corvid-features/%name%.rb.tt	2012-08-19 10:47:06.330673814 +0530
+@@ -0,0 +1,20 @@
++# Requirements that must be satisfied before the feature can be installed.
++# @return [nil, String, Hash<String,Fixnum|Range|Array<Fixnum>>, Array] Requirements that can be provided to
++#   {RequirementValidator}.
++# @see RequirementValidator#add
++#
++#requirements
++
++install {
++  # empty_directory 'lib'
++  # copy_file       'hello.txt'
++  # copy_executable 'bin/hello'
++}
++
++# update {|ver|
++#   case ver
++#   when 2
++#     update stuff here
++#     empty_directory 'lib'
++#   end
++# }
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ test/bootstrap/all.rb	2012-08-19 10:33:19.346680586 +0530
+@@ -0,0 +1,11 @@
++# encoding: utf-8
++APP_ROOT = File.expand_path('../../..',__FILE__)
++require 'rubygems'
++require 'bundler/setup'
++require 'corvid/test/bootstrap/all'
++
++Bundler.require :default
++
++# Load test helpers
++Dir.glob("#{APP_ROOT}/test/helpers/**/*.rb") {|f| require f}
++
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ test/bootstrap/spec.rb	2012-08-19 10:33:19.350013901 +0530
+@@ -0,0 +1,5 @@
++# encoding: utf-8
++$coverage_name = 'specs'
++require_relative 'all'
++require 'corvid/test/bootstrap/spec'
++
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ test/bootstrap/unit.rb	2012-08-19 10:33:19.350013901 +0530
+@@ -0,0 +1,4 @@
++# encoding: utf-8
++$coverage_name = 'unit tests'
++require_relative 'all'
++require 'corvid/test/bootstrap/unit'
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ test/spec/%name%_plugin_spec.rb.tt	2012-08-19 10:33:19.350013901 +0530
+@@ -0,0 +1,12 @@
++# encoding: utf-8
++require_relative '../bootstrap/spec'
++require 'corvid/test/resource_patch_tests'
++require '<%= require_path %>'
++
++describe <%= class_name %> do
++  include Corvid::ResourcePatchTests
++
++  include_resource_patch_tests
++
++  include_feature_update_install_tests
++end
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ test/spec/%src%_spec.rb.tt	2012-08-19 10:33:19.350013901 +0530
+@@ -0,0 +1,7 @@
++# encoding: utf-8
++require_relative '<%= bootstrap_dir %>/spec'
++require '<%= src %>'
++
++describe <%= subject %> do
++  # TODO
++end
+--- /dev/null	2012-08-19 06:52:34.669537800 +0530
++++ test/unit/%src%_test.rb.tt	2012-08-19 10:33:19.350013901 +0530
+@@ -0,0 +1,7 @@
++# encoding: utf-8
++require_relative '<%= bootstrap_dir %>/unit'
++require '<%= src %>'
++
++class <%= testcase_name %>Test < MiniTest::Unit::TestCase
++  # TODO
++end

@@ -6,8 +6,6 @@ module Corvid
 
       since_ver 2
 
-      requirements 'corvid:corvid'
-
       rake_tasks {
         require 'corvid/rake/tasks/resources'
       }
