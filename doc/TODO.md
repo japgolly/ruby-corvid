@@ -52,7 +52,7 @@ Plugins: The Plan
   * ![Done](done.png) Add name and require-path to `plugins.yml`
   * ![TODO](pin-red.png) Install features on plugin installation.
 * ![Done](done.png) Create a `new:plugin NAME` task
-  * ![TODO](pin-red.png) ensures plugin feature installed
+  * ![Done](done.png) ensures plugin feature installed
   * ![Done](done.png) creates `lib/corvid/NAME_plugin.rb` which
   * ![Done](done.png) creates `test/spec/corvid/NAME_plugin_spec.rb` which
   * ![Done](done.png) creates `bin/NAME`

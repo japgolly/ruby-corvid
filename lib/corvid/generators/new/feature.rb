@@ -7,9 +7,9 @@ class Corvid::Generator::NewFeature < ::Corvid::Generator::Base
 
   desc 'feature', 'Generates a new plugin feature.'
   def feature
-    with_latest_resources(builtin_plugin) do
+    validate_requirements! 'corvid:plugin'
+    with_latest_resources(builtin_plugin) {
       template2 'lib/corvid/%name%_feature.rb.tt', :name
-      #template2 'test/spec/%name%_feature_spec.rb.tt', :name
       template2 'resources/latest/corvid-features/%name%.rb.tt', :name
 
       # Add to feature manifest
@@ -17,7 +17,7 @@ class Corvid::Generator::NewFeature < ::Corvid::Generator::Base
         insert_into_file plugin_file, "    '#{name}' => ['#{require_path}','::#{class_name}'],\n",
           after: /^\s*feature_manifest\s*\(.*?\n/
       end
-    end
+    }
   end
 
   protected

@@ -4,6 +4,7 @@ require 'corvid/generators/new/unit_test'
 
 describe Corvid::Generator::NewUnitTest do
   run_each_in_dynamic_fixture :bare
+  before(:each){ add_feature! 'corvid:test_unit' }
 
   describe 'new:test:unit' do
     it("simplest case"){

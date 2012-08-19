@@ -7,9 +7,10 @@ class Corvid::Generator::NewSpec < ::Corvid::Generator::Base
 
   desc 'spec', 'Generates a new specification.'
   def spec
-    with_latest_resources(builtin_plugin) do
+    validate_requirements! 'corvid:test_spec'
+    with_latest_resources(builtin_plugin) {
       template2 'test/spec/%src%_spec.rb.tt', :src
-    end
+    }
   end
 
   # Template vars

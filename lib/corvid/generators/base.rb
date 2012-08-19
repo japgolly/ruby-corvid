@@ -336,6 +336,12 @@ module Corvid
         rv
       end
 
+      def validate_requirements!(*requirements)
+        rv= new_requirement_validator
+        rv.add *requirements
+        rv.validate!
+      end
+
       # Installs a feature into an existing Corvid project.
       #
       # If the feature is already installed then this tells the user thus and stops.

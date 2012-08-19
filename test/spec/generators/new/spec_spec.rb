@@ -4,6 +4,7 @@ require 'corvid/generators/new/spec'
 
 describe Corvid::Generator::NewSpec do
   run_each_in_dynamic_fixture :bare
+  before(:each){ add_feature! 'corvid:test_spec' }
 
   describe 'new:test:spec' do
     it("simplest case"){
@@ -31,5 +32,5 @@ describe What::Say::Good do
 end
       EOB
     }
-  end # new:test:spec
+  end
 end

@@ -7,11 +7,12 @@ class Corvid::Generator::NewPlugin < ::Corvid::Generator::Base
 
   desc 'plugin', 'Creates a new Corvid plugin.'
   def plugin
-    with_latest_resources(builtin_plugin) do
+    validate_requirements! 'corvid:plugin'
+    with_latest_resources(builtin_plugin) {
       template2 'lib/corvid/%name%_plugin.rb.tt', :name
       template2 'test/spec/%name%_plugin_spec.rb.tt', :name
       template2 'bin/%plugin_name%.tt', plugin_name: name, perms: 0755
-    end
+    }
   end
 
   # Template vars
