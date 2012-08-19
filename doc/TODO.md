@@ -70,9 +70,9 @@ Plugins: The Plan
   * ![Done](done.png) `<plugin> update`
 
 #### Modify
-* ![TODO](pin-red.png) Feature installation
-  * Check that requirements are met.
-  * Use plugin resources.
+* Feature installation
+  * ![Done](done.png) Check that requirements are met.
+  * ![TODO](pin-red.png) Use plugin resources.
 * ![Done](done.png) Feature updating
   * ![Done](done.png) Update plugins' features.
   * ![TODO](pin-red.png) Check requirements already met for latest version of all installed plugin features.
@@ -80,7 +80,7 @@ Plugins: The Plan
   * ![Done](done.png) `plugins.yml` contains: `plugin -> :require -> string`
   * ![Done](done.png) `version.yml` update to structure: `plugin -> version` and rename to `versions.yml`
   * ![Done](done.png) `features.yml` and feature names: update to `<plugin>:<name>`
-  * ![TODO](pin-red.png) `corvid-features/*` to specify dependencies on feature and/or res versions.
+  * ![Done](done.png) `corvid-features/*` to specify dependencies on feature and/or res versions.
 * ![Done](done.png) Provide ext points
   * test bootstraps
   * test helpers
