@@ -5,7 +5,7 @@ require 'corvid/generators/new/plugin'
 describe Corvid::Generator::NewPlugin do
   describe 'new:plugin' do
     run_all_in_empty_dir {
-      copy_fixture 'bare'
+      copy_dynamic_fixture :bare
       run_generator described_class, 'plugin happy'
     }
 

@@ -8,7 +8,7 @@ describe Corvid::Generator::NewFeature do
   describe 'new:feature' do
     context "with no client res-patches" do
       run_all_in_empty_dir {
-        copy_fixture 'bare'
+        copy_dynamic_fixture :bare
         run_generator Corvid::Generator::NewPlugin, 'plugin big'
         run_generator described_class, 'feature small'
       }
@@ -20,7 +20,7 @@ describe Corvid::Generator::NewFeature do
 
     context "with 2 mock client res-patches" do
       run_all_in_empty_dir {
-        copy_fixture 'bare'
+        copy_dynamic_fixture :bare
         Dir.mkdir 'resources'
         File.write 'resources/00001.patch', ''
         File.write 'resources/00002.patch', ''

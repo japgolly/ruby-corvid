@@ -1,4 +1,0 @@
----
-corvid:
-  :path: corvid/builtin/builtin_plugin
-  :class: Corvid::Builtin::BuiltinPlugin

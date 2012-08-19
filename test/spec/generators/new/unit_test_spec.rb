@@ -3,9 +3,7 @@ require_relative '../../../spec_helper'
 require 'corvid/generators/new/unit_test'
 
 describe Corvid::Generator::NewUnitTest do
-  around :each do |ex|
-    inside_fixture('bare'){ ex.run }
-  end
+  run_each_in_dynamic_fixture :bare
 
   describe 'new:test:unit' do
     it("simplest case"){

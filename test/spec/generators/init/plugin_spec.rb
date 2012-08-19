@@ -13,24 +13,20 @@ describe Corvid::Generator::InitPlugin do
     }
 
     it("should fail if corvid:corvid isn't installed yet"){
-      copy_fixture 'bare'
-      # TODO fix bare version being out of date
-      File.write CONST::VERSIONS_FILE, {'corvid'=>Corvid::ResPatchManager.new.latest_version}.to_yaml
+      copy_dynamic_fixture :bare
       File.delete CONST::FEATURES_FILE
       expect{ run! }.to raise_error Corvid::RequirementValidator::UnsatisfiedRequirementsError
     }
 
     it("should do nothing if already installed"){
-      copy_fixture 'bare'
+      copy_dynamic_fixture :bare
       add_feature! 'corvid:plugin'
       expect{ run! }.not_to change{ get_dir_entries }
     }
 
     context 'when installed the first time in a corvid project' do
       run_all_in_empty_dir {
-        copy_fixture 'bare'
-        # TODO fix bare version being out of date
-        File.write CONST::VERSIONS_FILE, {'corvid'=>Corvid::ResPatchManager.new.latest_version}.to_yaml
+        copy_dynamic_fixture :bare
         run!
       }
       it("should install the plugin feature"){

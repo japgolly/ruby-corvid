@@ -24,6 +24,15 @@ module DynamicFixtures
     end
   end
 
+  def inside_dynamic_fixture(fixture_name)
+    Dir.mktmpdir {|dir|
+      Dir.chdir dir do
+        copy_dynamic_fixture fixture_name
+        yield
+      end
+    }
+  end
+
   private
 
   def dynamic_fixture_root
@@ -57,6 +66,14 @@ module DynamicFixtures
       STDERR.warn "Dyanmic fixture being redefined: #{name}." if $dynamic_fixtures[name]
       $dynamic_fixtures[name]= block
       self
+    end
+
+    def run_each_in_dynamic_fixture(fixture_name)
+      class_eval <<-EOB
+        around :each do |ex|
+          inside_dynamic_fixture(#{fixture_name.inspect}){ ex.run }
+        end
+      EOB
     end
 
   end

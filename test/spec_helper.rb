@@ -106,7 +106,7 @@ module TestHelpers
   end
 
   def inside_fixture(fixture_name)
-    Dir.mktmpdir {|dir|dir
+    Dir.mktmpdir {|dir|
       Dir.chdir dir do
         copy_fixture fixture_name
         patch_corvid_gemfile
@@ -208,6 +208,13 @@ module IntegrationTestDecoration
 end
 
 module DynamicFixtures
+  def_fixture :bare do
+    Dir.mkdir '.corvid'
+    add_plugin! BUILTIN_PLUGIN.new
+    add_feature! 'corvid:corvid'
+    add_version! 'corvid', Corvid::ResPatchManager.new.latest_version
+  end
+
   def_fixture :new_cool_plugin do
     invoke_corvid! %(
       init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec

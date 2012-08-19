@@ -7,7 +7,7 @@ describe Corvid::Generator::InitTestSpec do
   include TestBootstraps
 
   describe 'init:test:spec' do
-    run_each_in_fixture 'bare'
+    run_each_in_dynamic_fixture :bare
 
     it("should initalise spec test support"){
       run_generator described_class, "spec"
