@@ -2,7 +2,7 @@ require 'corvid/res_patch_manager'
 require 'thread'
 
 module Fixtures::Upgrading
-  MAX_VER= 4
+  MAX_VER= 5
 
   def fixture_dir(ver)
     "#{Fixtures::FIXTURE_ROOT}/upgrading/r#{ver}"

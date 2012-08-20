@@ -94,6 +94,13 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         deployable_files.sort!.uniq!
       }
 
+      # Validate requirements
+      if installers[to]
+        rv= new_requirement_validator
+        rv.add installers[to].values.map{|fi| fi.respond_to?(:requirements) ? fi.requirements : nil }
+        rv.validate!
+      end
+
       # Patch & migrate deployable files
       unless deployable_files.empty?
         rpm.allow_interactive_patching do

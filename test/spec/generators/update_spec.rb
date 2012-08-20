@@ -215,5 +215,19 @@ describe Corvid::Generator::Update do
         }
       end
     end
+
+    it("should check feature installer's requirements before upgrading"){
+      @rpms= {'corvid' => @rpm_at_ver[5]}
+      with_sandbox_copy_of(4) {
+        # Try with unmet requirements
+        expect{ run_update_task }.to raise_error ::Corvid::RequirementValidator::UnsatisfiedRequirementsError
+        assert_installation 4, 4
+
+        # Satisfy requirement and try again
+        add_feature! 'corvid:whatever'
+        run_update_task
+        assert_installation 5, 5
+      }
+    }
   end
 end
