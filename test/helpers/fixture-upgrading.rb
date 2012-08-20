@@ -1,4 +1,5 @@
 require 'corvid/res_patch_manager'
+require 'thread'
 
 module Fixtures::Upgrading
   MAX_VER= 4
@@ -9,12 +10,13 @@ module Fixtures::Upgrading
 
   # Turn the r?? fixture directories into res-patches
   def prepare_res_patches
-    @rpm_at_ver= [nil]
-    1.upto(MAX_VER) do |v|
-      @rpm_at_ver<< create_patches(v)
-      # Make patching quiet for tests
-      @rpm_at_ver.last.patch_exe += ' --quiet'
-    end
+    @rpm_at_ver= [nil] + (1..MAX_VER).to_a
+      .map{|v| Thread.new {
+        rpm= create_patches(v)
+        rpm.patch_exe += ' --quiet' # Make patching quiet for tests
+        rpm
+      }}
+      .map{|t| t.join.value }
   end
 
   # Create client installations at various versions.

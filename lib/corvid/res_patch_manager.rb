@@ -325,31 +325,30 @@ module Corvid
 
         # Create patches
         patches= {}
-        Dir.chdir target_dir do
-          filelist.each do |f,fv|
-            from_ver2= from_ver
+        filelist.each do |f,fv|
+          from_ver2= from_ver
+          tf= "#{target_dir}/#{f}"
 
-            # Check if deployed is identical to a versioned copy
-            if File.exists?(f)
-              csum= DIGEST.file(f)
-              to_ver.downto(from_ver) do |ver|
-                vf= "#{reconstruction_dir ver}/#{f}"
-                if File.exists?(vf) and csum == DIGEST.file(vf)
-                  # Found a match
-                  from_ver2= ver
-                  break
-                end
+          # Check if deployed is identical to a versioned copy
+          if File.exists?(tf)
+            csum= DIGEST.file(tf)
+            to_ver.downto(from_ver) do |ver|
+              vf= "#{reconstruction_dir ver}/#{f}"
+              if File.exists?(vf) and csum == DIGEST.file(vf)
+                # Found a match
+                from_ver2= ver
+                break
               end
             end
-
-            # Do nothing if target is already up-to-date
-            next if from_ver2 == to_ver
-
-            # Create patch
-            from_file,to_file = [from_ver2,to_ver].map{|ver| "#{reconstruction_dir ver}/#{f}" }
-            patch= diff_files f, from_file, to_file
-            patches[f]= patch if patch
           end
+
+          # Do nothing if target is already up-to-date
+          next if from_ver2 == to_ver
+
+          # Create patch
+          from_file,to_file = [from_ver2,to_ver].map{|ver| "#{reconstruction_dir ver}/#{f}" }
+          patch= diff_files f, from_file, to_file
+          patches[f]= patch if patch
         end
 
         # Apply patches
@@ -379,16 +378,20 @@ module Corvid
     # @param [nil,String] dir The directory to inspect.
     # @return [Array<String>] A list of files relative to `dir`, or an empty array if `dir` is `nil`.
     def get_files_in_dir(dir)
-      r= []
-      Dir.chdir dir do
-        Dir.glob("**/*", File::FNM_DOTMATCH).sort.each do |f|
-          if File.file?(f) and File.basename(f) !~ FILE_BLACKLIST
-            f= yield f if block_given?
-            r<< f
+      return [] if dir.nil?
+      dir += '/'
+      Dir.glob("#{dir}**/*", File::FNM_DOTMATCH)
+        .sort # Needs to happen before the yield
+        .map {|ff|
+          f= ff.sub(dir, '')
+          if File.file?(ff) and File.basename(f) !~ FILE_BLACKLIST
+            f= yield ff,f if block_given?
+            f
+          else
+            nil
           end
-        end
-      end if dir
-      r
+        }
+        .compact
     end
 
     # Diffs two files.
@@ -422,41 +425,39 @@ module Corvid
     #   {#allow_interactive_patching}.
     # @see #interactive_patching?
     def apply_patch(target_dir, patch)
-      Dir.chdir target_dir do
-        tmp= Tempfile.new('corvid-migration')
-        begin
-          tmp.write patch
-          tmp.close
+      tmp= Tempfile.new('corvid-migration')
+      begin
+        tmp.write patch
+        tmp.close
 
-          merge_conflict= false
+        merge_conflict= false
 
-          # patch's  exit  status  is  0 if all hunks are applied successfully, 1 if some
-          # hunks cannot be applied or there were merge conflicts, and 2 if there is more
-          # serious trouble.  When applying a set of patches in a loop it behooves you to
-          # check this exit status so you don't  apply  a  later  patch  to  a  partially
-          # patched file.
+        # patch's  exit  status  is  0 if all hunks are applied successfully, 1 if some
+        # hunks cannot be applied or there were merge conflicts, and 2 if there is more
+        # serious trouble.  When applying a set of patches in a loop it behooves you to
+        # check this exit status so you don't  apply  a  later  patch  to  a  partially
+        # patched file.
 
-          cmd= "#{patch_exe} -p0 --unified -i #{tmp.path.inspect}"
-          if interactive_patching?
-            system "#{cmd} --backup-if-mismatch --merge"
-            case $?.exitstatus
-            when 0
-              # Great!
-            when 1
-              merge_conflict= true
-            else
-              raise "Problem occured applying patches. Exit status = #{$?.exitstatus}."
-            end
+        cmd= "cd #{target_dir.inspect} && #{patch_exe} -p0 --unified -i #{tmp.path.inspect}"
+        if interactive_patching?
+          system "#{cmd} --backup-if-mismatch --merge"
+          case $?.exitstatus
+          when 0
+            # Great!
+          when 1
+            merge_conflict= true
           else
-            `#{cmd} --batch`
-            raise "Failed to apply patch. Exit status = #{$?.exitstatus}." unless $?.success?
+            raise "Problem occured applying patches. Exit status = #{$?.exitstatus}."
           end
-
-          return merge_conflict
-        ensure
-          tmp.close
-          tmp.delete
+        else
+          `#{cmd} --batch`
+          raise "Failed to apply patch. Exit status = #{$?.exitstatus}." unless $?.success?
         end
+
+        return merge_conflict
+      ensure
+        tmp.close
+        tmp.delete
       end
     end
 
@@ -464,7 +465,7 @@ module Corvid
     # @param [nil,String] dir
     # @return String A single checksum.
     def digest_dir(dir)
-      digests= get_files_in_dir(dir){|f| DIGEST.file f}
+      digests= get_files_in_dir(dir){|ff,f| DIGEST.file(ff).to_s }
       DIGEST.hexdigest digests.join(nil)
     end
 
@@ -535,7 +536,7 @@ module Corvid
       # Check after-checksum
       new_dir_digest= digest_dir(target_dir)
       if patch_data[:digest_after] != new_dir_digest
-        raise "After successfully creating patch ver ##{ver}, the contents don't seem to match what was expected."
+        raise "After successfully applying patch ver ##{ver}, the contents don't seem to match what was expected."
       end
 
       new_dir_digest
