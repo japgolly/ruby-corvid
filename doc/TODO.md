@@ -82,11 +82,11 @@ Plugins: The Plan
   * ![Done](done.png) `features.yml` and feature names: update to `<plugin>:<name>`
   * ![Done](done.png) `corvid-features/*` to specify dependencies on feature and/or res versions.
 * ![Done](done.png) Provide ext points
-  * test bootstraps
-  * test helpers
-  * `Gemfile`
-  * `Guardfile`
-  * code coverage settings
+  * ![TODO](pin-red.png) test bootstraps
+  * ![TODO](pin-red.png) test helpers
+  * ![TODO](pin-red.png) `Gemfile`
+  * ![TODO](pin-red.png) `Guardfile`
+  * ![TODO](pin-red.png) code coverage settings
   * ![Done](done.png) Rake tasks
 * ![TODO](pin-red.png) `corvid` bin should also load and expose (namespaced) plugins' tasks.
 * ![Done](done.png) Make `init:project` add corvid to `plugins.yml` and delete (most) special built-in logic.
