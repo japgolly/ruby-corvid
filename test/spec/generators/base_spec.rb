@@ -3,8 +3,6 @@ require_relative '../../spec_helper'
 require 'corvid/generators/base'
 
 describe Corvid::Generator::Base do
-  UnsatisfiedRequirementsError= Corvid::RequirementValidator::UnsatisfiedRequirementsError
-
   add_generator_lets
 
   def source_root; $corvid_global_thor_source_root; end
@@ -128,9 +126,9 @@ describe Corvid::Generator::Base do
       subject.should_receive(:new_requirement_validator).once.and_return(rv)
       rv.stub :add
       rv.should_receive(:add).with('x')
-      rv.should_receive(:validate!).once.and_raise(UnsatisfiedRequirementsError)
+      rv.should_receive(:validate!).once.and_raise(Corvid::RequirementValidator::UnsatisfiedRequirementsError)
       subject.should_not_receive :add_feature
-      expect{ subject.send :install_feature, 'a', 'b' }.to raise_error UnsatisfiedRequirementsError
+      expect{ subject.send :install_feature, 'a', 'b' }.to raise_error Corvid::RequirementValidator::UnsatisfiedRequirementsError
     }
 
     class FakeFeatureInstaller
@@ -149,9 +147,9 @@ describe Corvid::Generator::Base do
       subject.should_receive(:new_requirement_validator).once.and_return(rv)
       rv.stub :add
       rv.should_receive(:add).once.with('y')
-      rv.should_receive(:validate!).once.and_raise(UnsatisfiedRequirementsError)
+      rv.should_receive(:validate!).once.and_raise(Corvid::RequirementValidator::UnsatisfiedRequirementsError)
       subject.should_not_receive :add_feature
-      expect{ subject.send :install_feature, 'a', 'b' }.to raise_error UnsatisfiedRequirementsError
+      expect{ subject.send :install_feature, 'a', 'b' }.to raise_error Corvid::RequirementValidator::UnsatisfiedRequirementsError
     }
   end
 

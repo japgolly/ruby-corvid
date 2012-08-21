@@ -3,8 +3,6 @@ require_relative '../spec_helper'
 require 'corvid/requirement_validator'
 
 describe Corvid::RequirementValidator do
-  UnsatisfiedRequirementsError= Corvid::RequirementValidator::UnsatisfiedRequirementsError
-
   describe '#add' do
     def test(arg, result)
       subject.add arg
@@ -135,7 +133,7 @@ describe Corvid::RequirementValidator do
       }
       it("#validate returns false"){ subject.validate.should be_false }
       it("#errors returns an array of unsatisfied requirements and error messages"){ subject.errors.size.should == 2 }
-      it("#validate! raises an UnsatisfiedRequirementsError"){ expect{ subject.validate! }.to raise_error UnsatisfiedRequirementsError }
+      it("#validate! raises an Corvid::RequirementValidator::UnsatisfiedRequirementsError"){ expect{ subject.validate! }.to raise_error Corvid::RequirementValidator::UnsatisfiedRequirementsError }
     end
   end
 end
