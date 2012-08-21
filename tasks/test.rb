@@ -8,6 +8,11 @@ namespace :test do
     end
   end
 
+  desc "Run fast tests."
+  task :fast do
+    run_specs :fast, 'test/spec', '--order random -f p -t ~slow'
+  end
+
   desc "Run tests: specifications."
   task :spec do
     run_specs :spec, 'test/spec', '--order random'

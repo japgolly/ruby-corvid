@@ -5,7 +5,7 @@ require 'corvid/generators/init/test_unit'
 require 'corvid/res_patch_manager'
 require 'helpers/fixture-upgrading'
 
-describe 'Feature Installation' do
+describe 'Feature Installation', :slow do
   include Fixtures::Upgrading
 
   run_all_in_empty_dir {

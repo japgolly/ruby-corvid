@@ -2,7 +2,7 @@
 require_relative '../../spec_helper'
 require 'corvid/test/resource_patch_tests'
 
-describe Corvid::ResourcePatchTests do
+describe Corvid::ResourcePatchTests, :slow do
   include Corvid::ResourcePatchTests
 
   run_each_in_empty_dir

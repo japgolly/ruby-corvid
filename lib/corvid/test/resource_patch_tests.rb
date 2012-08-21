@@ -32,7 +32,7 @@ module Corvid
         $include_resource_patch_tests_ver1_test_block= ver1_test_block
 
         class_eval <<-EOB
-          describe "Resource Patches" do
+          describe "Resource Patches", slow: true do
             run_each_in_empty_dir
 
             # Test that we can explode n->1 without errors being raised.
@@ -80,7 +80,7 @@ module Corvid
                }.compact
         unless tests.empty?
           class_eval <<-EOB
-            describe 'Feature Installers: Update vs Install' do
+            describe 'Feature Installers: Update vs Install', slow: true do
               run_each_in_empty_dir
               #{tests * "\n"}
               after(:all){

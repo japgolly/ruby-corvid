@@ -105,7 +105,7 @@ describe Corvid::Generator::Update do
 
   #---------------------------------------------------------------------------------------------------------------------
 
-  describe 'Real Updating With Sample Resources' do
+  describe 'Real Updating With Sample Resources', :slow do
     include Fixtures::Upgrading
 
     run_all_in_empty_dir {
