@@ -36,64 +36,26 @@ Non-Functional / Under-The-Hood
 * Check transient dependencies. Like do corvid apps really need Thor on _their_ runtime dep list?
 * Separate client and core stuff in corvid dir stucture. `guard.rb` and `plugin.rb` shouldn't be beside each other.
 
-Plugins: The Plan
------------------
-#### New
-* ![Done](done.png) Features should be able to contribute extensions.
-  * ![Done](done.png) Create extension points.
-  * ![Done](done.png) Create feature manager.
-* ![Done](done.png) Create a corvid `plugin` feature
-  * ![Done](done.png) Creates new `resources/latest` dir
-  * ![Done](done.png) Adds `res` rake tasks
-  * ![Done](done.png) Adds rspec feature
-  * ![Done](done.png) Adds res-patch validity test
-* ![Done](done.png) Plugin installation
-  * ![Done](done.png) Add ability to install plugins.
-  * ![Done](done.png) Add name and require-path to `plugins.yml`
-  * ![TODO](pin-red.png) Install features on plugin installation.
-* ![Done](done.png) Create a `new:plugin NAME` task
-  * ![Done](done.png) ensures plugin feature installed
-  * ![Done](done.png) creates `lib/corvid/NAME_plugin.rb` which
-  * ![Done](done.png) creates `test/spec/corvid/NAME_plugin_spec.rb` which
-  * ![Done](done.png) creates `bin/NAME`
-  * ![TODO](pin-blue.png) creates `test/spec/corvid/NAME_bin_spec.rb` which
-* ![Done](done.png) `corvid new:plugin:feature NAME` which
-  * ![Done](done.png) finds an existing plugin
-    * ![Done](done.png) uses one if found
-    * ![TODO](pin-yellow.png) prompts if more than one
-  * ![Done](done.png) creates `resources/latest/corvid-features/NAME.rb`
-  * ![Done](done.png) creates `lib/corvid/NAME_feature.rb`
-  * ![TODO](pin-blue.png) creates `test/spec/corvid/NAME_features_spec.rb`
-  * ![Done](done.png) adds feature to the plugin manifest (`lib/corvid/????_plugin.rb`)
-* ![Done](done.png) Create a plugin bin/CLI delegate
-  * ![Done](done.png) `<plugin> install`
-  * ![Done](done.png) `<plugin> update`
+Plugins
+-------
+### Must
+* Plugins must add themselves to Gemfile.
+* Don't load features for plugins that aren't installed.
+* `corvid` bin should also load and expose (namespaced) plugins' tasks.
+* Provide ext points
+  * test bootstraps
+  * test helpers
+  * `Gemfile`
+  * `Guardfile`
+  * code coverage settings
 
-#### Modify
-* Feature installation
-  * ![Done](done.png) Check that requirements are met.
-  * ![TODO](pin-red.png) Use plugin resources.
-* ![Done](done.png) Feature updating
-  * ![Done](done.png) Update plugins' features.
-  * ![Done](done.png) Check requirements already met for latest version of all installed plugin features.
-* Existing state changes
-  * ![Done](done.png) `plugins.yml` contains: `plugin -> :require -> string`
-  * ![Done](done.png) `version.yml` update to structure: `plugin -> version` and rename to `versions.yml`
-  * ![Done](done.png) `features.yml` and feature names: update to `<plugin>:<name>`
-  * ![Done](done.png) `corvid-features/*` to specify dependencies on feature and/or res versions.
-* ![Done](done.png) Provide ext points
-  * ![TODO](pin-red.png) test bootstraps
-  * ![TODO](pin-red.png) test helpers
-  * ![TODO](pin-red.png) `Gemfile`
-  * ![TODO](pin-red.png) `Guardfile`
-  * ![TODO](pin-red.png) code coverage settings
-  * ![Done](done.png) Rake tasks
-* ![TODO](pin-red.png) `corvid` bin should also load and expose (namespaced) plugins' tasks.
-* ![Done](done.png) Make `init:project` add corvid to `plugins.yml` and delete (most) special built-in logic.
-  Should only load built-in if no `plugins.yml` found.
-* ![TODO](pin-red.png) Don't load feature for plugins that aren't installed.
-
-#### Other
+### Should
 * Doco on how plugins work, how to write one.
-* Test Corvid and a plugin both modifying the same file.
 * Test `template/template2` in context of install/update.
+* Add visible to Feature and have corvid create install tasks on-the-fly when plugin installed and features not.
+
+### Could
+* Test Corvid and a plugin both modifying the same file.
+* Make corvid:init work via install_plugin?
+* `new:plugin NAME` task should create `test/spec/corvid/NAME_bin_spec.rb` which
+* `corvid new:feature NAME` should prompts if more than one existing plugin found
