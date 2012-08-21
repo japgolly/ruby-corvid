@@ -4,6 +4,7 @@ namespace :test do
     RSpec::Core::RakeTask.new(:"test:#{task}") do |t|
       t.rspec_path= "bin/rspec"
       t.pattern= "#{dir}/{,*/,**/}*_spec.rb"
+      t.verbose= false
       t.rspec_opts= args if args
     end
   end
