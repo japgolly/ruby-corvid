@@ -185,18 +185,20 @@ describe Corvid::Generator::Base do
     }
 
     it("should update the plugins file when plugin not installed yet"){
-      p1= stub name: 'a', requirements: nil
+      p1= stub name: 'a', requirements: nil, auto_install_features: []
       pr.should_receive(:instance_for).with('a').once.and_return(p1)
       pr.should_receive(:read_client_plugins).at_least(:once).and_return(%w[b])
       subject.should_receive(:add_plugin).once.with(p1)
+      subject.should_not_receive(:install_feature)
       subject.send :install_plugin, 'a'
     }
 
     it("should update the plugins file when nothing installed yet"){
-      p1= stub name: 'a', requirements: nil
+      p1= stub name: 'a', requirements: nil, auto_install_features: []
       pr.should_receive(:instance_for).with('a').once.and_return(p1)
       pr.should_receive(:read_client_plugins).at_least(:once).and_return(nil)
       subject.should_receive(:add_plugin).once.with(p1)
+      subject.should_not_receive(:install_feature)
       subject.send :install_plugin, 'a'
     }
 
@@ -208,6 +210,17 @@ describe Corvid::Generator::Base do
       mock_client_state %w[p2], %w[p2:a], {'p2'=>1}
       subject.should_not_receive :add_plugin
       expect{ subject.send :install_plugin, 'a' }.to raise_error /[Rr]equire.+391/
+    }
+
+    it("should auto-install specified features"){
+      p1= stub name: 'a', requirements: nil, auto_install_features: %w[a b]
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      pr.should_receive(:read_client_plugins).at_least(:once).and_return(nil)
+      subject.should_receive(:add_plugin).once.with(p1)
+      subject.stub(:install_feature)
+      subject.should_receive(:install_feature).once.with(p1,'a')
+      subject.should_receive(:install_feature).once.with(p1,'b')
+      subject.send :install_plugin, 'a'
     }
   end
 end

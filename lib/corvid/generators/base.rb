@@ -321,6 +321,12 @@ module Corvid
 
           # Install plugin
           add_plugin plugin
+
+          # Auto-install features
+          features= plugin.auto_install_features || []
+          features.each {|feature_name|
+            install_feature plugin, feature_name
+          }
         end
 
         true
@@ -381,7 +387,7 @@ module Corvid
 
         # Install feature
         # TODO remember that plugins can call install_feature 'corvid:test_unit' & install feature of a diff plugin
-        with_resources(plugin, ver || :latest) {|ver|
+        with_resources(plugin, ver || :latest) {|actual_ver|
           fi= feature_installer!(feature_name)
 
           # Validate feature requirements
@@ -393,7 +399,8 @@ module Corvid
           # Install
           fi.install
           add_feature feature_id
-          yield ver if block_given?
+          add_version plugin, actual_ver unless ver == actual_ver
+          yield actual_ver if block_given?
           run_bundle() if options[:run_bundle]
         }
       end

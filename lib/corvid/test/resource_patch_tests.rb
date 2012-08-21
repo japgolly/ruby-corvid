@@ -133,7 +133,9 @@ module Corvid
       Dir.chdir 'upgrade' do
         quiet_generator(TestInstaller).install plugin, feature_name, starting_version
         g= quiet_generator(Corvid::Generator::Update)
-        g.send :upgrade!, plugin, starting_version, g.rpm_for(plugin).latest_version, [feature_name]
+        rpm= g.rpm_for(plugin)
+        rpm.patch_exe += ' --quiet'
+        g.send :upgrade!, plugin, starting_version, rpm.latest_version, [feature_name]
       end
 
       # Compare directories
@@ -141,6 +143,7 @@ module Corvid
       files.should equal_array get_files('install')
       get_dirs('upgrade').should equal_array get_dirs('install')
       files.each do |f|
+        next if f == '.corvid/versions.yml'
         "upgrade/#{f}".should be_file_with_contents File.read("install/#{f}")
       end
     end

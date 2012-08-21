@@ -33,5 +33,10 @@ module Corvid
     #     array of the feature's require-path, and class name, respectively.
     attr_declarative feature_manifest: {}
 
+    # @!attribute [rw] auto_install_features
+    #   A list of features to install automatically when the plugin itself is installed.
+    #   @return [Array<String>] An array of feature names. Do not include the plugin prefix.
+    attr_declarative auto_install_features: []
+
   end
 end

@@ -209,6 +209,7 @@ end
 
 module DynamicFixtures
   def_fixture :bare do
+    require 'corvid/res_patch_manager'
     Dir.mkdir '.corvid'
     add_plugin! BUILTIN_PLUGIN.new
     add_feature! 'corvid:corvid'
@@ -226,6 +227,11 @@ module DynamicFixtures
     patch_corvid_deps
     invoke_sh! 'bundle install --quiet'
     'Gemfile.lock'.should exist_as_file
+  end
+
+  def_fixture :new_hot_feature do
+    copy_dynamic_fixture :new_cool_plugin
+    invoke_corvid! 'new:feature hot'
   end
 end
 
