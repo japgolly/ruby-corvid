@@ -61,7 +61,7 @@ module Corvid
       #   variable names to values. If anything else then (String, array of symbols) it is assumed to be one or more
       #   variable names with instance methods that can be called to provide the value.
       # @option args [Fixnum] :perms (nil) If provided, the new file will be chmod'd with the given permissions here.
-      # @return (see Thor::Actions#template)
+      # @return [void]
       def template2(file, args)
         src= file
         target= file.sub /\.tt$/, ''
@@ -77,6 +77,104 @@ module Corvid
 
         template src, target
         chmod target, perms if perms
+      end
+
+      # Adds a new dependency to `Gemfile`.
+      #
+      # If the dependency is already declared, even if the parameters differ, then it will be left as is without making
+      # changes.
+      #
+      # @example
+      #   add_dependency_to_gemfile 'rake', '>= 0.9', require: false
+      #
+      # @param [String|Array] args The args that should be passed to the `gem` DSL command in the `Gemfile`.
+      # @return [void]
+      # @see #add_dependencies_to_gemfile
+      def add_dependency_to_gemfile(*args)
+        add_dependencies_to_gemfile args # Note this is deliberately not *args
+      end
+
+      # Adds new dependencies to `Gemfile`.
+      #
+      # If a dependency is already declared, even if the parameters differ, then it will be left as is without making
+      # changes.
+      #
+      # @example
+      #   add_dependencies_to_gemfile 'minitest', 'guard-minitest'
+      #   add_dependencies_to_gemfile ['rake', '>= 0.9', require: false], 'yard'
+      #
+      # @param [Array<String|Array>] args An array of args that should be passed to the `gem` DSL command in the
+      #   `Gemfile`.
+      # @return [void]
+      # @see #add_dependency_to_gemfile
+      def add_dependencies_to_gemfile(*args)
+        gemfile= 'Gemfile'
+        content= File.read(gemfile)
+
+        ge= GemfileEvaluator.new.eval_string(content)
+        args.each do |name, *dep_args|
+          name= name.to_s if name.is_a?(Symbol)
+          raise "Invalid dependency name: #{name.inspect}" unless name.is_a?(String)
+          unless ge.gems.has_key? name
+            line= "gem #{name.inspect}"
+            unless dep_args.empty?
+              o= dep_args.last.is_a?(Hash) ? dep_args.pop : nil
+              line+= dep_args.map{|d| ", #{d.inspect}"}.join
+              line+= o.map{|k,v| ", #{k}: #{v.inspect}"}.join if o
+            end
+
+            content.sub! /\n?\z/, "\n"
+            content+= line
+          end
+        end
+
+        create_file gemfile, content, force: true
+      end
+
+      private
+
+      # Used to parse Gemfile content and provide list of declared gems.
+      #
+      # @!visibility private
+      # @see #add_dependencies_to_gemfile
+      class GemfileEvaluator
+        attr_reader :gems
+
+        def initialize
+          @gems= {}
+        end
+
+        def eval_string(content)
+          instance_eval content
+          self
+        end
+
+        def group(group_name, *args)
+          return unless block_given?
+          prev_group_name= @group_name
+          begin
+            @group_name= group_name
+            yield
+          ensure
+            @group_name= prev_group_name
+          end
+          nil
+        end
+
+        def gem(gem_name, *args)
+          if @group_name
+            args= args.dup
+            args<< {} unless args.last.is_a?(Hash)
+            args.last[:group] ||= @group_name
+          end
+          @gems[gem_name]= args
+          nil
+        end
+
+        def method_missing(method, *args, &block)
+          instance_eval &block if block
+          nil
+        end
       end
 
     end
