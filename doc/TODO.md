@@ -53,6 +53,7 @@ Plugins
 * Doco on how plugins work, how to write one.
 * Test `template/template2` in context of install/update.
 * Add visible to Feature and have corvid create install tasks on-the-fly when plugin installed and features not.
+* Strip _plugin and _feature from new:xxx names
 
 ### Could
 * Test Corvid and a plugin both modifying the same file.
