@@ -216,17 +216,20 @@ module DynamicFixtures
     add_version! 'corvid', Corvid::ResPatchManager.new.latest_version
   end
 
+  def_fixture :bare_no_gemfile_lock, 'int_test' do
+    invoke_corvid! "init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec"
+    init_gemfile true, false
+  end
+
   def_fixture :new_cool_plugin do
     invoke_corvid! %(
       init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec
       init:plugin --no-#{RUN_BUNDLE}
       new:plugin cool
     )
-    'Gemfile.lock'.should_not exist_as_file
-    patch_corvid_gemfile
-    patch_corvid_deps
-    invoke_sh! 'bundle install --quiet'
-    'Gemfile.lock'.should exist_as_file
+    init_gemfile
+    gsub_file! /(add_dependency_to_gemfile.+)$/, "\\1, path: File.expand_path('../../..',__FILE__)",
+      'lib/new_cool_plugin/cool_plugin.rb'
   end
 
   def_fixture :new_hot_feature do

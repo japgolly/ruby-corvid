@@ -244,19 +244,21 @@ module Corvid
         t.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
       end
 
+      # TODO move to actions.rb
       # Unless the option to disable this specifies otherwise, asynchronously sets up `bundle install` to run in the
       # client's project after all generators have completed.
       #
       # @return [void]
       def run_bundle
-        if options[RUN_BUNDLE] and !$corvid_bundle_install_at_exit_installed
-          $corvid_bundle_install_at_exit_installed= true
-          at_exit {
-            ENV['BUNDLE_GEMFILE']= nil
-            ENV['RUBYOPT']= nil
-            run "bundle install"
-          }
-        end
+        return if $corvid_bundle_install_at_exit_installed
+        return if options[RUN_BUNDLE] == false
+
+        $corvid_bundle_install_at_exit_installed= true
+        at_exit {
+          ENV['BUNDLE_GEMFILE']= nil
+          ENV['RUBYOPT']= nil
+          run "bundle install"
+        }
       end
 
       # Adds feature ids to the client's {Constants::FEATURES_FILE FEATURES_FILE}.
@@ -323,6 +325,9 @@ module Corvid
 
           # Install plugin
           add_plugin plugin
+
+          # Run post-install hook
+          plugin.run_callback :after_installed, context: self
 
           # Auto-install features
           features= plugin.auto_install_features || []

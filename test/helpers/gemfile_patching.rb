@@ -52,4 +52,13 @@ module GemfilePatching
     raise "Something went wrong: exit status = #{$?.exitstatus}" unless $?.success?
   end
 
+  def init_gemfile(confirm_does_exist_yet=true, run_bundle=true)
+    'Gemfile.lock'.should_not exist_as_file if confirm_does_exist_yet
+    patch_corvid_gemfile
+    patch_corvid_deps
+    if run_bundle
+      invoke_sh! 'bundle install --quiet'
+      'Gemfile.lock'.should exist_as_file
+    end
+  end
 end

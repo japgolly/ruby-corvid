@@ -185,7 +185,7 @@ describe Corvid::Generator::Base do
     }
 
     it("should update the plugins file when plugin not installed yet"){
-      p1= stub name: 'a', requirements: nil, auto_install_features: []
+      p1= stub name: 'a', requirements: nil, auto_install_features: [], run_callback: true
       pr.should_receive(:instance_for).with('a').once.and_return(p1)
       pr.should_receive(:read_client_plugins).at_least(:once).and_return(%w[b])
       subject.should_receive(:add_plugin).once.with(p1)
@@ -194,11 +194,21 @@ describe Corvid::Generator::Base do
     }
 
     it("should update the plugins file when nothing installed yet"){
+      p1= stub name: 'a', requirements: nil, auto_install_features: [], run_callback: true
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      pr.should_receive(:read_client_plugins).at_least(:once).and_return(nil)
+      subject.should_receive(:add_plugin).once.with(p1)
+      subject.should_not_receive(:install_feature)
+      subject.send :install_plugin, 'a'
+    }
+
+    it("should run the after_installed callback"){
       p1= stub name: 'a', requirements: nil, auto_install_features: []
       pr.should_receive(:instance_for).with('a').once.and_return(p1)
       pr.should_receive(:read_client_plugins).at_least(:once).and_return(nil)
       subject.should_receive(:add_plugin).once.with(p1)
       subject.should_not_receive(:install_feature)
+      p1.should_receive(:run_callback).once.with(:after_installed, kind_of(Hash))
       subject.send :install_plugin, 'a'
     }
 
@@ -213,7 +223,7 @@ describe Corvid::Generator::Base do
     }
 
     it("should auto-install specified features"){
-      p1= stub name: 'a', requirements: nil, auto_install_features: %w[a b]
+      p1= stub name: 'a', requirements: nil, auto_install_features: %w[a b], run_callback: true
       pr.should_receive(:instance_for).with('a').once.and_return(p1)
       pr.should_receive(:read_client_plugins).at_least(:once).and_return(nil)
       subject.should_receive(:add_plugin).once.with(p1)

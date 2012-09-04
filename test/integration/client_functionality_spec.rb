@@ -14,11 +14,7 @@ describe 'Client Functionality provided by Corvid' do
 
   it("should install itself into new project"){
     invoke_corvid! "init --no-#{RUN_BUNDLE} --test-unit --test-spec"
-    'Gemfile.lock'.should_not exist_as_file
-    patch_corvid_gemfile
-    patch_corvid_deps
-    invoke_sh! 'bundle install --quiet'
-    'Gemfile.lock'.should exist_as_file
+    init_gemfile
     File.write 'lib/hehe.rb', 'class Hehe; def num; 123 end end'
   }
 

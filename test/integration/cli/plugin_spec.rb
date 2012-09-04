@@ -8,6 +8,7 @@ describe Corvid::CLI::Plugin do
   run_all_in_empty_dir {
     copy_dynamic_fixture :new_cool_plugin
     Dir.mkdir 'ah'
+    File.write 'ah/Gemfile', ''
   }
   around(:each){|ex|
     Dir.chdir('ah'){ ex.run }
@@ -29,7 +30,7 @@ describe Corvid::CLI::Plugin do
   }
 
   it("can install itself"){
-    invoke_plugin_cli! 'install'
+    invoke_plugin_cli! "install", "--no-#{RUN_BUNDLE}"
     assert_plugins_installed({'cool'=>{path: 'new_cool_plugin/cool_plugin', class: 'NewCoolPlugin::CoolPlugin'}})
   }
 

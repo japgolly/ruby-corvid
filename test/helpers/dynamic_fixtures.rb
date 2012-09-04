@@ -14,10 +14,15 @@ module DynamicFixtures
       raise "Undefined dynamic fixture: #{name}"
     when String
       return value
-    when Proc
+    when Hash
+      o= value
       dir= "#{dynamic_fixture_root}/#{name}"
       Dir.mkdir dir
-      Dir.chdir(dir){ instance_eval &value }
+      if subdir= o[:dir_name]
+        dir+= "/#{subdir}"
+        Dir.mkdir dir
+      end
+      Dir.chdir(dir){ instance_eval &o[:block] }
       return $dynamic_fixtures[name]= dir
     else
       raise "Unexpected value for #{name}: #{value.inspect}"
@@ -60,11 +65,11 @@ module DynamicFixtures
 
   module ClassMethods
 
-    def def_fixture(name, &block)
+    def def_fixture(name, dir_name=nil, &block)
       raise "Block not provided." unless block
       name= DynamicFixtures.normalise_dynfix_name(name)
       STDERR.warn "Dyanmic fixture being redefined: #{name}." if $dynamic_fixtures[name]
-      $dynamic_fixtures[name]= block
+      $dynamic_fixtures[name]= {dir_name: dir_name, block: block}
       self
     end
 

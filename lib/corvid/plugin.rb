@@ -1,7 +1,10 @@
 require 'golly-utils/attr_declarative'
+require 'golly-utils/callbacks'
 
 module Corvid
   class Plugin
+    include GollyUtils::Callbacks
+
     # Plugins can be extensions but are not by default.
     # include Extension
 
@@ -32,6 +35,12 @@ module Corvid
     #   @return [Hash<String,Array<String>>] A hash with keys being feature names, and the values being a 2-element
     #     array of the feature's require-path, and class name, respectively.
     attr_declarative feature_manifest: {}
+
+    # TODO Find a way to get callbacks into Yard.
+    # Callback that is run after the plugin is installed.
+    #
+    # Generator actions are available and can be invoked as if the callback function were a generator method.
+    define_callback :after_installed
 
     # @!attribute [rw] auto_install_features
     #   A list of features to install automatically when the plugin itself is installed.

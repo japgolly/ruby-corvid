@@ -11,7 +11,11 @@ describe 'Plugin Development Feature' do
   it("Author: Create res-patch #1"){
     'resources/00001.patch'.should_not exist_as_file
     File.write 'resources/latest/symphony_x.txt', 'Iconoclast, 2011, TN#7, When All Is Lost <-- awesome song!'
-    File.write 'resources/latest/corvid-features/hot.rb', "install{ copy_file 'symphony_x.txt' }"
+    File.write 'resources/latest/corvid-features/hot.rb', <<-EOB
+      install{
+        copy_file 'symphony_x.txt'
+      }
+    EOB
 
     invoke_rake! 'res:new'
     'resources/00001.patch'.should exist_as_file
@@ -20,18 +24,28 @@ describe 'Plugin Development Feature' do
 
   it("User: install plugin and feature"){
     gsub_file! /(?<=auto_install_features ).+$/, '%w[hot]', 'lib/new_cool_plugin/cool_plugin.rb'
-    Dir.mkdir '_'
-    Dir.chdir('_'){
-      copy_dynamic_fixture :bare
-      invoke_sh! "../bin/cool install"
+    Dir.mkdir 'clients'
+    Dir.mkdir 'clients/_'
+    Dir.chdir('clients/_'){
+      copy_dynamic_fixture :bare_no_gemfile_lock
+      invoke_sh! "../../bin/cool install"
+
+      # Check plugin installed
       assert_plugins_installed %w[corvid cool]
+      'Gemfile'.should be_file_with_content /new_cool_plugin/
+      'Gemfile.lock'.should be_file_with_content /new_cool_plugin/
+
+      # Check feature auto-installed
       assert_features_installed %w[corvid:corvid cool:hot]
       'symphony_x.txt'.should be_file_with_contents 'Iconoclast, 2011, TN#7, When All Is Lost <-- awesome song!'
-
-      # TODO - Manually adding plugin to Gemfile - TODO delme"
-#      gsub_file! /\z/, "\ngem 'cool_plugin', path: '..'", 'Gemfile'
     }
   }
+
+  def with_client_copy(id='def')
+    dir= "clients/#{id}"
+    FileUtils.cp_r "clients/_", dir unless Dir.exists? dir
+    Dir.chdir(dir){ yield }
+  end
 
   it("Author: Create res-patch #2"){
     File.write 'resources/latest/symphony_x.txt', 'update bru'
@@ -39,18 +53,16 @@ describe 'Plugin Development Feature' do
     'resources/00002.patch'.should exist_as_file
   }
 
-  xit("User: Update feature via corvid update"){
-    FileUtils.cp_r '_', '_1'
-    Dir.chdir('_1'){
+  it("User: Update feature via corvid update"){
+    with_client_copy(1) {
       invoke_corvid! 'update:all'
       'symphony_x.txt'.should be_file_with_contents 'update bru'
     }
   }
 
   it("User: Update feature via plugin update"){
-    FileUtils.cp_r '_', '_2'
-    Dir.chdir('_2'){
-      invoke_sh! '../bin/cool update'
+    with_client_copy(2) {
+      invoke_sh! '../../bin/cool update'
       'symphony_x.txt'.should be_file_with_contents 'update bru'
     }
   }
