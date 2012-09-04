@@ -61,6 +61,9 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         say "Upgrading #{plugin.name} from v#{from} to v#{to}..."
         upgrade! plugin, from, to, features
       end
+
+      # Done with this plugin
+      say ""
     end
   end
 
