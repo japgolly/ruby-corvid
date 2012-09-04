@@ -110,7 +110,7 @@ module Corvid
             add_version! 'corvid', ver
           end
           with_resources(plugin, ver) {
-            feature_installer!(feature_name).install
+            with_action_context feature_installer!(feature_name), &:install
             add_feature feature_id
             add_version plugin, ver
           }
@@ -121,6 +121,7 @@ module Corvid
     # @!visibility private
     def test_feature_updates_match_install(plugin_or_name, feature_name, starting_version=1)
       plugin= plugin_or_name.is_a?(Plugin) ? plugin_or_name : ::Corvid::PluginRegistry.instance_for(plugin_or_name)
+      Dir.stub pwd: '/tmp/pwd_stub'
 
       # Install latest
       Dir.mkdir 'install'

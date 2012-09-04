@@ -123,7 +123,9 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
             installer.instance_eval "def copy_file(*) end"
 
             # Call update() in the installer
-            installer.update ver
+            with_action_context(installer) {
+              installer.update ver
+            }
 
           end
         end
@@ -159,6 +161,9 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     end
     def copy_file_unless_exists(src, tgt=nil, options={})
       copy_file src, tgt, options
+    end
+    def template(*args)
+      # Ignore
     end
 
     def method_missing(method,*args)

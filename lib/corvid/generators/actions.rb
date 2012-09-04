@@ -56,18 +56,23 @@ module Corvid
 
       # Easier way of calling Thor's `template` method.
       #
+      # @note Ensure that you call {#with_action_context} first if methods used to resolve template variables are in a
+      #   different context.
+      #
       # @param [String] file The filename of the template. Normally ends in `.tt`.
       # @param [Hash,String,Symbol,Array<String|Symbol>] args If a Hash is provided then it is a map of template
       #   variable names to values. If anything else then (String, array of symbols) it is assumed to be one or more
       #   variable names with instance methods that can be called to provide the value.
       # @option args [Fixnum] :perms (nil) If provided, the new file will be chmod'd with the given permissions here.
       # @return [void]
+      # @see #with_action_context
       def template2(file, args)
         src= file
         target= file.sub /\.tt$/, ''
+
         unless args.is_a?(Hash)
           names= [args].flatten
-          args= names.inject({}){|h,name| h[name]= send name.to_sym; h}
+          args= names.inject({}){|h,name| h[name]= action_context.send name.to_sym; h}
         end
 
         perms= args.delete :perms
@@ -77,6 +82,72 @@ module Corvid
 
         template src, target
         chmod target, perms if perms
+      end
+
+      # Monkey patch of Thor's `template` method.
+      #
+      # Changed to use the {#action_context} binding rather than the generator binding.
+      #
+      # @note Ensure that you call {#with_action_context} first if methods used to resolve template variables are in a
+      #   different context.
+      #
+      # @see #with_action_context
+      def template(source, *args, &block)
+        config = args.last.is_a?(Hash) ? args.pop : {}
+        destination = args.first || source.sub(/\.tt$/, '')
+
+        source  = File.expand_path(find_in_source_paths(source.to_s))
+        #context = instance_eval('binding')
+        context = action_context.instance_eval('binding') # <---- monkey patch
+
+        create_file destination, nil, config do
+          content = ERB.new(::File.binread(source), nil, '-', '@output_buffer').result(context)
+          content = block.call(content) if block
+          content
+        end
+      end
+
+      # Uses a provided action context for the duration of the block.
+      #
+      # What is an action context? It is an object that will be used by functions in this module that need to run
+      # `instance_eval` to call expected methods. The reason this is required in the context of Corvid specifically, is
+      # that feature installers are created as new objects that delegate to generators, meaning that methods locally
+      # defined in feature installers are not available to the generator itself. This is desired for isolation and
+      # safety yet causes {#template} and {#template2} to fail when attempting to resolve template variables. Therefore
+      # by providing the feature installer as the action context, said methods will resolve required variables through
+      # the action context (i.e. specific feature installer) rather than the generator.
+      #
+      # @example Feature installer
+      #   install {
+      #     template2 '%name%.rb.tt', :name
+      #   }
+      #
+      #   def name  # <-- This method will not be available from the generator.
+      #     'blah'
+      #   end
+      #
+      # @example Using the action context
+      #   feature_installer.install                         # Fails because name() isn't available from generator.
+      #   with_action_context feature_installer, &:install  # Passes because name() is available from action ctx.
+      #
+      # @param [Object] action_ctx The object to use as the action context. Normally a feature installer.
+      # @yieldparam [Object] action_ctx The provided action context.
+      # @return [Object] The result of the given block.
+      def with_action_context(action_ctx)
+        old_action_ctx= @action_ctx
+        begin
+          @action_ctx= action_ctx
+          return yield action_ctx
+        ensure
+          @action_ctx= old_action_ctx
+        end
+      end
+
+      # Returns the current action context, or `self` if it hasn't been set.
+      #
+      # @return [Object|self] Never `nil`.
+      def action_context
+        @action_ctx || self
       end
 
       # Adds a new dependency to `Gemfile`.

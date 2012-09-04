@@ -10,7 +10,7 @@ class Corvid::Generator::InitCorvid < ::Corvid::Generator::Base
   declare_option_to_run_bundle(self)
   def init
     with_latest_resources(builtin_plugin) {|ver|
-      feature_installer!('corvid').install
+      with_action_context feature_installer!('corvid'), &:install
       write_client_versions builtin_plugin.name => ver
       add_plugin            builtin_plugin
       add_feature           feature_id_for(builtin_plugin.name,'corvid')

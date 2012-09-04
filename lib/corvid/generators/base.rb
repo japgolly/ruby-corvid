@@ -397,7 +397,7 @@ module Corvid
           rv.validate!
 
           # Install
-          fi.install
+          with_action_context fi, &:install
           add_feature feature_id
           add_version plugin, actual_ver unless ver == actual_ver
           yield actual_ver if block_given?
