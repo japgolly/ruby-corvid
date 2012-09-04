@@ -15,7 +15,7 @@ class Corvid::Generator::NewFeature < ::Corvid::Generator::Base
 
       # Add to feature manifest
       if plugin_file= find_client_plugin
-        insert_into_file plugin_file, "    '#{feature_name}' => ['#{require_path}','::#{full_class_name}'],\n",
+        insert_into_file plugin_file, "      '#{feature_name}' => ['#{require_path}','::#{full_class_name}'],\n",
           after: /^\s*feature_manifest\s*\(.*?\n/
       end
     }
