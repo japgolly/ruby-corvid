@@ -59,27 +59,30 @@ module Corvid
       # @note Ensure that you call {#with_action_context} first if methods used to resolve template variables are in a
       #   different context.
       #
+      # @example
+      #   template2 'lib/%name%.rb.tt'
+      #   template2 'bin/%exec_name%.tt', perms: 0755
+      #
       # @param [String] file The filename of the template. Normally ends in `.tt`.
-      # @param [Hash,String,Symbol,Array<String|Symbol>] args If a Hash is provided then it is a map of template
-      #   variable names to values. If anything else then (String, array of symbols) it is assumed to be one or more
-      #   variable names with instance methods that can be called to provide the value.
-      # @option args [Fixnum] :perms (nil) If provided, the new file will be chmod'd with the given permissions here.
+      # @param [Hash] options
+      # @option options [Fixnum] :perms (nil) The desired permissions (in octal) of the target file.
       # @return [void]
       # @see #with_action_context
-      def template2(file, args)
+      def template2(file, options={})
         src= file
+
+        # Parse options
+        perms= options.delete :perms
+        raise "Unsupported options specified: #{options.inspect}" unless options.empty?
+
+        # Substitute tags in filename
         target= file.sub /\.tt$/, ''
-
-        unless args.is_a?(Hash)
-          names= [args].flatten
-          args= names.inject({}){|h,name| h[name]= action_context.send name.to_sym; h}
+        target.scan(/%.+?%/).uniq.each do |tag|
+          value= action_context.send tag[1..-2].to_sym
+          target.gsub! tag, value.to_s
         end
 
-        perms= args.delete :perms
-        args.each do |k,v|
-          target.gsub! "%#{k}%", v
-        end
-
+        # Create file
         template src, target
         chmod target, perms if perms
       end
@@ -119,7 +122,7 @@ module Corvid
       #
       # @example Feature installer
       #   install {
-      #     template2 '%name%.rb.tt', :name
+      #     template2 '%name%.rb.tt'
       #   }
       #
       #   def name  # <-- This method will not be available from the generator.

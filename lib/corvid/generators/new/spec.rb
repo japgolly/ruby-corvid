@@ -9,7 +9,7 @@ class Corvid::Generator::NewSpec < ::Corvid::Generator::Base
   def spec
     validate_requirements! 'corvid:test_spec'
     with_latest_resources(builtin_plugin) {
-      template2 'test/spec/%src%_spec.rb.tt', :src
+      template2 'test/spec/%src%_spec.rb.tt'
     }
   end
 

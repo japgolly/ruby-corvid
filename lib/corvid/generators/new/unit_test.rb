@@ -9,7 +9,7 @@ class Corvid::Generator::NewUnitTest < ::Corvid::Generator::Base
   def unit
     validate_requirements! 'corvid:test_unit'
     with_latest_resources(builtin_plugin) {
-      template2 'test/unit/%src%_test.rb.tt', :src
+      template2 'test/unit/%src%_test.rb.tt'
     }
   end
 

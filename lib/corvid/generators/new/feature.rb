@@ -3,18 +3,19 @@ require 'corvid/generators/base'
 class Corvid::Generator::NewFeature < ::Corvid::Generator::Base
   namespace 'new'
 
-  argument :feature_name, type: :string
+  # TODO
+  argument :feature_name2, type: :string
 
   desc 'feature', 'Generates a new plugin feature.'
   def feature
     validate_requirements! 'corvid:plugin'
     with_latest_resources(builtin_plugin) {
-      template2 'lib/corvid/%name%_feature.rb.tt', :name
-      template2 'resources/latest/corvid-features/%name%.rb.tt', :name
+      template2 'lib/%project_name%/%feature_name%_feature.rb.tt'
+      template2 'resources/latest/corvid-features/%feature_name%.rb.tt'
 
       # Add to feature manifest
       if plugin_file= find_client_plugin
-        insert_into_file plugin_file, "    '#{name}' => ['#{require_path}','::#{class_name}'],\n",
+        insert_into_file plugin_file, "    '#{feature_name}' => ['#{require_path}','::#{full_class_name}'],\n",
           after: /^\s*feature_manifest\s*\(.*?\n/
       end
     }
@@ -32,9 +33,10 @@ class Corvid::Generator::NewFeature < ::Corvid::Generator::Base
 
   # Template vars
   private
-  def name; feature_name.underscore.gsub(/^.*[\\\/]+|\.rb$/,'') end
-  def class_name; name.camelize + 'Feature' end
-  def require_path; "corvid/#{name}_feature" end
+  def feature_name; feature_name2.underscore.gsub(/^.*[\\\/]+|\.rb$/,'') end
+  def require_path; "#{project_name}/#{feature_name}_feature" end
+  def class_name; feature_name.camelize + 'Feature' end
+  def full_class_name; "#{project_module}::#{class_name}" end
   def since_ver
     @since_ver ||= (
       Corvid::ResPatchManager.new("resources").latest_version + 1

@@ -3,7 +3,7 @@ require_relative '../spec_helper'
 
 describe 'Client Functionality provided by Corvid' do
   include IntegrationTestDecoration
-  run_all_in_empty_dir
+  run_all_in_empty_dir 'int_test'
   before(:each){ clean }
 
   def clean
@@ -78,4 +78,5 @@ describe 'Client Functionality provided by Corvid' do
     invoke_sh! 'bin/rspec test/spec/hehe_spec.rb', 'coverage'=>'1'
     File.exist?('target/coverage/index.html').should == true
   }
+
 end

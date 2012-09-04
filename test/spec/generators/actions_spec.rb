@@ -11,6 +11,11 @@ describe Corvid::Generator::ActionExtentions do
     include Thor::Actions
     include Corvid::Generator::ActionExtentions
     desc '',''; def add_line; add_line_to_file 'file', 'this is the text' end
+
+    no_tasks{
+      def omg; "123" end
+      def evil; 666 end
+    }
   end
 
   #---------------------------------------------------------------------------------------------------------------------
@@ -126,6 +131,38 @@ describe Corvid::Generator::ActionExtentions do
       expect{
         quiet_generator(MockGen).add_dependency_to_gemfile "yard"
       }.to raise_error /Gemfile/
+    }
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
+  describe '#template2' do
+    let(:g) {
+      g= quiet_generator(MockGen)
+      g.stub :template
+      g.stub :chmod
+      g
+    }
+
+    it("removes .tt from end of filename"){
+      g.should_receive(:template).once.with('hehe.rb.tt','hehe.rb')
+      g.template2 'hehe.rb.tt'
+    }
+
+    it("doesn't remove .tt from middle of filename"){
+      g.should_receive(:template).once.with('hehe.tt.rb','hehe.tt.rb')
+      g.template2 'hehe.tt.rb'
+    }
+
+    it("substitutes tags in filename"){
+      g.should_receive(:template).once.with('%omg%/%evil%-%evil%.rb','123/666-666.rb')
+      g.template2 '%omg%/%evil%-%evil%.rb'
+    }
+
+    it("calls chmod when perms provided"){
+      g.should_receive(:template).once.with('hehe.rb','hehe.rb').ordered
+      g.should_receive(:chmod).once.with('hehe.rb',0123).ordered
+      g.template2 'hehe.rb', perms: 0123
     }
   end
 end

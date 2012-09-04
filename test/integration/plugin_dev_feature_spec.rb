@@ -19,7 +19,7 @@ describe 'Plugin Development Feature' do
   }
 
   it("User: install plugin and feature"){
-    gsub_file! /(?<=auto_install_features ).+$/, '%w[hot]', 'lib/corvid/cool_plugin.rb'
+    gsub_file! /(?<=auto_install_features ).+$/, '%w[hot]', 'lib/new_cool_plugin/cool_plugin.rb'
     Dir.mkdir '_'
     Dir.chdir('_'){
       copy_dynamic_fixture :bare

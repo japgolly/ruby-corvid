@@ -6,6 +6,7 @@ require 'corvid/naming_policy'
 require 'corvid/requirement_validator'
 require 'corvid/res_patch_manager'
 require 'corvid/generators/actions'
+require 'corvid/generators/template_vars'
 require 'corvid/generators/thor_monkey_patches'
 
 require 'active_support/core_ext/string/inflections'
@@ -28,6 +29,7 @@ module Corvid
     class Base < Thor
       include Thor::Actions
       include ActionExtentions
+      include TemplateVars
       include ::Corvid::NamingPolicy
 
       # Name of the option that users can use on the CLI to opt-out of Bundler being run at the end of certain tasks.

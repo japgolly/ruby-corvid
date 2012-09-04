@@ -30,7 +30,7 @@ describe Corvid::CLI::Plugin do
 
   it("can install itself"){
     invoke_plugin_cli! 'install'
-    assert_plugins_installed({'cool'=>{path: 'corvid/cool_plugin', class: 'CoolPlugin'}})
+    assert_plugins_installed({'cool'=>{path: 'new_cool_plugin/cool_plugin', class: 'NewCoolPlugin::CoolPlugin'}})
   }
 
   it("when installed, provides tasks: update"){

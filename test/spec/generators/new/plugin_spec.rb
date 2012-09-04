@@ -6,31 +6,32 @@ describe Corvid::Generator::NewPlugin do
   describe 'new:plugin' do
 
     context "when corvid:plugin is installed" do
-      run_all_in_empty_dir {
+      run_all_in_empty_dir("my_thing") {
         copy_dynamic_fixture :bare
         add_feature! 'corvid:plugin'
         run_generator described_class, 'plugin happy'
       }
 
       it("should create a plugin"){
-        'lib/corvid/happy_plugin.rb'.should be_file_with_contents(/class HappyPlugin < Corvid::Plugin/)
+        'lib/my_thing/happy_plugin.rb'.should be_file_with_contents(%r|module MyThing|)
+          .and(%r|class HappyPlugin < Corvid::Plugin|)
           .and(%r|name 'happy'|)
-          .and(%r|require_path 'corvid/happy_plugin'|)
+          .and(%r|require_path 'my_thing/happy_plugin'|)
           .and(%r|feature_manifest|)
           .and(%r|resources_path|)
       }
 
       it("should create a plugin test"){
-        'test/spec/happy_plugin_spec.rb'.should be_file_with_contents(%r|require 'corvid/happy_plugin'|)
-          .and(%r|describe HappyPlugin do|)
+        'test/spec/happy_plugin_spec.rb'.should be_file_with_contents(%r|require 'my_thing/happy_plugin'|)
+          .and(%r|describe MyThing::HappyPlugin do|)
           .and(%r|include Corvid::ResourcePatchTests|)
           .and(%r|include_resource_patch_tests|)
           .and(%r|include_feature_update_install_tests|)
       }
 
       it("should create a CLI"){
-        'bin/happy'.should be_file_with_contents(%r|'corvid/happy_plugin'|)
-          .and(%r|HappyPlugin|)
+        'bin/happy'.should be_file_with_contents(%r|'my_thing/happy_plugin'|)
+          .and(%r|MyThing::HappyPlugin|)
           .and(%r|require 'corvid/cli/plugin'|)
         File.executable?('bin/happy').should be_true
       }

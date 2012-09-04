@@ -3,21 +3,23 @@ require 'corvid/generators/base'
 class Corvid::Generator::NewPlugin < ::Corvid::Generator::Base
   namespace 'new'
 
-  argument :plugin_name, type: :string
+  # TODO
+  argument :plugin_name2, type: :string
 
   desc 'plugin', 'Creates a new Corvid plugin.'
   def plugin
     validate_requirements! 'corvid:plugin'
     with_latest_resources(builtin_plugin) {
-      template2 'lib/corvid/%name%_plugin.rb.tt', :name
-      template2 'test/spec/%name%_plugin_spec.rb.tt', :name
-      template2 'bin/%plugin_name%.tt', plugin_name: name, perms: 0755
+      template2 'lib/%project_name%/%plugin_name%_plugin.rb.tt'
+      template2 'test/spec/%plugin_name%_plugin_spec.rb.tt'
+      template2 'bin/%plugin_name%.tt', perms: 0755
     }
   end
 
   # Template vars
   private
-  def name; plugin_name.underscore.gsub(/^.*[\\\/]+|\.rb$/,'') end
-  def class_name; name.camelize + 'Plugin' end
-  def require_path; "corvid/#{name}_plugin" end
+  def plugin_name; plugin_name2.underscore.gsub(/^.*[\\\/]+|\.rb$/,'') end
+  def require_path; "#{project_name}/#{plugin_name}_plugin" end
+  def class_name; plugin_name.camelize + 'Plugin' end
+  def full_class_name; "#{project_module}::#{class_name}" end
 end
