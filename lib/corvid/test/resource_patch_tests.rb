@@ -71,7 +71,7 @@ module Corvid
                  unless f.since_ver == latest_resource_version
                    %[
                      it("Testing feature: #{feature_name}"){
-                       Corvid::PluginRegistry.use_plugin $include_feature_update_install_tests_plugin
+                       Corvid::PluginRegistry.clear_cache.register $include_feature_update_install_tests_plugin
                        Corvid::FeatureRegistry.use_feature_manifest_from $include_feature_update_install_tests_plugin
                        test_feature_updates_match_install '#{plugin.name}', '#{feature_name}', #{f.since_ver}
                      }

@@ -12,11 +12,19 @@ module Corvid
       clear_cache
     end
 
+    # Abandons all cached plugin instances and clears the registry.
+    #
+    # Calls to {#instance_for} will return new plugins.
+    #
+    # @return [self]
     def clear_cache
       @instance_cache= nil
       self
     end
 
+    # Reads the client's {Constants::PLUGINS_FILE PLUGINS_FILE} file if it exists, and returns a list of installed
+    # plugin names.
+    #
     # @return [nil,Array<String>] An array of installed plugins, or `nil` if the file wasn't found.
     def read_client_plugins
       pd= read_client_plugin_details
@@ -37,11 +45,20 @@ module Corvid
       end
     end
 
-    # @param [String] name
-    # @return [nil,Plugin]
+    # Provides an instance of a registered plugin. If the registry is empty then client-installed plugins will be loaded
+    # automatically.
+    #
+    # Subsequent calls for the same plugin name will return the same plugin instance.
+    #
+    # @note If the client's installed plugin list changes, call {#clear_cache} first.
+    # @note To manually provide plugins rather than depending on the client's installation, use {#register}.
+    #
+    # @param [String] name The plugin name.
+    # @return [Plugin] A plugin instance.
+    # @raise If the requested plugin isn't installed registered.
     def instance_for(name)
       validate_plugin_name! name
-      load_client_plugins unless @instance_cache
+      register_client_plugins unless @instance_cache
 
       unless @instance_cache.has_key?(name)
         raise "Unknown plugin: #{name}. Is it specified in #{Constants::PLUGINS_FILE}?\nKnown plugins are: #{@instance_cache.keys.sort.inspect}"
@@ -51,25 +68,37 @@ module Corvid
     end
     alias :[] :instance_for
 
-    # TODO
+    # Provides an instance of each client-installed plugin.
     #
-    # @return [Hash<String,nil|Plugin>] An instance of each client-installed feature. May return an empty array but never `nil`.
+    # @note If plugins have been manually registered via {#register} then this will simply return everything in the
+    #   registry.
+    #
+    # @return [Hash<String,Plugin>] A map of plugin names to plugin instances, for each client-installed plugin.
+    #   May return an empty array but never `nil`.
     def instances_for_installed
-      load_client_plugins unless @instance_cache
-      @instance_cache
+      register_client_plugins unless @instance_cache
+      @instance_cache.dup
     end
 
-    def use_plugin(plugin, clear_existing=true)
-      @instance_cache= {} if clear_existing
+    # Installs a manually instanciated plugin into the registry.
+    #
+    # @param [Plugin] plugin A plugin instance.
+    # @return [self]
+    def register(plugin)
       @instance_cache ||= {}
       @instance_cache[plugin.name]= plugin
       self
     end
 
-    protected
-
-    def load_client_plugins
-      @instance_cache= {}
+    # Reads the client's {Constants::PLUGINS_FILE PLUGINS_FILE}, then loads and caches an instance of every plugin
+    # declared.
+    #
+    # Plugins are added to the registry but nothing will be removed. In the case that this is undesired, simply call
+    # {#clear_cache} first.
+    #
+    # @return [self]
+    def register_client_plugins
+      @instance_cache ||= {}
 
       # Add client plugins
       if plugin_manifest= read_client_plugin_details
@@ -87,7 +116,7 @@ module Corvid
         }
       end
 
-      @instance_cache.freeze
+      self
     end
 
   end

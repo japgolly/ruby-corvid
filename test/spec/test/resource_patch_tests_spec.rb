@@ -9,7 +9,7 @@ describe Corvid::ResourcePatchTests, :slow do
 
   before :each do
     @plugin= BUILTIN_PLUGIN.new
-    Corvid::PluginRegistry.use_plugin @plugin
+    Corvid::PluginRegistry.clear_cache.register @plugin
   end
 
   it("should fail when update() has an extra step that's not in install()"){

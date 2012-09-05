@@ -35,7 +35,7 @@ describe Corvid::Generator::Update do
     rpm1= Corvid::ResPatchManager.new
     rpm1.stub latest_version: latest_version
     subject.stub(:rpm_for).with(p1).and_return(rpm1)
-    pr.use_plugin p1, false
+    pr.register p1
     p1
   end
 
