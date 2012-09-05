@@ -216,7 +216,7 @@ module DynamicFixtures
     add_version! 'corvid', Corvid::ResPatchManager.new.latest_version
   end
 
-  def_fixture :bare_no_gemfile_lock, 'int_test' do
+  def_fixture :bare_no_gemfile_lock, dir_name: 'int_test' do
     invoke_corvid! "init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec"
     init_gemfile true, false
   end
@@ -235,6 +235,27 @@ module DynamicFixtures
   def_fixture :new_hot_feature do
     copy_dynamic_fixture :new_cool_plugin
     invoke_corvid! 'new:feature hot'
+  end
+
+  def_fixture :plugin do
+    copy_fixture 'plugin'
+
+    # Change relative paths to Corvid, into absolute paths
+    gsub_files! %r|(?<![./a-z])\.\./\.\./\.\./\.\.(?![./a-z])|, "#{CORVID_ROOT}" \
+      ,'plugin_project/Gemfile.lock', 'plugin_project/Gemfile', 'plugin_project/.corvid/Gemfile' \
+      ,'client_project/Gemfile.lock', 'client_project/Gemfile', 'client_project/.corvid/Gemfile'
+  end
+
+  def_fixture :client_with_plugin, cd_into: 'client_project' do
+    copy_dynamic_fixture :plugin
+    d= 'client_project/.corvid'
+    FileUtils.cp "#{d}/features-without_p1f1.yml", "#{d}/features.yml"
+  end
+
+  def_fixture :client_with_plugin_and_feature, cd_into: 'client_project' do
+    copy_dynamic_fixture :plugin
+    d= 'client_project/.corvid'
+    FileUtils.cp "#{d}/features-with_p1f1.yml", "#{d}/features.yml"
   end
 end
 

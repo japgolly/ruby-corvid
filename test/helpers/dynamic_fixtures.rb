@@ -8,37 +8,45 @@ module DynamicFixtures
   end
 
   def dynamic_fixture_dir(name)
-    name= DynamicFixtures.normalise_dynfix_name(name)
-    case value= $dynamic_fixtures[name]
-    when nil
+    df= get_dynamic_fixture_data(name)
+
+    if !df
       raise "Undefined dynamic fixture: #{name}"
-    when String
-      return value
-    when Hash
-      o= value
+    elsif df[:block]
       dir= "#{dynamic_fixture_root}/#{name}"
       Dir.mkdir dir
-      if subdir= o[:dir_name]
+      if subdir= df[:dir_name]
         dir+= "/#{subdir}"
         Dir.mkdir dir
       end
-      Dir.chdir(dir){ instance_eval &o[:block] }
-      return $dynamic_fixtures[name]= dir
-    else
-      raise "Unexpected value for #{name}: #{value.inspect}"
+      Dir.chdir(dir){ instance_eval &df[:block] }
+      df.delete :block
+      df[:dir]= dir
     end
+
+    df[:dir].dup
   end
 
-  def inside_dynamic_fixture(fixture_name)
+  def inside_dynamic_fixture(fixture_name, cd_into=nil, &block)
     Dir.mktmpdir {|dir|
       Dir.chdir dir do
         copy_dynamic_fixture fixture_name
-        yield
+        cd_into ||= get_dynamic_fixture_data(fixture_name)[:cd_into]
+        if cd_into
+          orig_block= block
+          block= ->{ Dir.chdir(cd_into){ orig_block.() }}
+        end
+        block.()
       end
     }
   end
 
   private
+
+  def get_dynamic_fixture_data(name)
+    name= DynamicFixtures.normalise_dynfix_name(name)
+    $dynamic_fixtures[name]
+  end
 
   def dynamic_fixture_root
     $dynamic_fixture_root ||= (
@@ -65,18 +73,24 @@ module DynamicFixtures
 
   module ClassMethods
 
-    def def_fixture(name, dir_name=nil, &block)
+    def def_fixture(name, options={}, &block)
       raise "Block not provided." unless block
       name= DynamicFixtures.normalise_dynfix_name(name)
       STDERR.warn "Dyanmic fixture being redefined: #{name}." if $dynamic_fixtures[name]
-      $dynamic_fixtures[name]= {dir_name: dir_name, block: block}
+
+      invalid_options= options.keys - VALID_DEF_FIXTURE_OPTIONS
+      raise "Invalid options: #{invalid_options}" unless invalid_options.empty?
+
+      $dynamic_fixtures[name]= options.merge(block: block)
       self
     end
 
-    def run_each_in_dynamic_fixture(fixture_name)
+    VALID_DEF_FIXTURE_OPTIONS= [:cd_into, :dir_name].freeze
+
+    def run_each_in_dynamic_fixture(fixture_name, cd_into=nil)
       class_eval <<-EOB
         around :each do |ex|
-          inside_dynamic_fixture(#{fixture_name.inspect}){ ex.run }
+          inside_dynamic_fixture(#{fixture_name.inspect}, #{cd_into.inspect}){ ex.run }
         end
       EOB
     end
