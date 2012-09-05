@@ -239,8 +239,8 @@ module Corvid
       # @param [Base] t The calling generator.
       # @return [void]
       # @see RUN_BUNDLE
-      # @see #run_bundle
-      def self.declare_option_to_run_bundle(t)
+      # @see #run_bundle_at_exit
+      def self.declare_option_to_run_bundle_at_exit(t)
         t.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
       end
 
@@ -249,11 +249,11 @@ module Corvid
       # client's project after all generators have completed.
       #
       # @return [void]
-      def run_bundle
+      def run_bundle_at_exit
         return if $corvid_bundle_install_at_exit_installed
         return if options[RUN_BUNDLE] == false
 
-        $stderr.puts "[WARNING] run_bundle() called without Thor option to disable it.\n#{caller.join "\n"}\n#{'-'*80}\n\n" if options[RUN_BUNDLE].nil?
+        $stderr.puts "[WARNING] run_bundle_at_exit() called without Thor option to disable it.\n#{caller.join "\n"}\n#{'-'*80}\n\n" if options[RUN_BUNDLE].nil?
 
         $corvid_bundle_install_at_exit_installed= true
         at_exit {
@@ -363,7 +363,7 @@ module Corvid
       #
       # @param [String,Plugin] plugin_or_name The plugin, or name of, that the feature belongs to.
       # @param [String] feature_name The feature name to install.
-      # @option options [Boolean] :run_bundle (false) If enabled, then {#run_bundle} will be called after the feature is
+      # @option options [Boolean] :run_bundle_at_exit (false) If enabled, then {#run_bundle_at_exit} will be called after the feature is
       #   added.
       # @option options [Boolean] :say_if_installed (true) If enabled and feature is already installed, then display a message
       #   indicating so to the user.
@@ -414,13 +414,13 @@ module Corvid
           add_feature feature_id
           add_version plugin, actual_ver unless ver == actual_ver
           yield actual_ver if block_given?
-          run_bundle() if options[:run_bundle]
+          run_bundle_at_exit() if options[:run_bundle_at_exit]
         }
       end
 
       # @!visibility private
       DEFAULT_OPTIONS_FOR_INSTALL_FEATURE= {
-        run_bundle: false,
+        run_bundle_at_exit: false,
         say_if_installed: true,
       }.freeze
 

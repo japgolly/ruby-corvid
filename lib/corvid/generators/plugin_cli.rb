@@ -17,7 +17,7 @@ class Corvid::Generator::PluginCli < ::Corvid::Generator::Base
   }
 
   desc 'install', 'Install this plugin.'
-  declare_option_to_run_bundle(self)
+  declare_option_to_run_bundle_at_exit(self)
   def install
     install_plugin plugin
   end
