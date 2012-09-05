@@ -14,6 +14,11 @@ namespace :test do
     run_specs :fast, 'test/spec', '--order random -f p -t ~slow'
   end
 
+  # desc "Run slow tests."
+  task :slow do
+    run_specs :slow, 'test/spec', '--order random -f p -t slow'
+  end
+
   desc "Run tests: specifications."
   task :spec do
     run_specs :spec, 'test/spec', '--order random'
