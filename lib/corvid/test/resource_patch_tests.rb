@@ -99,6 +99,9 @@ module Corvid
         include Corvid::PluginTestHelpers
 
         def install(plugin, feature_name, ver=nil)
+          new_options= options.merge(RUN_BUNDLE => false)
+          stub options: new_options
+
           ver ||= rpm_for(plugin).latest_version
           feature_id= feature_id_for(plugin.name, feature_name)
           # TODO Hardcoded-logic here but all features apart from corvid, requrie corvid to be installed first.

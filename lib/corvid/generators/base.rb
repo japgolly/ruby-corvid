@@ -253,6 +253,8 @@ module Corvid
         return if $corvid_bundle_install_at_exit_installed
         return if options[RUN_BUNDLE] == false
 
+        $stderr.puts "[WARNING] run_bundle() called without Thor option to disable it.\n#{caller.join "\n"}\n#{'-'*80}\n\n" if options[RUN_BUNDLE].nil?
+
         $corvid_bundle_install_at_exit_installed= true
         at_exit {
           ENV['BUNDLE_GEMFILE']= nil
