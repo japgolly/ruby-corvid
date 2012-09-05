@@ -1,0 +1,6 @@
+--db         target/yardoc.db
+--output-dir target/doc
+--markup     markdown
+--readme     README.md
+--files      CHANGELOG.md
+{app,lib}/**/*.rb
