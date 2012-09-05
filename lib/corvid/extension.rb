@@ -5,6 +5,6 @@ module Corvid
     include GollyUtils::Callbacks
 
     # TODO Find a way to get callbacks into Yard.
-    define_callbacks :rake_tasks
+    define_callbacks :rake_tasks, :corvid_tasks
   end
 end

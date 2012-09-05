@@ -5,6 +5,10 @@ module PluginProject
 
     since_ver 1
 
+    corvid_tasks {
+      require 'plugin_project/t2_task'
+    }
+
     rake_tasks {
       extend Rake::DSL
 

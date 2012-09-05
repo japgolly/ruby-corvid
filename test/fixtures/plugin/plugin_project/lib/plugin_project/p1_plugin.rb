@@ -40,7 +40,13 @@ module PluginProject
     # @return [Array<String>] An array of feature names. Do not include the plugin prefix.
     auto_install_features %w[]
 
-    # Rake tasks
+    #-------------------------------------------------------------------------------------------------------------------
+    # Callbacks
+
+    corvid_tasks {
+      require 'plugin_project/t1_task'
+    }
+
     rake_tasks {
       extend Rake::DSL
 

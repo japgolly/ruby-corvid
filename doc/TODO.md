@@ -39,7 +39,6 @@ Non-Functional / Under-The-Hood
 Plugins
 -------
 ### Must
-* `corvid` bin should also load and expose (namespaced) plugins' tasks.
 * Provide ext points
   * test bootstraps
   * test helpers
@@ -53,6 +52,7 @@ Plugins
 * Add visible to Feature and have corvid create install tasks on-the-fly when plugin installed and features not.
 
 ### Could
+* Allow tasks to be added dynamically to plugin CLI.
 * Test Corvid and a plugin both modifying the same file.
 * Make corvid:init work via install_plugin?
 * `new:plugin NAME` task should create `test/spec/corvid/NAME_bin_spec.rb` which
