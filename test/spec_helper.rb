@@ -246,6 +246,7 @@ RSpec.configure do |config|
   config.after(:each){
     Corvid::PluginRegistry.clear_cache if defined? Corvid::PluginRegistry
     Corvid::FeatureRegistry.clear_cache if defined? Corvid::FeatureRegistry
+    Corvid::Generator::TemplateVars.reset_template_var_cache if defined? Corvid::Generator::TemplateVars
   }
   config.treat_symbols_as_metadata_keys_with_true_values= true
 end
