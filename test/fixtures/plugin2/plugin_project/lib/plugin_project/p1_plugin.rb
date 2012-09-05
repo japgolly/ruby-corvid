@@ -1,10 +1,9 @@
 require 'corvid/plugin'
-#require 'corvid/extension'
+require 'corvid/extension'
 
 module PluginProject
   class P1Plugin < Corvid::Plugin
-    # Plugins can be extensions but are not by default.
-    #include Corvid::Extension
+    include Corvid::Extension
 
     # The name of the plugin. Must conform to format enforced by {Corvid::NamingPolicy#validate_plugin_name!}.
     #
@@ -40,6 +39,18 @@ module PluginProject
     #
     # @return [Array<String>] An array of feature names. Do not include the plugin prefix.
     auto_install_features %w[]
+
+    # Rake tasks
+    rake_tasks {
+      extend Rake::DSL
+
+      namespace :p1 do
+        desc 'Generate hello.txt'
+        task :hello do
+          File.write 'hello.txt', 'Created by p1'
+        end
+      end
+    }
 
   end
 end

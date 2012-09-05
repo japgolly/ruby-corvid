@@ -6,6 +6,14 @@ module PluginProject
     since_ver 1
 
     rake_tasks {
+      extend Rake::DSL
+
+      namespace :p1f1 do
+        desc 'Generate hello.txt'
+        task :hello do
+          File.write 'hello.txt', 'Created by p1:f1'
+        end
+      end
     }
 
   end
