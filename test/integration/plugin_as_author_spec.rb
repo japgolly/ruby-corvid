@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative '../spec_helper'
 
-describe 'Plugin Development Feature' do
+describe "Plugins from an Author's perspective" do
   include IntegrationTestDecoration
 
   run_all_in_empty_dir {

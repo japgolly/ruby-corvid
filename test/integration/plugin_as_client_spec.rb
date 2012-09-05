@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative '../spec_helper'
 
-describe 'Plugin Integration Test' do
+describe "Plugins from a Client's perspective" do
 
   context "when plugin is installed (with no features)" do
     run_each_in_dynamic_fixture :client_with_plugin
