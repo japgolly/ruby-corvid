@@ -3,8 +3,7 @@ require 'corvid/generators/base'
 class Corvid::Generator::NewFeature < ::Corvid::Generator::Base
   namespace 'new'
 
-  # TODO
-  argument :feature_name2, type: :string
+  argument :name, type: :string
 
   desc 'feature', 'Generates a new plugin feature.'
   def feature
@@ -33,7 +32,7 @@ class Corvid::Generator::NewFeature < ::Corvid::Generator::Base
 
   # Template vars
   private
-  def feature_name; feature_name2.underscore.gsub(/^.*[\\\/]+|\.rb$/,'') end
+  def feature_name; name.underscore.gsub(/^.*[\\\/]+|\.rb$/,'').sub(/_feature$/,'') end
   def require_path; "#{project_name}/#{feature_name}_feature" end
   def class_name; feature_name.camelize + 'Feature' end
   def full_class_name; "#{project_module}::#{class_name}" end
