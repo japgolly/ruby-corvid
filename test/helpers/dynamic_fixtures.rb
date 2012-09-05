@@ -88,6 +88,7 @@ module DynamicFixtures
     VALID_DEF_FIXTURE_OPTIONS= [:cd_into, :dir_name].freeze
 
     def run_each_in_dynamic_fixture(fixture_name, cd_into=nil)
+      raise "Block not supported." if block_given?
       class_eval <<-EOB
         around :each do |ex|
           inside_dynamic_fixture(#{fixture_name.inspect}, #{cd_into.inspect}){ ex.run }
