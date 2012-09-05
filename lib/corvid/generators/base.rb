@@ -32,9 +32,6 @@ module Corvid
       include TemplateVars
       include ::Corvid::NamingPolicy
 
-      # Name of the option that users can use on the CLI to opt-out of Bundler being run at the end of certain tasks.
-      RUN_BUNDLE= :'run_bundle'
-
       # Methods provided to feature installer that each take a block of code.
       FEATURE_INSTALLER_CODE_DEFS= %w[install update].map(&:freeze).freeze
 
@@ -232,35 +229,6 @@ module Corvid
             $corvid_global_thor_source_root= nil
           end
         end
-      end
-
-      # Declares a Thor option that allows users to opt-out of Bundler being run at the end of certain tasks.
-      #
-      # @param [Base] t The calling generator.
-      # @return [void]
-      # @see RUN_BUNDLE
-      # @see #run_bundle_at_exit
-      def self.declare_option_to_run_bundle_at_exit(t)
-        t.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
-      end
-
-      # TODO move to actions.rb
-      # Unless the option to disable this specifies otherwise, asynchronously sets up `bundle install` to run in the
-      # client's project after all generators have completed.
-      #
-      # @return [void]
-      def run_bundle_at_exit
-        return if $corvid_bundle_install_at_exit_installed
-        return if options[RUN_BUNDLE] == false
-
-        $stderr.puts "[WARNING] run_bundle_at_exit() called without Thor option to disable it.\n#{caller.join "\n"}\n#{'-'*80}\n\n" if options[RUN_BUNDLE].nil?
-
-        $corvid_bundle_install_at_exit_installed= true
-        at_exit {
-          ENV['BUNDLE_GEMFILE']= nil
-          ENV['RUBYOPT']= nil
-          run "bundle install"
-        }
       end
 
       # Adds feature ids to the client's {Constants::FEATURES_FILE FEATURES_FILE}.

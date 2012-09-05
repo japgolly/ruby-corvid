@@ -4,6 +4,9 @@ module Corvid
     # Provides additional actions, and extentions to Thor actions.
     module ActionExtentions
 
+      # Name of the option that users can use on the CLI to opt-out of Bundler being run at the end of certain tasks.
+      RUN_BUNDLE= :'run_bundle'
+
       # Copies a file and gives it 755 permissions.
       # @return [void]
       def copy_executable(name, *extra_args)
@@ -204,6 +207,51 @@ module Corvid
 
         create_file gemfile, content, force: true
       end
+
+      # Unless the option to disable this specifies otherwise, asynchronously sets up `bundle install` to run in the
+      # client's project after all generators have completed.
+      #
+      # @return [void]
+      def run_bundle_at_exit
+        return if $corvid_bundle_install_at_exit_installed
+        return if options[RUN_BUNDLE] == false
+
+        if options[RUN_BUNDLE].nil?
+          STDERR.puts "[WARNING] run_bundle_at_exit() called without Thor option to disable it.\n#{caller.join "\n"}\n#{'-'*80}\n\n"
+        end
+
+        $corvid_bundle_install_at_exit_installed= true
+        at_exit {
+          ENV['BUNDLE_GEMFILE']= nil
+          ENV['RUBYOPT']= nil
+          run "bundle install"
+        }
+      end
+
+      #-----------------------------------------------------------------------------------------------------------------
+
+      # @!visibility private
+      def self.included(target)
+        target.extend ClassMethods
+      end
+
+      module ClassMethods
+
+        # @!visibility private
+        RUN_BUNDLE= ActionExtentions::RUN_BUNDLE
+
+        # Declares a Thor option that allows users to opt-out of Bundler being run at the end of certain tasks.
+        #
+        # @param [Base] g The generator in which to delcare the option.
+        # @return [void]
+        # @see Corvid::Generator::ActionExtentions::RUN_BUNDLE
+        # @see #run_bundle_at_exit
+        def declare_option_to_run_bundle_at_exit(g)
+          g.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
+        end
+      end
+
+      #-----------------------------------------------------------------------------------------------------------------
 
       private
 
