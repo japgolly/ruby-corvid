@@ -39,8 +39,6 @@ Non-Functional / Under-The-Hood
 Plugins
 -------
 ### Must
-* Plugins must add themselves to Gemfile.
-* Don't load features for plugins that aren't installed.
 * `corvid` bin should also load and expose (namespaced) plugins' tasks.
 * Provide ext points
   * test bootstraps

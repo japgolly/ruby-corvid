@@ -385,7 +385,11 @@ module Corvid
           return
         end
 
-        # TODO ensure plugin installed
+        # Ensure plugin installed
+        client_plugins= plugin_registry.read_client_plugins || []
+        unless client_plugins.include? plugin.name
+          raise "Can't install feature '#{feature_id}' because '#{plugin.name}' plugin is not installed."
+        end
 
         # Ensure resources up-to-date
         ver= vers[plugin.name]

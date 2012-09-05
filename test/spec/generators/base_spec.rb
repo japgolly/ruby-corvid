@@ -113,6 +113,13 @@ describe Corvid::Generator::Base do
       subject.send :install_feature, 'a', 'b'
     }
 
+    it("should fail if plugin isn't already installed"){
+      stub_client_state %w[a], %w[a:af], {'a'=>3}
+      expect{
+        subject.send :install_feature, BUILTIN_PLUGIN.new, 'whatever'
+      }.to raise_error /plugin is not installed/
+    }
+
     it("should validate requirements in the feature class"){
       stub_client_state %w[a], nil, nil
       p= stub name: 'a'
