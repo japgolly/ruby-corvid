@@ -1,6 +1,6 @@
 # encoding: utf-8
 require_relative '../../spec_helper'
-require 'corvid/generators/actions'
+require 'corvid/generators/action_extentions'
 require 'thor'
 
 describe Corvid::Generator::ActionExtentions do

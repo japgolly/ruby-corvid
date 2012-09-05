@@ -5,7 +5,7 @@ require 'corvid/plugin_registry'
 require 'corvid/naming_policy'
 require 'corvid/requirement_validator'
 require 'corvid/res_patch_manager'
-require 'corvid/generators/actions'
+require 'corvid/generators/action_extentions'
 require 'corvid/generators/template_vars'
 require 'corvid/generators/thor_monkey_patches'
 
