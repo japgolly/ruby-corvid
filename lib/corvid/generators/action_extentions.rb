@@ -164,10 +164,19 @@ module Corvid
       # changes.
       #
       # @example
+      #   add_dependency_to_gemfile 'rake'
+      #
       #   add_dependency_to_gemfile 'rake', '>= 0.9', require: false
       #
-      # @param [String|Array] args The args that should be passed to the `gem` DSL command in the `Gemfile`.
-      # @return [void]
+      #   add_dependency_to_gemfile 'rake', '>= 0.9', require: false, run_bundle_at_exit: false
+      #
+      # @overload add_dependency_to_gemfile(*args, options={})
+      #   @param [String|Array] args The args that should be passed to the `gem` DSL command in the `Gemfile`.
+      #   @param [Hash] options Supported options (see below) will be extracted, remaining options will be passed to
+      #     the `gem` DSL command.
+      #   @option options [Boolean] :run_bundle_at_exit (true) Whether or not to {#run_bundle_at_exit} if gems are
+      #     successfully added to the `Gemfile`.
+      # @return [Boolean] Whether or not the `Gemfile` was modified.
       # @see #add_dependencies_to_gemfile
       def add_dependency_to_gemfile(*args)
         add_dependencies_to_gemfile args # Note this is deliberately not *args
@@ -180,34 +189,66 @@ module Corvid
       #
       # @example
       #   add_dependencies_to_gemfile 'minitest', 'guard-minitest'
+      #
       #   add_dependencies_to_gemfile ['rake', '>= 0.9', require: false], 'yard'
       #
-      # @param [Array<String|Array>] args An array of args that should be passed to the `gem` DSL command in the
-      #   `Gemfile`.
-      # @return [void]
+      # @overload add_dependencies_to_gemfile(*deps, options={})
+      #   @param [Array<String|Array>] deps An array of args that should be passed to the `gem` DSL command in the
+      #     `Gemfile`. Each dep arg should be either a String, or an array of String with an optional Hash at the end.
+      #   @option options [Boolean] :run_bundle_at_exit (true) Whether or not to {#run_bundle_at_exit} if gems are
+      #     successfully added to the `Gemfile`.
+      # @return [Boolean] Whether or not the `Gemfile` was modified.
       # @see #add_dependency_to_gemfile
       def add_dependencies_to_gemfile(*args)
+
+        # Parse options if provided
+        run_bundle_at_exit= nil
+        o= args.pop.dup if args.last.is_a?(Hash)
+        if o
+          run_bundle_at_exit= o.delete :run_bundle_at_exit
+          raise "Unknown options: #{o.inspect}" unless o.empty?
+        end
+
+        # Parse Gemfile
         gemfile= 'Gemfile'
         content= File.read(gemfile)
-
         ge= ::Corvid::GemfileEvaluator.new.eval_string(content)
+
+        # Add deps
+        dep_added= false
         args.each do |name, *dep_args|
           name= name.to_s if name.is_a?(Symbol)
           raise "Invalid dependency name: #{name.inspect}" unless name.is_a?(String)
           unless ge.gems.has_key? name
+
+            # Add new dependency
             line= "gem #{name.inspect}"
             unless dep_args.empty?
               o= dep_args.last.is_a?(Hash) ? dep_args.pop : nil
               line+= dep_args.map{|d| ", #{d.inspect}"}.join
-              line+= o.map{|k,v| ", #{k}: #{v.inspect}"}.join if o
+              if o
+                if o.has_key? :run_bundle_at_exit
+                  o= o.dup
+                  run_bundle_at_exit= o.delete :run_bundle_at_exit
+                end
+                line+= o.map{|k,v| ", #{k}: #{v.inspect}"}.join
+              end
             end
-
             content.sub! /\n?\z/, "\n"
-            content+= line
+            content+= line + "\n"
+            dep_added= true
           end
         end
 
+        # Create file (if no changes then Thor's create_file() will simply report as much)
         create_file gemfile, content, force: true
+
+        # Run bundle
+        if dep_added and run_bundle_at_exit || run_bundle_at_exit.nil?
+          run_bundle_at_exit()
+        end
+
+        dep_added
       end
 
       # Unless the option to disable this specifies otherwise, asynchronously sets up `bundle install` to run in the

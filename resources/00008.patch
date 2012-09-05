@@ -1,8 +1,8 @@
-Before: 88f174fc78940b169b8acbca6d5a5a84eeb738a75c05334c400076e65dac36ec
+Before: abe19e0cefa22500e8c35336a6fcfdb66edaed187adfb94e746d438f0ea18f37
 After: 48869d1981a00fba39a03f52822e6689dda86fad7eef70686de019a4e257c658
-Patch: ee11a4d0e96aacd0cd2ffe89ec8f8832ba0c70d76aa9bf3a2080ab38e292fe1d
+Patch: b47f8a8de2470a5eced559ee227dbca9280d439016f77db682a64008c4efc954
 --- corvid-features/plugin.rb	2012-09-05 11:27:29.835679351 +1000
-+++ corvid-features/plugin.rb	2012-09-05 11:30:49.991091550 +1000
++++ corvid-features/plugin.rb	2012-09-05 13:24:00.904609020 +1000
 @@ -4,5 +4,5 @@
    empty_directory 'resources'
    empty_directory 'resources/latest'
@@ -10,13 +10,12 @@ Patch: ee11a4d0e96aacd0cd2ffe89ec8f8832ba0c70d76aa9bf3a2080ab38e292fe1d
 -  install_feature 'corvid', 'test_spec', run_bundle_at_exit: true, say_if_installed: false
 +  install_feature 'corvid', 'test_spec', run_bundle: true, say_if_installed: false
  }
---- lib/%project_name%/%plugin_name%_plugin.rb.tt	2012-09-05 11:30:35.437849429 +1000
-+++ lib/%project_name%/%plugin_name%_plugin.rb.tt	2012-09-05 11:30:49.971091676 +1000
-@@ -33,7 +33,7 @@
+--- lib/%project_name%/%plugin_name%_plugin.rb.tt	2012-09-05 13:23:52.121330735 +1000
++++ lib/%project_name%/%plugin_name%_plugin.rb.tt	2012-09-05 13:24:00.904609020 +1000
+@@ -33,6 +33,7 @@
      # Generator actions are available and can be invoked as if the callback function were a generator method.
      after_installed {
        add_dependency_to_gemfile '<%= project_name %>'
--      run_bundle_at_exit
 +      run_bundle
      }
  

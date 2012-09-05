@@ -55,12 +55,20 @@ describe Corvid::Generator::ActionExtentions do
   #---------------------------------------------------------------------------------------------------------------------
 
   describe '#add_dependencies_to_gemfile' do
+    before(:each){ $expect_bundle= nil }
+
     def test(gemfile_before, gemfile_after)
       File.write 'Gemfile', gemfile_before
       g= quiet_generator MockGen
+      case $expect_bundle
+        when nil   then g.stub :run_bundle_at_exit
+        when false then g.should_not_receive :run_bundle_at_exit
+        else            g.should_receive :run_bundle_at_exit
+      end
       yield g
-      'Gemfile'.chomp.should be_file_with_contents gemfile_after.chomp
+      'Gemfile'.should be_file_with_contents(gemfile_after).when_normalised_with(&:chomp)
     end
+
     def test1(gemfile_before, gemfile_after, *params)
       test(gemfile_before, gemfile_after) {|g| g.add_dependency_to_gemfile *params }
     end
@@ -106,6 +114,7 @@ describe Corvid::Generator::ActionExtentions do
 
     context "when dependency already declared" do
       it("do nothing when exact match found"){
+        $expect_bundle= false
         g= %[source :rubygems\ngroup :ci do\n  gem 'ci_reporter', require: false\nend\ngem 'yard']
         test1 g, g, "yard"
         test1 g, g, "ci_reporter", require: false
@@ -114,6 +123,7 @@ describe Corvid::Generator::ActionExtentions do
 
       it("do nothing when declared with different params"){
         # I think another method like set_dependency_option() would be more appropriate
+        $expect_bundle= false
         g= %[source :rubygems\ngroup :ci do\n  gem 'ci_reporter', require: false\nend\ngem 'yard', '>=2']
         test1 g, g, "ci_reporter", require: true
         test1 g, g, "ci_reporter", '>=4', require: true
@@ -122,8 +132,32 @@ describe Corvid::Generator::ActionExtentions do
       }
 
       it("do nothing when declared one same line as other declaration"){
+        $expect_bundle= false
         g= %[gem "abc"; gem "yard"; gem "def"]
         test1 g, g, "yard"
+      }
+    end
+
+    context "running bundle" do
+      it("calls run_bundle_at_exit() by default"){
+        $expect_bundle= true
+        g= %[source :rubygems\ngroup :ci do\n  gem 'ci_reporter', require: false\nend]
+        test1 g, %[#{g}\ngem "yard"], "yard"
+        test2 g, %[#{g}\ngem "yard"], "yard"
+      }
+
+      it("calls run_bundle_at_exit() if requested"){
+        $expect_bundle= true
+        g= %[source :rubygems\ngroup :ci do\n  gem 'ci_reporter', require: false\nend]
+        test1 g, %[#{g}\ngem "yard"], "yard", run_bundle_at_exit: true
+        test2 g, %[#{g}\ngem "yard"], "yard", run_bundle_at_exit: true
+      }
+
+      it("skips run_bundle_at_exit() if requested"){
+        $expect_bundle= false
+        g= %[source :rubygems\ngroup :ci do\n  gem 'ci_reporter', require: false\nend]
+        test1 g, %[#{g}\ngem "yard"], "yard", run_bundle_at_exit: false
+        test2 g, %[#{g}\ngem "yard"], "yard", run_bundle_at_exit: false
       }
     end
 
