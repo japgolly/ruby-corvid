@@ -1,6 +1,6 @@
 # vim:ft=ruby et ts=2 sw=2:
 
-gem 'corvid', path: '/home/golly/projects/corvid'
+gem 'corvid', path: '../../../..'
 
 gem 'rake', group: :rake
 

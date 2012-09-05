@@ -11,18 +11,18 @@ PATH
       corvid
 
 PATH
-  remote: ../plugin_project
-  specs:
-    plugin_project (0.0.1)
-      corvid
-
-PATH
-  remote: /home/golly/projects/corvid
+  remote: ../../../..
   specs:
     corvid (0.0.1)
       activesupport
       golly-utils
       thor (~> 0.15.4)
+
+PATH
+  remote: ../plugin_project
+  specs:
+    plugin_project (0.0.1)
+      corvid
 
 GEM
   remote: http://rubygems.org/

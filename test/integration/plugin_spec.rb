@@ -6,6 +6,12 @@ describe 'Plugin Integration Test' do
   run_each_in_fixture 'plugin'
 
   it("should load plugins' rake tasks"){
+
+    # TODO move
+    gsub_files! %r|(?<![./a-z])\.\./\.\./\.\./\.\.(?![./a-z])|, "#{CORVID_ROOT}" \
+      ,'plugin_project/Gemfile.lock', 'plugin_project/Gemfile', 'plugin_project/.corvid/Gemfile' \
+      ,'client_project/Gemfile.lock', 'client_project/Gemfile', 'client_project/.corvid/Gemfile'
+
     Dir.chdir 'client_project' do
       invoke_rake! 'p1:hello'
       'hello.txt'.should be_file_with_content /p1$/
