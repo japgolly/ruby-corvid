@@ -1,3 +1,5 @@
+require 'corvid/gemfile_evaluator'
+
 module Corvid
   module Generator
 
@@ -188,7 +190,7 @@ module Corvid
         gemfile= 'Gemfile'
         content= File.read(gemfile)
 
-        ge= GemfileEvaluator.new.eval_string(content)
+        ge= ::Corvid::GemfileEvaluator.new.eval_string(content)
         args.each do |name, *dep_args|
           name= name.to_s if name.is_a?(Symbol)
           raise "Invalid dependency name: #{name.inspect}" unless name.is_a?(String)
@@ -249,56 +251,8 @@ module Corvid
         def declare_option_to_run_bundle_at_exit(g)
           g.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
         end
+
       end
-
-      #-----------------------------------------------------------------------------------------------------------------
-
-      private
-
-      # Used to parse Gemfile content and provide list of declared gems.
-      #
-      # @!visibility private
-      # @see #add_dependencies_to_gemfile
-      class GemfileEvaluator
-        attr_reader :gems
-
-        def initialize
-          @gems= {}
-        end
-
-        def eval_string(content)
-          instance_eval content
-          self
-        end
-
-        def group(group_name, *args)
-          return unless block_given?
-          prev_group_name= @group_name
-          begin
-            @group_name= group_name
-            yield
-          ensure
-            @group_name= prev_group_name
-          end
-          nil
-        end
-
-        def gem(gem_name, *args)
-          if @group_name
-            args= args.dup
-            args<< {} unless args.last.is_a?(Hash)
-            args.last[:group] ||= @group_name
-          end
-          @gems[gem_name]= args
-          nil
-        end
-
-        def method_missing(method, *args, &block)
-          instance_eval &block if block
-          nil
-        end
-      end
-
     end
   end
 end
