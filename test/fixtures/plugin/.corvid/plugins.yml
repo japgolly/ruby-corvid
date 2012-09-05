@@ -1,8 +1,0 @@
----
-corvid:
-  :path: corvid/builtin/builtin_plugin
-  :class: Corvid::Builtin::BuiltinPlugin
-mock_plugin:
-  :path: blah/mock_plugin
-  :class: MockPlugin
-

@@ -1,3 +1,0 @@
-gemspec
-gem 'corvid', path: '../../../..'
-gem 'golly-utils', git: 'git://github.com/japgolly/golly-utils.git' # TODO use proper golly-utils
