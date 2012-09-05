@@ -153,6 +153,16 @@ module TestHelpers
     instance
   end
 
+  def available_tasks_for(cli_name, &cli_block)
+    @capture_sh= true
+    cli_block.call self
+    @stdout.split($/).map{|l| /^\s*#{cli_name} +(\S+).*#.+$/ === l; $1 ? $1.dup : nil}.compact - %w[help]
+  end
+
+  def available_tasks_for_corvid
+    available_tasks_for 'corvid', &:invoke_corvid!
+  end
+
   def self.included base
     base.extend ClassMethods
   end

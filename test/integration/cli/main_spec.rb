@@ -5,12 +5,7 @@ require 'corvid/cli/main'
 describe Corvid::CLI::Main do
   run_each_in_empty_dir
 
-  let(:available_tasks) do
-    @capture_sh= true
-    invoke_corvid!
-#    puts @stdout
-    @stdout.split($/).map{|l| /^\s*corvid +(\S+).*#.+$/ === l; $1 ? $1.dup : nil}.compact - %w[help]
-  end
+  let(:available_tasks){ available_tasks_for_corvid }
 
   it("when corvid not installed, provides task: init"){
     available_tasks.should equal_array %w[init]

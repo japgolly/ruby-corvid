@@ -19,10 +19,8 @@ describe Corvid::CLI::Plugin do
   end
 
   let(:available_tasks) do
-    @capture_sh= true
-    invoke_plugin_cli!
+    available_tasks_for 'cool', &:invoke_plugin_cli!
 #    puts @stdout
-    @stdout.split($/).map{|l| /^\s*cool +(\S+).*#.+$/ === l; $1 ? $1.dup : nil}.compact - %w[help]
   end
 
   it("when not installed, provides tasks: install"){
