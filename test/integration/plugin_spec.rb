@@ -3,7 +3,7 @@ require_relative '../spec_helper'
 
 describe 'Plugin Integration Test' do
 
-  run_each_in_fixture 'plugin2'
+  run_each_in_fixture 'plugin'
 
   it("should load plugins' rake tasks"){
     Dir.chdir 'client_project' do
