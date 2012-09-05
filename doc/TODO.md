@@ -24,6 +24,12 @@ New Functionality
 * Integration tests. (Like NS: new dir, Guard, Rake, Simplecov)
 * Performance tests. Maybe also have results checked in so history maintained. ![?](question.png)
 * Add a library feature that adds things like gemspec ![?](question.png)
+* Provide additional ext points
+  * test bootstraps
+  * test helpers
+  * `Gemfile`
+  * `Guardfile`
+  * code coverage settings
 
 Non-Functional / Under-The-Hood
 -------------------------------
@@ -39,20 +45,15 @@ Non-Functional / Under-The-Hood
 Plugins
 -------
 ### Must
-* Provide ext points
-  * test bootstraps
-  * test helpers
-  * `Gemfile`
-  * `Guardfile`
-  * code coverage settings
+* Corvid CLI should provide install tasks for uninstalled plugin features (unless disabled by flag in Feature).
 
 ### Should
 * Doco on how plugins work, how to write one.
 * Test `template/template2` in context of install/update.
-* Add visible to Feature and have corvid create install tasks on-the-fly when plugin installed and features not.
 
 ### Could
-* Allow tasks to be added dynamically to plugin CLI.
+* Plugin CLI should load plugin & feature provided tasks when installed.
+* Plugin CLI should provide install tasks for uninstalled plugin features (unless disabled by flag in Feature).
 * Test Corvid and a plugin both modifying the same file.
 * Make corvid:init work via install_plugin?
 * `new:plugin NAME` task should create `test/spec/corvid/NAME_bin_spec.rb` which
