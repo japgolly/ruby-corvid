@@ -6,16 +6,76 @@ require 'digest/sha2'
 module Corvid
 
   # Manages the generation, deployment, and patch-migration of versioned resources.
+  #
+  # The main flows of operation here are:
+  #
+  # * Creating patch files in `resources/` based on the exploded resources found in `resources/latest/`.
+  # * Recreating resources at a specific version by progressively exploding patch files into a temporary directory.
+  # * Creating transient patches between specific versions of resources, then using that to migrate a
+  #   potentially-dirty resource-installation to a target version.
+  #
+  # ## Resource Patches
+  #
+  # Resource patches...
+  #
+  # * Typically live in a projects `resources/` directory.
+  # * Are named like `00001.patch`, `00002.patch`, etc.
+  # * Contain an additional header not found in normal patch files, that contains data for increased security and data
+  #   integrity.
+  # * Work backwards, in descending order.  _...What??_
+  #
+  #   To satisfy various design goals and a performance goal, the latest resource patch will always be the initial
+  #   patch, depending on nothing; and earlier resource patches will each depend on the patch of the *proceeding*
+  #   version. Accordingly, the latest resource version will always be the fastest to create; the oldest, the slowest.
+  #
+  #   For example:
+  #       resources/
+  #           00001.patch    # 2 --> 1
+  #           00002.patch    # 3 --> 2
+  #           00003.patch    # 4 --> 3
+  #           00004.patch    # 5 --> 4
+  #           00005.patch    # 0 --> 5
+  #
+  #       To create v5 of resources:
+  #       - Apply patch #5 to an empty directory.
+  #
+  #       To create v4 of resources:
+  #       - Apply patch #5 to an empty directory.
+  #       - Apply patch #4 to top.
+  #
+  #       To create v1 of resources:
+  #       - Apply patch #5 to an empty directory.
+  #       - Apply patch #4 to top.
+  #       - Apply patch #3 to top.
+  #       - Apply patch #2 to top.
+  #       - Apply patch #1 to top.
+  #
+  #       To create a new version which will be v6.
+  #       - Create patch #6 as nothing:latest, i.e. #0:#6.
+  #       - Recreate patch #5 as #6:#5.
+  #       Thus we end up with:
+  #           00001.patch    # Same:    2 --> 1
+  #           00002.patch    # Same:    3 --> 2
+  #           00003.patch    # Same:    4 --> 3
+  #           00004.patch    # Same:    5 --> 4
+  #           00005.patch    # Changed: 6 --> 5
+  #           00006.patch    # New:     0 --> 6
   class ResPatchManager
 
+    # Any files matching this are ignored when creating patches.
+    #
+    # Currently ignores Vim swap files.
+    FILE_BLACKLIST= /^(?:\..*\.sw[p-z])$/
+
     # Returns the default directory that res-patches are expected to reside in.
-    # @return [String]
+    #
+    # By default this is Corvid's internal resources.
+    #
+    # @return [String] A directory.
     def self.default_res_patch_dir
       require 'corvid/environment' unless defined?(CORVID_ROOT)
       res_patch_dir= "#{CORVID_ROOT}/resources"
     end
-
-    FILE_BLACKLIST= /^(?:\..*\.sw[p-z])$/
 
     # The directory where resource patches are located.
     # @return [String]
@@ -42,7 +102,9 @@ module Corvid
 
     # Inspects the {#res_patch_dir} to determine the latest version of resources.
     #
-    # @param [Boolean] force If `true` then a cached value will be discarded and the latest version reevaluated.
+    # @note This value is cached by default. Specify `force` if necessary.
+    #
+    # @param [Boolean] force If `true` then the cached value will be discarded and the latest version re-evaluated.
     # @return [Fixnum] The latest version, or 0 if there are no res-patches.
     def latest_version(force=false)
       @latest_version= nil if force
@@ -66,7 +128,7 @@ module Corvid
     #
     # @param [Fixnum] ver The version to check.
     # @param [Fixnum] min The minimum acceptable version (inclusive). 0 is also acceptable.
-    # @param [nil,String] name The name of the variable being checked. Used in error messages.
+    # @param [nil|String] name The name of the variable being checked. Used in error messages.
     #   eg. `"upgrade target version"`
     # @return [true]
     # @raise If given version is not a valid number.
@@ -74,6 +136,7 @@ module Corvid
     # @raise If given minimum is beyond the latest available version.
     # @raise If given version is below the provided minimum.
     def validate_version!(ver, min, name=nil)
+      # @!visibility private
       def invalid_msg; "Invalid version" + name ? " for #{name}" : ''; end
 
       unless ver.is_a?(Fixnum)
@@ -90,8 +153,11 @@ module Corvid
 
     # Generates a res-patch in-memory. (Doesn't save anything.)
     #
-    # @param [nil,String] from_dir
-    # @param [String] to_dir
+    # @param [nil|String] from_dir The directory containing the pre-patch FS state, or `nil` if the pre-patch state is
+    #   nothingness.
+    # @param [String] to_dir The directory containing the post-patch FS state.
+    # @param [Boolean] include_header Whether or not to include the custom header required by this class to be able to
+    #   apply the patch later.
     # @return String The patch contents.
     def create_res_patch_content(from_dir, to_dir, include_header=true)
       files= get_files_in_dir(from_dir) | get_files_in_dir(to_dir)
@@ -117,13 +183,13 @@ module Corvid
     #
     # Res-patches are designed so that the later patches are faster to reconstruct than older patches, thus in
     # performing this operation in addition to a new patch will being created, the current latest will also be updated
-    # to be backwards reconstructable from the new latest.
+    # to be backwards-reconstructable from the new latest.
     #
     # @param [String] from_dir The directory containing the contents of the last-packaged resources (i.e. matching the
     #   latest resource patch.)
     # @param [String] to_dir The directory containing the latest version of resources that will be the contents of the
     #   new resource patch.
-    # @return [nil,Fixnum] The version of the new resource patch, else `nil` if there were no changes and one wasn't
+    # @return [nil|Fixnum] The version of the new resource patch, else `nil` if there were no changes and one wasn't
     #   created.
     def create_res_patch_files!(from_dir, to_dir)
       raise "From-dir doesn't exist: #{from_dir}" unless Dir.exists?(from_dir)
@@ -150,11 +216,11 @@ module Corvid
       end
     end
 
-    # Deploys a specified version of resources to an empty directory.
+    # Deploys a specific version of resources to an empty directory.
     #
-    # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will be
-    #   created. If it exists, it must be empty.
-    # @param [Fixnum,:latest] ver The version of resources to deploy.
+    # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will
+    #   be created. If it exists, it must be empty.
+    # @param [Fixnum|:latest] ver The version of resources to deploy.
     # @return [self]
     def deploy_resources(target_dir, ver)
 
@@ -178,18 +244,18 @@ module Corvid
 
     # Deploys the latest version of resources to an empty directory.
     #
-    # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will be
-    #   created. If it exists, it must be empty.
+    # @param [String] target_dir The directory where the resources should be deployed to. If it doesn't exist, it will
+    #   be created. If it exists, it must be empty.
     # @return [self]
     def deploy_latest_resources(target_dir)
       deploy_resources target_dir, :latest
     end
 
-    # Deploys a specified version of resources to a temporary directory and yields.
+    # Deploys a specific version of resources to a temporary directory and yields.
     #
     # Resources will be removed on method exit.
     #
-    # @param [Fixnum,:latest] ver The version of resources to deploy.
+    # @param [Fixnum|:latest] ver The version of resources to deploy.
     # @yieldparam [String] dir The directory containing the resources.
     # @return Whatever the yielded block returns.
     def with_resources(ver, &block)
@@ -209,14 +275,14 @@ module Corvid
       with_resources :latest, &block
     end
 
-    # Deploys a range of versions of resources to a temporary directory and yields.
+    # Deploys a range of versions of resources to subdirs within a temporary directory, and yields.
     #
     # Resources will be removed on method exit.
     #
     # @param [Fixnum] from_ver The lowest version (inclusive) of resources to deploy. Must be >= 1.
-    # @param [Fixnum,:latest] to_ver The highest version (inclusive) of resources to deploy. Must be >= `from_ver`.
-    # @yieldparam [String] dir The directory containing subdirectories of each version of resources. Use {#ver_dir} to
-    #   get the directory for a specific version.
+    # @param [Fixnum|:latest] to_ver The highest version (inclusive) of resources to deploy. Must be >= `from_ver`.
+    # @yieldparam [String] dir The base directory containing subdirectories of each version of resources. Use {#ver_dir}
+    #   to get the directory for a specific version.
     # @return Whatever the yielded block returns.
     # @see #ver_dir
     def with_resource_versions(from_ver, to_ver=:latest, &block)
@@ -246,16 +312,16 @@ module Corvid
         end
 
         # Done. Yield control.
-        return block.call base_dir
+        return block.(base_dir)
 
       end
     end
 
-    # Provides a directory to the deployed resources of a given version. Use in conjunction with
+    # Provides the directory name of deployed resources at a specific version. Use in conjunction with
     # {#with_resource_versions}.
     #
     # @param [Fixnum] ver The version of resources wanted.
-    # @return [String] The directory of resources of the given version.
+    # @return [String] The directory of resources at the given version.
     # @raise If resources haven't been deployed yet.
     # @see #with_resource_versions
     def ver_dir(ver)
@@ -264,7 +330,8 @@ module Corvid
     end
     alias :reconstruction_dir :ver_dir
 
-    # Allows the `patch` command to be run interactively and allow merge conflicts.
+    # When the `patch` command is run within the yielded block provided this method, it runs interactively and allows
+    # merge conflicts.
     #
     # @yield control with interactive patching enabled.
     # @return Whatever the yielded block returns.
@@ -279,7 +346,7 @@ module Corvid
       end
     end
 
-    # Returns whether interactive patching is enabled.
+    # Indicates whether interactive patching is enabled.
     #
     # @return [Boolean]
     # @see #allow_interactive_patching
@@ -287,15 +354,15 @@ module Corvid
       @interactive_patching
     end
 
-    # Patches up files initially deployed at ver A, to ver B.
+    # Patches potentially-dirty, exploded files that were initially deployed at ver A, up to ver B.
     #
     # You will likely want to run this in conjunction with {#allow_interactive_patching}.
     #
-    # @param [nil,Fixnum] from_ver The version previously deployed. If nothing has been deployed previously, use `nil`
+    # @param [nil|Fixnum] from_ver The version previously deployed. If nothing has been deployed previously, use `nil`
     #   or 0.
     # @param [Fixnum] to_ver The target version.
     # @param [String] target_dir The directory containing the resources to patch.
-    # @param [nil,Array<String>] filelist The list of files to patch. If `nil` then all files will patched.
+    # @param [nil|Array<String>] filelist The list of files to patch. If `nil` then all files will patched.
     # @return [Boolean] Whether there were any merge conflicts.
     # @raise If resources haven't been deployed yet.
     # @see #allow_interactive_patching
@@ -363,6 +430,8 @@ module Corvid
     end
 
     # Returns the filename of a resource patch for a given version.
+    #
+    # File may or may not exist.
     #
     # @param [Fixnum] ver The resource patch version.
     # @return [String] The resource patch filename.

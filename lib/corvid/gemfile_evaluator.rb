@@ -1,6 +1,9 @@
 module Corvid
   # Used to parse `Gemfile` content and provide list of declared gems.
   #
+  # Currently the only usage of this is to determine whether or not a dependency is being declared in a project's
+  # `Gemfile`.
+  #
   # @see Generator::ActionExtentions#add_dependencies_to_gemfile
   class GemfileEvaluator
 

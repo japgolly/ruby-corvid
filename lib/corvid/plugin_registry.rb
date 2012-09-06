@@ -4,6 +4,12 @@ require 'corvid/plugin'
 require 'corvid/naming_policy'
 
 module Corvid
+  # Provides information and instances of {Plugin}s.
+  # Specifically:
+  #
+  # * Maintains a registry of known/installed plugins.
+  # * Maintains a cache of {Plugin} instances.
+  # * Provides functions to inspect the plugin configuration of a Corvid project.
   class PluginRegistry
     include GollyUtils::Singleton
     include Corvid::NamingPolicy
@@ -25,7 +31,7 @@ module Corvid
     # Reads the client's {Constants::PLUGINS_FILE PLUGINS_FILE} file if it exists, and returns a list of installed
     # plugin names.
     #
-    # @return [nil,Array<String>] An array of installed plugins, or `nil` if the file wasn't found.
+    # @return [nil|Array<String>] An array of installed plugins, or `nil` if the file wasn't found.
     def read_client_plugins
       pd= read_client_plugin_details
       pd && pd.keys
@@ -33,7 +39,7 @@ module Corvid
 
     # Reads and parses the contents of the client's {Constants::PLUGINS_FILE PLUGINS_FILE} if it exists.
     #
-    # @return [nil,Hash<String,Hash<Symbol,Object>>] A map of plugins to their propreties, or `nil` if the file wasn't
+    # @return [nil|Hash<String,Hash<Symbol,Object>>] A map of plugins to their propreties, or `nil` if the file wasn't
     #   found.
     def read_client_plugin_details
       if File.exists? Constants::PLUGINS_FILE
@@ -74,7 +80,7 @@ module Corvid
     #   registry.
     #
     # @return [Hash<String,Plugin>] A map of plugin names to plugin instances, for each client-installed plugin.
-    #   May return an empty array but never `nil`.
+    #   May return an empty hash but never `nil`.
     def instances_for_installed
       register_client_plugins unless @instance_cache
       @instance_cache.dup

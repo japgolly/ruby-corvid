@@ -2,6 +2,12 @@ require 'golly-utils/attr_declarative'
 require 'golly-utils/callbacks'
 
 module Corvid
+  # A Corvid plugin is an entity outside of Corvid proper, that provides:
+  #
+  # * {Extension}s.
+  # * {Feature}s.
+  # * New functionality.
+  # * Tasks. (See {Generator::Base} and the `corvid_tasks` callback in {Extension}.)
   class Plugin
     include GollyUtils::Callbacks
 

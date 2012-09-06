@@ -75,8 +75,8 @@ module Corvid
     # be checking.
     #
     # @param [Array<String>] plugin_names A list of names of plugins installed.
-    # @param [nil,Array<String>] feature_ids A list of ids of features installed.
-    # @param [nil,Hash<String,Fixnum>] versions Versions of installed resources. Key = plugin name, value = version
+    # @param [nil|Array<String>] feature_ids A list of ids of features installed.
+    # @param [nil|Hash<String,Fixnum>] versions Versions of installed resources. Key = plugin name, value = version
     #   number.
     # @return [self]
     def set_client_state(plugin_names, feature_ids, versions)
@@ -93,7 +93,7 @@ module Corvid
     # Checks if a single requirement is satisfied.
     #
     # @param [Hash<Symbol,Object>] req The requirement to check. Must be in this class's internal format.
-    # @return [nil,String] A string describing why the requirement isn't satisfied, or `nil` if it is satisfied.
+    # @return [nil|String] A string describing why the requirement isn't satisfied, or `nil` if it is satisfied.
     def check(req)
       raise "Client state hasn't been provided yet. Unable to check requirements." unless @plugin_names
 
