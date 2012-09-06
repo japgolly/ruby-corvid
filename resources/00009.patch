@@ -1,12 +1,14 @@
-Before: aae6beccd610ed4a77848a05be6444e0a5480480be75fa8c12c77478c7ac9dc6
+Before: 84fd7acc36005c1d7cbf8b2f29d02bad6eaff830091d28830f55e0c8fb37b3af
 After: abe19e0cefa22500e8c35336a6fcfdb66edaed187adfb94e746d438f0ea18f37
-Patch: 13e868ccfc994490e6bd718b404a48763628d07f515799d0a3c96af13e172f1c
---- lib/%project_name%/%feature_name%_feature.rb.tt	2012-09-06 08:00:49.576741943 +1000
-+++ lib/%project_name%/%feature_name%_feature.rb.tt	2012-09-06 08:00:54.596771116 +1000
-@@ -5,12 +5,7 @@
+Patch: 9fa1cff5a8ffef07ff62f5a66234e613fd9cf58a9f43cba345e264e7f4a30f97
+--- lib/%project_name%/%feature_name%_feature.rb.tt	2012-09-06 11:01:04.906245908 +1000
++++ lib/%project_name%/%feature_name%_feature.rb.tt	2012-09-06 11:03:52.880515007 +1000
+@@ -5,14 +5,7 @@
  
      since_ver <%= since_ver %>
  
+-    managed_install_task? true
+-
 -    corvid_tasks {
 -      # require '<%= project_name %>/example/corvid_task'
 -    }
@@ -16,3 +18,15 @@ Patch: 13e868ccfc994490e6bd718b404a48763628d07f515799d0a3c96af13e172f1c
      }
  
    end
+--- resources/latest/corvid-features/%feature_name%.rb.tt	2012-09-06 11:03:11.953620299 +1000
++++ resources/latest/corvid-features/%feature_name%.rb.tt	2012-09-06 11:03:52.880515007 +1000
+@@ -9,9 +9,6 @@
+   # empty_directory 'lib'
+   # copy_file       'hello.txt'
+   # copy_executable 'bin/hello'
+-
+-  # You can also call the update function below to keep things DRY.
+-  # update 3
+ }
+ 
+ # update {|ver|

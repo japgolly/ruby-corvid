@@ -1,6 +1,6 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: aae6beccd610ed4a77848a05be6444e0a5480480be75fa8c12c77478c7ac9dc6
-Patch: 8e28920bb3ddb147a625b96cb913d285745ba9d8625a42a73a18e5204e0db284
+After: 84fd7acc36005c1d7cbf8b2f29d02bad6eaff830091d28830f55e0c8fb37b3af
+Patch: 5ef5a31c2e9e5c136fd0128a444200ce9895db436ed47d3545b6bbbf31d8aeb6
 --- /dev/null	2012-09-03 14:23:42.005077313 +1000
 +++ %project_name%.gemspec.tt	2012-09-06 07:57:58.255746233 +1000
 @@ -0,0 +1,21 @@
@@ -411,14 +411,16 @@ Patch: 8e28920bb3ddb147a625b96cb913d285745ba9d8625a42a73a18e5204e0db284
 +  empty_directory         'test/unit'
 +}
 --- /dev/null	2012-09-03 14:23:42.005077313 +1000
-+++ lib/%project_name%/%feature_name%_feature.rb.tt	2012-09-06 08:00:49.576741943 +1000
-@@ -0,0 +1,17 @@
++++ lib/%project_name%/%feature_name%_feature.rb.tt	2012-09-06 11:01:04.906245908 +1000
+@@ -0,0 +1,19 @@
 +require 'corvid/feature'
 +
 +module <%= project_module %>
 +  class <%= class_name %> < Corvid::Feature
 +
 +    since_ver <%= since_ver %>
++
++    managed_install_task? true
 +
 +    corvid_tasks {
 +      # require '<%= project_name %>/example/corvid_task'
@@ -490,8 +492,8 @@ Patch: 8e28920bb3ddb147a625b96cb913d285745ba9d8625a42a73a18e5204e0db284
 @@ -0,0 +1 @@
 +latest
 --- /dev/null	2012-09-03 14:23:42.005077313 +1000
-+++ resources/latest/corvid-features/%feature_name%.rb.tt	2012-09-06 07:57:58.255746233 +1000
-@@ -0,0 +1,20 @@
++++ resources/latest/corvid-features/%feature_name%.rb.tt	2012-09-06 11:03:11.953620299 +1000
+@@ -0,0 +1,23 @@
 +# Requirements that must be satisfied before the feature can be installed.
 +# @return [nil, String, Hash<String,Fixnum|Range|Array<Fixnum>>, Array] Requirements that can be provided to
 +#   {RequirementValidator}.
@@ -503,6 +505,9 @@ Patch: 8e28920bb3ddb147a625b96cb913d285745ba9d8625a42a73a18e5204e0db284
 +  # empty_directory 'lib'
 +  # copy_file       'hello.txt'
 +  # copy_executable 'bin/hello'
++
++  # You can also call the update function below to keep things DRY.
++  # update 3
 +}
 +
 +# update {|ver|
