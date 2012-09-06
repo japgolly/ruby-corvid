@@ -2,6 +2,16 @@ require 'corvid/extension'
 require 'golly-utils/attr_declarative'
 
 module Corvid
+  # Corvid plugins can have features. Features are used by plugins to allow the selective installation of differing
+  # chunks of functionality. A plugin might make 3 different features available, and allow the user to install and use
+  # only 1. Or 2. Or none or all 3.
+  #
+  # Features require:
+  #
+  # * A feature-installer file in the plugin resources.
+  # * An entry in the plugin's feature manifest.
+  #
+  # When generating a new feature in a Corvid plugin project, both points above will be performed for you automatically.
   class Feature
     include Extension
 
