@@ -64,7 +64,7 @@ module Corvid
         latest_resource_version= Corvid::ResPatchManager.new(plugin.resources_path).latest_version
 
         $include_feature_update_install_tests_plugin= plugin
-        Corvid::FeatureRegistry.use_feature_manifest_from(plugin)
+        Corvid::FeatureRegistry.clear_cache.register_features_in(plugin)
 
         tests= features.map {|feature_name|
                  f= FeatureRegistry.instance_for(feature_id_for(plugin.name, feature_name))
@@ -72,7 +72,7 @@ module Corvid
                    %[
                      it("Testing feature: #{feature_name}"){
                        Corvid::PluginRegistry.clear_cache.register $include_feature_update_install_tests_plugin
-                       Corvid::FeatureRegistry.use_feature_manifest_from $include_feature_update_install_tests_plugin
+                       Corvid::FeatureRegistry.clear_cache.register_features_in $include_feature_update_install_tests_plugin
                        test_feature_updates_match_install '#{plugin.name}', '#{feature_name}', #{f.since_ver}
                      }
                    ]

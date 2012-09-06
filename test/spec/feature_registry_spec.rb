@@ -37,7 +37,7 @@ describe Corvid::FeatureRegistry do
 
     class FakeFeature < ::Corvid::Feature; end
     it("should read plugins' feature manifests"){
-      p= stub feature_manifest: {'crazy' => [nil,FakeFeature.to_s]}
+      p= stub name: 'blah', feature_manifest: {'crazy' => [nil,FakeFeature.to_s]}
       subject.plugin_registry.stub instances_for_installed: {'blah' => p}
       i= subject.instance_for('blah:crazy')
       i.should_not be_nil
@@ -79,8 +79,8 @@ describe Corvid::FeatureRegistry do
 
   describe '#feature_manifest' do
     it("should prefix feature names with plugin name"){
-      p1= stub feature_manifest: {'happy'=>[nil,'Happy'], 'tired'=>['tired','Tired']}
-      p2= stub feature_manifest: {'eat'=>[nil,'Eat']}
+      p1= stub name: 'p1', feature_manifest: {'happy'=>[nil,'Happy'], 'tired'=>['tired','Tired']}
+      p2= stub name: 'p2', feature_manifest: {'eat'=>[nil,'Eat']}
       subject.plugin_registry.stub instances_for_installed: {'p1'=>p1, 'p2'=>p2}
       subject.feature_manifest.keys.should equal_array %w[p1:happy p1:tired p2:eat]
     }
@@ -94,7 +94,7 @@ describe Corvid::FeatureRegistry do
     }
 
     it("should fail if a feature name contains a colon"){
-      p2= stub feature_manifest: {'eat:no'=>[nil,'Eat']}
+      p2= stub name: 'p2', feature_manifest: {'eat:no'=>[nil,'Eat']}
       expect{
         subject.plugin_registry.stub instances_for_installed: {'p2'=>p2}
         subject.feature_manifest
