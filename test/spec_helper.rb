@@ -256,7 +256,7 @@ module DynamicFixtures
         gsub_files! %r|(?<![./a-z])\.\./\.\./\.\./\.\.(?![./a-z])|, "#{CORVID_ROOT}", 'Gemfile', '.corvid/Gemfile'
 
         # Regenerate bundle lock files
-        File.delete 'Gemfile.lock'
+        gsub_file! /^GEM.+\z/m, '', 'Gemfile.lock'
         invoke_sh! 'bundle install --local --quiet'
       end
     end
