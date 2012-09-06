@@ -258,14 +258,11 @@ module DynamicFixtures
 
   def_fixture :client_with_plugin, cd_into: 'client_project' do
     copy_dynamic_fixture :plugin
-    d= 'client_project/.corvid'
-    FileUtils.cp "#{d}/features-without_p1f1.yml", "#{d}/features.yml"
   end
 
   def_fixture :client_with_plugin_and_feature, cd_into: 'client_project' do
     copy_dynamic_fixture :plugin
-    d= 'client_project/.corvid'
-    FileUtils.cp "#{d}/features-with_p1f1.yml", "#{d}/features.yml"
+    FileUtils.cp_r "p1f1_installation_changes/.", "client_project"
   end
 end
 
