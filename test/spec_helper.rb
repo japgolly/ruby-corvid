@@ -249,11 +249,17 @@ module DynamicFixtures
 
   def_fixture :plugin do
     copy_fixture 'plugin'
+    %w[client_project plugin_project].each do |dir|
+      Dir.chdir dir do
 
-    # Change relative paths to Corvid, into absolute paths
-    gsub_files! %r|(?<![./a-z])\.\./\.\./\.\./\.\.(?![./a-z])|, "#{CORVID_ROOT}" \
-      ,'plugin_project/Gemfile.lock', 'plugin_project/Gemfile', 'plugin_project/.corvid/Gemfile' \
-      ,'client_project/Gemfile.lock', 'client_project/Gemfile', 'client_project/.corvid/Gemfile'
+        # Change relative paths to Corvid, into absolute paths
+        gsub_files! %r|(?<![./a-z])\.\./\.\./\.\./\.\.(?![./a-z])|, "#{CORVID_ROOT}", 'Gemfile', '.corvid/Gemfile'
+
+        # Regenerate bundle lock files
+        File.delete 'Gemfile.lock'
+        invoke_sh! 'bundle install --local --quiet'
+      end
+    end
   end
 
   def_fixture :client_with_plugin, cd_into: 'client_project' do
