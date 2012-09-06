@@ -2,6 +2,7 @@
 require_relative '../spec_helper'
 
 describe "Plugins from a Client's perspective" do
+  INSTALL_F1_TASK= 'p1:install:f1'.freeze
 
   let(:available_tasks){ $available_tasks ||= available_tasks_for_corvid }
 
@@ -22,6 +23,10 @@ describe "Plugins from a Client's perspective" do
 
     include_examples 'plugin-installed functionality'
 
+    it("Corvid CLI should create install task for p1:f1"){
+      available_tasks.should include INSTALL_F1_TASK
+    }
+
     it("Corvid CLI shouldn't load feature's corvid tasks"){
       available_tasks.should_not include 'p1:t2_task'
     }
@@ -36,6 +41,14 @@ describe "Plugins from a Client's perspective" do
       File.write CONST::PLUGINS_FILE, BUILTIN_PLUGIN_DETAILS.to_yaml
       invoke_rake('p1:hello').should be_false
     }
+
+    it("#{INSTALL_F1_TASK} task should install f1"){
+      @quiet_sh= true
+      'f1.txt'.should_not exist_as_file
+      invoke_corvid! INSTALL_F1_TASK
+      assert_features_installed %w[corvid:corvid p1:f1]
+      'f1.txt'.should exist_as_file
+    }
   end
 
   context "when plugin and feature is installed" do
@@ -46,6 +59,10 @@ describe "Plugins from a Client's perspective" do
 
     it("Corvid CLI should load feature's corvid tasks"){
       available_tasks.should include 'p1:t2_task'
+    }
+
+    it("Corvid CLI shouldn't create install task for p1:f1"){
+      available_tasks.should_not include INSTALL_F1_TASK
     }
 
     it("Rake should load feature's rake tasks"){

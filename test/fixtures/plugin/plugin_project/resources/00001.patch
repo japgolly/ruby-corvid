@@ -1,0 +1,31 @@
+Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+After: 27aa5ad28d59d191f8096a86e85944cd48083cfbe533aaf13b58419af74f2693
+Patch: e71c68cccdbd51768e439bfd0a08be797b50318250485e2268e44e6a25c65c76
+--- /dev/null	2012-09-03 14:23:42.005077313 +1000
++++ corvid-features/f1.rb	2012-09-06 10:25:36.747850959 +1000
+@@ -0,0 +1,21 @@
++# Requirements that must be satisfied before the feature can be installed.
++# @return [nil, String, Hash<String,Fixnum|Range|Array<Fixnum>>, Array] Requirements that can be provided to
++#   {RequirementValidator}.
++# @see RequirementValidator#add
++#
++#requirements
++
++install {
++  # empty_directory 'lib'
++  # copy_file       'hello.txt'
++  # copy_executable 'bin/hello'
++  copy_file 'f1.txt'
++}
++
++# update {|ver|
++#   case ver
++#   when 2
++#     update stuff here
++#     empty_directory 'lib'
++#   end
++# }
+--- /dev/null	2012-09-03 14:23:42.005077313 +1000
++++ f1.txt	2012-09-06 10:26:06.394679419 +1000
+@@ -0,0 +1 @@
++Congratulations! Feature f1 is installed.

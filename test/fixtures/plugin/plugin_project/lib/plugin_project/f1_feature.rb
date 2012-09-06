@@ -5,6 +5,8 @@ module PluginProject
 
     since_ver 1
 
+    managed_install_task? true
+
     corvid_tasks {
       require 'plugin_project/t2_task'
     }

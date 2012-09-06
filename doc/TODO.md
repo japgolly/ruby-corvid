@@ -45,7 +45,6 @@ Non-Functional / Under-The-Hood
 Plugins
 -------
 ### Must
-* Corvid CLI should provide install tasks for uninstalled plugin features (unless disabled by flag in Feature).
 
 ### Should
 * Doco on how plugins work, how to write one.

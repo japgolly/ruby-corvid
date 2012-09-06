@@ -1,5 +1,6 @@
 require 'corvid/extension_registry'
 require 'corvid/feature_registry'
+require 'corvid/generators/managed_features'
 require 'thor'
 
 module Corvid
@@ -17,7 +18,7 @@ module Corvid
           Generator::InitCorvid.start
 
         else
-          # Load internal generators
+          # Load internal tasks
           require 'corvid/generators/init/plugin'    unless features.include? 'corvid:plugin'
           require 'corvid/generators/init/test_unit' unless features.include? 'corvid:test_unit'
           require 'corvid/generators/init/test_spec' unless features.include? 'corvid:test_spec'
@@ -28,8 +29,17 @@ module Corvid
           require 'corvid/generators/update'
           Generator::Update.add_tasks_for_installed_plugins!
 
-          # Load external generators
-          Corvid::ExtensionRegistry.run_extensions_for :corvid_tasks
+          # Load external tasks
+          ExtensionRegistry.run_extensions_for :corvid_tasks
+
+          # Create install tasks for uninstalled features
+          FeatureRegistry.feature_manifest.keys.each do |feature_id|
+            next if feature_id =~ /^corvid:/ # TODO corvid builtin features should be weaved in via plugin arch
+            next if features.include? feature_id
+            next unless f= FeatureRegistry[feature_id]
+            next unless f.managed_install_task?
+            Generator::ManagedFeatures.create_install_task_for feature_id
+          end
 
           # Show available tasks by default
           ARGV<< '-T' if ARGV.empty?
