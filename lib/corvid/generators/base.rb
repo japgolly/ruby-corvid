@@ -401,7 +401,10 @@ module Corvid
       # @raise If the installer file doesn't exist.
       def feature_installer_file!(dir = res_dir(), feature_name)
         filename= feature_installer_file(dir, feature_name)
-        raise "File not found: #{filename}" unless File.exists?(filename)
+        unless File.exists?(filename)
+          raise "File not found: #{filename}\n"\
+            "Feature installer for '#{feature_name}' doesn't seem to exist. Check the plugin's resources and try again."
+        end
         filename
       end
 
