@@ -271,6 +271,139 @@ module Corvid
         }
       end
 
+      # Updates a gemspec file so that it declares one or more given names, as executables.
+      #
+      # This will do a bunch of regex magic and try to handle a bunch of predetermined scenarios, but in the event that
+      # this function doesn't know how to (relatively-)safely make the required changes, the users will be promted to
+      # update the file manually and this function will return `false`.
+      #
+      # @param [String] gemspec_file The filename of the gemspec to update.
+      # @return [Boolean] Whether or not the gemspec was updated. `false` if the user was asked to update manually.
+      # @raise If the file doesn't exist.
+      def add_executable_to_gemspec(gemspec_file, *executable_names)
+
+        # Validate exe names
+        executable_names= executable_names.flatten.uniq
+        return true if executable_names.empty?
+        executable_names.each{|n| raise "Invalid name: #{n.inspect}. Only Strings are allowed." unless String === n }
+
+        # Read and parse gemspec
+        content= File.read(gemspec_file)
+        gem_var, gem_block_opener, gem_block_closer, gem_block_closer_regex = nil
+        if content =~ /Gem::Specification.*?(#{BLOCK_OPENERS_REGEX_STR})\s*?\|\s*?(\S+?)\s*?\|/m
+          gem_block_opener , gem_var = $1,$2
+          gem_block_closer= BLOCK_CLOSERS[gem_block_opener][:str]
+          gem_block_closer_regex= BLOCK_CLOSERS[gem_block_opener][:regex]
+        end
+
+        new_content= nil
+
+        # Handle case where it isn't defined at all
+        if gem_var and content !~ /\n[^\n#]+?\.executables\s*=/
+          new_line= "#{gem_var}.executables = #{executable_names.inspect}"
+          new_content= append_to_code_block(new_line, content, gem_block_closer, gem_block_closer_regex)
+
+        # Handle case where it is a plain array
+        elsif /\n[^\n#]+?\.executables\s*=\s*\[/ === content
+          end_char= ']'
+          new_content= content.sub /(\n[^\n#]+?\.executables\s*=\s*\[)(.*?)#{Regexp.quote end_char}/m do
+            start,mid = $1,$2
+            mid += ', ' unless mid.empty?
+            mid += executable_names.map(&:inspect).join(', ')
+            "#{start}#{mid}#{end_char}"
+            #.tap{|r| puts "#{[start,mid].inspect} ---> #{r.inspect}"}
+          end
+
+        # Handle case where it is a word array
+        elsif /\n[^\n#]+?\.executables\s*=\s*%w(\S)/ === content
+          end_char= PERCENT_SYNTAX_CLOSERS[$1] || $1
+          new_content= content.sub /(\n[^\n#]+?\.executables\s*=\s*%w.)(.*?)#{Regexp.quote end_char}/m do
+            start,mid = $1,$2
+            if /\n(\s*)\S.*\n/ === mid
+              # Match previous intending in multiline word array
+              indent= $1
+              contrib= executable_names.map{|e| indent + e }.join "\n"
+              mid.sub! /(\n[^\n]*\z)/m, "\n#{contrib}\\1"
+            else
+              # Append to single-line word array
+              mid += ' ' unless mid.empty?
+              mid += executable_names.join(' ')
+            end
+            "#{start}#{mid}#{end_char}"
+            #.tap{|r| puts "#{[start,mid].inspect} ---> #{r.inspect}"}
+          end
+
+        # Handle case where it is defined some other way
+        elsif gem_var and /\n[^\n#]+?\.executables.*?=/m === content
+          new_lines= executable_names.map {|exe|
+            exe= exe.inspect
+            "#{gem_var}.executables << #{exe} unless #{gem_var}.executables.include? #{exe}"
+          }.join "\n"
+          new_content= append_to_code_block(new_lines, content, gem_block_closer, gem_block_closer_regex)
+        end
+
+        # This code currently makes no effort only add new items. It just adds what it's been told.
+        # Thus if new_content doesn't contain any changes, it means something didn't work.
+        new_content= nil if new_content == content
+
+        # Save the result or warn the user
+        if new_content
+          create_file gemspec_file, new_content, :force
+          true
+        else
+          say_status 'gemspec', "Failed to update gemspec: #{gemspec_file}. Add the following executables to it manually:", :red
+          executable_names.each{|n| say "              - #{n}" }
+          false
+        end
+      end
+
+      alias :add_executables_to_gemspec :add_executable_to_gemspec
+
+      private
+
+      # Adds a line (or lines) of code to the end of a block in string of Ruby code.
+      #
+      # @param [String] new_line A line of text. Add carriage returns for multiple lines; indenting will be taken care
+      #   of for you.
+      # @param [String] content The code that `new_line` will be inserted into.
+      # @param [String] gem_block_closer A string indicating the end of a block. Usually either `end` or `}`.
+      # @param [Regexp] gem_block_closer_regex A regexp that selects the end of a block. Make it smarter than just using
+      #   `Regexp.quote` by adding look-ahead/look-behind checks.
+      # @return [nil|String] `nil` if the end-of-block wasn't found, else a new copy of the code with the new lines
+      #   inserted.
+      def append_to_code_block(new_line, content, gem_block_closer, gem_block_closer_regex)
+        segments= (content + '!').split gem_block_closer_regex
+        if segments.size > 1
+          s= segments[-2]
+
+          if /\n(\s*?)\S[^\n]*?\n[^\n]*\z/ === s
+            indent= $1.sub /\A\n/, ''
+            s.sub! /(\n[^\n]*\z)/, "\n#{indent}#{new_line.gsub /(?<=\n)/, indent}\\1"
+          else
+            s += "\n" + new_line + "\n"
+          end
+          segments[-2]= s
+          segments.join(gem_block_closer)[0..-2]
+        else
+          nil
+        end
+      end
+
+      # Map of matching braces Ruby uses for things like %w[], %r<>, etc.
+      PERCENT_SYNTAX_CLOSERS= {
+        '<' => '>',
+        '(' => ')',
+        '[' => ']',
+        '{' => '}',
+      }
+
+      BLOCK_CLOSERS= {
+        'do' => {str: 'end', regex: /(?<![a-zA-Z0-9_])end(?![a-zA-Z0-9_])/},
+        '{' => {str: '}', regex: /\}/},
+      }
+
+      BLOCK_OPENERS_REGEX_STR= "(?:#{BLOCK_CLOSERS.keys.map{|k| Regexp.quote k }.join '|'})"
+
       #-----------------------------------------------------------------------------------------------------------------
 
       # @!visibility private
