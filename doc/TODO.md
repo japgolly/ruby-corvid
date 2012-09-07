@@ -54,8 +54,7 @@ Plugins
 ### Must
 
 ### Should
-* Doco on how plugins work, how to write one.
-* Add plugin bin to gemspec
+* Doco for potential plugin devs/users
 
 ### Could
 * Plugin CLI should load plugin & feature provided tasks when installed.
