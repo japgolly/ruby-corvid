@@ -163,6 +163,12 @@ module TestHelpers
     available_tasks_for 'corvid', &:invoke_corvid!
   end
 
+  def create_gemspec_file(project_name)
+    content= File.read("#{CORVID_ROOT}/corvid.gemspec")
+                 .gsub('corvid',project_name)
+    File.write "#{project_name}.gemspec", content
+  end
+
   def self.included base
     base.extend ClassMethods
   end

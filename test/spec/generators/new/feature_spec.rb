@@ -10,6 +10,7 @@ describe Corvid::Generator::NewFeature do
       run_all_in_empty_dir("my_stuff") {
         copy_dynamic_fixture :bare
         add_feature! 'corvid:plugin'
+        create_gemspec_file 'my_stuff'
         run_generator Corvid::Generator::NewPlugin, 'plugin big'
         run_generator described_class, 'feature small'
       }
@@ -23,6 +24,7 @@ describe Corvid::Generator::NewFeature do
       run_all_in_empty_dir("my_stuff") {
         copy_dynamic_fixture :bare
         add_feature! 'corvid:plugin'
+        create_gemspec_file 'my_stuff'
         Dir.mkdir 'resources'
         File.write 'resources/00001.patch', ''
         File.write 'resources/00002.patch', ''

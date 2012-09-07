@@ -348,7 +348,7 @@ module Corvid
 
         # Save the result or warn the user
         if new_content
-          create_file gemspec_file, new_content, :force
+          create_file gemspec_file, new_content, force: true
           true
         else
           say_status 'gemspec', "Failed to update gemspec: #{gemspec_file}. Add the following executables to it manually:", :red

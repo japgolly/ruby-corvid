@@ -12,6 +12,7 @@ class Corvid::Generator::NewPlugin < ::Corvid::Generator::Base
       template2 'lib/%project_name%/%plugin_name%_plugin.rb.tt'
       template2 'test/spec/%plugin_name%_plugin_spec.rb.tt'
       template2 'bin/%plugin_name%.tt', perms: 0755
+      add_executable_to_gemspec "#{project_name}.gemspec", plugin_name
     }
   end
 

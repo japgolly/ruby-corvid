@@ -9,6 +9,7 @@ describe Corvid::Generator::NewPlugin do
       run_all_in_empty_dir("my_thing") {
         copy_dynamic_fixture :bare
         add_feature! 'corvid:plugin'
+        create_gemspec_file 'my_thing'
         run_generator described_class, 'plugin happy'
       }
 
@@ -34,6 +35,10 @@ describe Corvid::Generator::NewPlugin do
           .and(%r|MyThing::HappyPlugin|)
           .and(%r|require 'corvid/cli/plugin'|)
         File.executable?('bin/happy').should be_true
+      }
+
+      it("should register the CLI as an executable in the gemspec"){
+        'my_thing.gemspec'.should be_file_with_content %r|gem.executable.*[^a-zA-Z/]happy|
       }
     end
 
