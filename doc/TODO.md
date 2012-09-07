@@ -44,14 +44,15 @@ Non-Functional / Under-The-Hood
 * Split `corvid/rake/tasks/test.rb` into unit, spec, all.
 * Check transient dependencies. Like do corvid apps really need Thor on _their_ runtime dep list?
 * Separate client and core stuff in corvid dir stucture. `guard.rb` and `plugin.rb` shouldn't be beside each other.
+* Move dynamic fixtures to GU.
 
 Plugins
 -------
 ### Must
-* Doc new classes and methods.
 
 ### Should
 * Doco on how plugins work, how to write one.
+* Add plugin bin to gemspec
 
 ### Could
 * Plugin CLI should load plugin & feature provided tasks when installed.
