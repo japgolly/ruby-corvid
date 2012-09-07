@@ -1,3 +1,4 @@
+require 'golly-utils/ruby_ext/kernel'
 require 'corvid/gemfile_evaluator'
 
 module Corvid
@@ -264,7 +265,7 @@ module Corvid
         end
 
         $corvid_bundle_install_at_exit_installed= true
-        at_exit {
+        at_exit_preserving_exit_status {
           ENV['BUNDLE_GEMFILE']= nil
           ENV['RUBYOPT']= nil
           run "bundle install"
