@@ -9,7 +9,6 @@ Fix or Enhance Existing Functionality
 * Handle cases where installed = n and first version of feature installer is n+1
 * `bin/corvid` shouldn't just be loading everything. It should use `plugins.yml` to determine.
 * `corvid new:test:*` shouldn't be using latest resources. They should be using `version.yml`
-* rake test:spec should fail build, not report failure and allow integration tests to run & pass.
 
 Documentation
 -------------

@@ -1,3 +1,4 @@
+require 'golly-utils/ruby_ext/kernel'
 require 'fileutils'
 require 'tmpdir'
 
@@ -50,7 +51,7 @@ module DynamicFixtures
 
   def dynamic_fixture_root
     $dynamic_fixture_root ||= (
-      at_exit{
+      at_exit_preserving_exit_status {
         FileUtils.remove_entry_secure $dynamic_fixture_root if $dynamic_fixture_root
         $dynamic_fixtures= $dynamic_fixture_root= nil
       }
