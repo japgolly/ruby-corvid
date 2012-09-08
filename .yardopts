@@ -3,5 +3,6 @@
 --markup     markdown
 --readme     README.md
 --files      doc/*.md
+--asset      doc/img:img
 --protected
 lib/**/*.rb
