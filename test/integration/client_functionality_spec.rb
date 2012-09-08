@@ -1,8 +1,9 @@
 # encoding: utf-8
 require_relative '../spec_helper'
 
-describe 'Client-Functionality Integration Test' do
-  run_all_in_empty_dir
+describe 'Client Functionality provided by Corvid' do
+  include IntegrationTestDecoration
+  run_all_in_empty_dir 'int_test'
   before(:each){ clean }
 
   def clean
@@ -11,15 +12,14 @@ describe 'Client-Functionality Integration Test' do
     Dir.exist?('target').should == false
   end
 
-  it("should initialise project"){
-    invoke_corvid! "init:project --no-#{RUN_BUNDLE} --test-unit --test-spec"
-    patch_corvid_gemfile
-    invoke_sh! 'bundle install'
-    File.exist?('Gemfile.lock').should == true
-    invoke_sh! 'echo "class Hehe; def num; 123 end end" > lib/hehe.rb'
+  it("should install itself into new project"){
+    invoke_corvid! "init --no-#{RUN_BUNDLE} --test-unit --test-spec"
+    init_gemfile
+    File.write 'lib/hehe.rb', 'class Hehe; def num; 123 end end'
   }
 
   it("should generate documentation"){
+
     def check_docs_exist(expected)
       File.exist?('target/doc/index.html').should == expected
       File.exist?('target/yardoc.db').should == expected
@@ -74,4 +74,5 @@ describe 'Client-Functionality Integration Test' do
     invoke_sh! 'bin/rspec test/spec/hehe_spec.rb', 'coverage'=>'1'
     File.exist?('target/coverage/index.html').should == true
   }
+
 end

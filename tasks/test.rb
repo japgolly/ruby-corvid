@@ -4,8 +4,19 @@ namespace :test do
     RSpec::Core::RakeTask.new(:"test:#{task}") do |t|
       t.rspec_path= "bin/rspec"
       t.pattern= "#{dir}/{,*/,**/}*_spec.rb"
+      t.verbose= false
       t.rspec_opts= args if args
     end
+  end
+
+  desc "Run fast tests."
+  task :fast do
+    run_specs :fast, 'test/spec', '--order random -f p -t ~slow'
+  end
+
+  # desc "Run slow tests."
+  task :slow do
+    run_specs :slow, 'test/spec', '--order random -f p -t slow'
   end
 
   desc "Run tests: specifications."

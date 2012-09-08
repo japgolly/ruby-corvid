@@ -24,6 +24,14 @@ listen to it again and now I just suddenly love it! Can't stop listening to it.
 
 <img style="width:200px;height:200px" alt="" src="http://www.coverdude.com/covers/symphony-x-iconoclast-front-cover-94733.jpg" />
 
+Rhapsody Of Fire
+----------------
+Catchy awesome album! I'm listening to it nearly 10 times a day. Tra fuoco e lacrime!
+
+* 2011 - From Chaos To Eternity
+
+<img style="width:200px;height:200px" alt="" src="http://www.lacriticamusical.com/images/stories/from%20chaos%20to%20eternity%20med.jpg" />
+
 Mudvayne
 --------
 Was in the mood for something fast, more percussive than melodic, and aggressive. Didn't find it in this but came to

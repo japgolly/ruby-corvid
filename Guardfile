@@ -17,14 +17,16 @@ group :spec do
     watch(%r'^test/spec/.+_spec\.rb$')
 
     # Lib
-    watch(%r'^lib/(.+)\.rb$')             {|m| "test/spec/#{m[1]}_spec.rb"}
-    watch(%r'^lib/corvid/(.+)\.rb$')      {|m| "test/spec/#{m[1]}_spec.rb"}
+    watch(%r'^lib/corvid/(.+)\.rb$') {|m| "test/spec/#{m[1]}_spec.rb"}
 
     # Fixtures
     watch(%r'^test/fixtures/migration/.+$')  {"test/spec/res_patch_manager_spec.rb"}
     upgrading= %w[test/spec/generators/init_spec.rb test/spec/generators/update_spec.rb]
     watch(%r'^test/fixtures/upgrading/.+$')   {upgrading}
     watch('test/helpers/fixture-upgrading.rb'){upgrading}
+
+    # Exceptional cases
+    watch(%r'^lib/corvid/test/resource_patch_tests\.rb') {'test/spec/builtin/builtin_plugin_spec.rb'}
   end
 end
 
@@ -36,5 +38,8 @@ group :int do
 
     # Each spec
     watch(%r'^test/integration/.+_spec\.rb$')
+
+    # Lib
+    watch(%r'^lib/corvid/(.+)\.rb$') {|m| "test/integration/#{m[1]}_spec.rb"}
   end
 end

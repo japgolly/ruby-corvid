@@ -1,0 +1,7 @@
+---
+corvid:
+  :path: corvid/builtin/builtin_plugin
+  :class: Corvid::Builtin::BuiltinPlugin
+p1:
+  :path: plugin_project/p1_plugin
+  :class: PluginProject::P1Plugin

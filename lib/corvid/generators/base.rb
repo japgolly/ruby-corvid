@@ -1,6 +1,13 @@
 require 'corvid/environment'
+require 'corvid/constants'
+require 'corvid/feature_registry'
+require 'corvid/plugin_registry'
+require 'corvid/naming_policy'
+require 'corvid/requirement_validator'
 require 'corvid/res_patch_manager'
-require 'corvid/generators/actions'
+require 'corvid/generators/action_extentions'
+require 'corvid/generators/template_vars'
+require 'corvid/generators/thor_monkey_patches'
 
 require 'active_support/core_ext/string/inflections'
 require 'active_support/inflections'
@@ -22,21 +29,14 @@ module Corvid
     class Base < Thor
       include Thor::Actions
       include ActionExtentions
-
-      # Name of the option that users can use on the CLI to opt-out of Bundler being run at the end of certain tasks.
-      RUN_BUNDLE= :'run_bundle'
-
-      # Filename of the client-side file that stores the version of Corvid resources last deployed.
-      VERSION_FILE= '.corvid/version.yml'
-
-      # Filename of the client-side file that stores the Corvid features that are enabled in the client's project.
-      FEATURES_FILE= '.corvid/features.yml'
+      include TemplateVars
+      include ::Corvid::NamingPolicy
 
       # Methods provided to feature installer that each take a block of code.
       FEATURE_INSTALLER_CODE_DEFS= %w[install update].map(&:freeze).freeze
 
       # Methods provided to feature installer that each take a single value.
-      FEATURE_INSTALLER_VALUES_DEFS= %w[].map(&:freeze).freeze
+      FEATURE_INSTALLER_VALUES_DEFS= %w[requirements].map(&:freeze).freeze
 
       # @!visibility private
       def self.inherited(c)
@@ -46,69 +46,70 @@ module Corvid
         EOB
       end
 
-      # This stops Thor thinking the public methods below are tasks
+      # This stops stupid Thor thinking the public methods below are tasks and issuing warnings
+      # Not using no_tasks{} because it stops Yard seeing the methods.
       @no_tasks= true
 
-      # Sets the {Corvid::ResPatchManager} that the generator will use.
-      # @param [Corvid::ResPatchManager] rpm
-      # @return [Corvid::ResPatchManager]
-      def rpm=(rpm)
-        @rpm= rpm
-      end
-
-      # Gets the {Corvid::ResPatchManager} that the generator will use.
-      # @return [Corvid::ResPatchManager]
-      def rpm()
-        @rpm ||= ::Corvid::ResPatchManager.new
-      end
-
-      # Reads and parses the contents of the client's {FEATURES_FILE} if it exists.
+      # Returns a resource-patch manager setup to use the resources of a given plugin.
       #
-      # @return [nil,Array<String>] A list of features or `nil` if the file wasn't found.
-      def read_client_features
-        if File.exists? FEATURES_FILE
-          v= YAML.load_file FEATURES_FILE
-          raise "Invalid #{FEATURES_FILE}. Array expected but got #{v.class}." unless v.is_a?(Array)
-          raise "Invalid #{FEATURES_FILE}. At least 1 feature expected but not defined." if v.empty?
-          v
+      # @param [Plugin] plugin
+      # @return [ResPatchManager]
+      def rpm_for(plugin)
+        @rpms ||= {}
+        @rpms[plugin.name] ||= ::Corvid::ResPatchManager.new(plugin.resources_path)
+      end
+
+      # @!attribute [rw] feature_registry
+      #   @return [FeatureRegistry]
+      ::Corvid::FeatureRegistry.def_accessor(self)
+
+      # @!attribute [rw] plugin_registry
+      #   @return [PluginRegistry]
+      ::Corvid::PluginRegistry.def_accessor(self)
+
+      def builtin_plugin
+        @@builtin_plugin ||= (
+          require 'corvid/builtin/builtin_plugin'
+          ::Corvid::Builtin::BuiltinPlugin.new
+        )
+      end
+
+      # Reads and parses the contents of the client's {Constants::VERSIONS_FILE VERSIONS_FILE} if it exists.
+      #
+      # @return [nil,Hash<String,Fixnum>] The version numbers for each plugin or `nil` if the file wasn't found.
+      def read_client_versions
+        if File.exists?(Constants::VERSIONS_FILE)
+          vers= YAML.load_file(Constants::VERSIONS_FILE)
+          validate_versions! vers, "\nCheck your #{Constants::VERSIONS_FILE} file."
+          vers
         else
           nil
         end
       end
 
-      # Reads and parses the contents of the client's {FEATURES_FILE}.
+      # Validates the (potential) contents of a client's {Constants::VERSIONS_FILE VERSIONS_FILE}.
       #
-      # @return [Array<String>] A list of features.
-      # @raise If file not found.
-      # @see #read_client_features
-      def read_client_features!
-        features= read_client_features
-        raise "File not found: #{FEATURES_FILE}\nYou must install Corvid first. Try corvid init:project." if features.nil?
-        features
-      end
-
-      # Reads and parses the contents of the client's {VERSION_FILE} if it exists.
-      #
-      # @return [nil,Fixnum] The version number or `nil` if the file wasn't found.
-      def read_client_version
-        if File.exists?(VERSION_FILE)
-          v= YAML.load_file(VERSION_FILE)
-          raise "Invalid version: #{v.inspect}\nNumber expected. Check your #{VERSION_FILE}." unless v.is_a? Fixnum
-          v
-        else
-          nil
+      # @param [Hash<String,Fixnum>] vers A hash of plugins to the version of corresponding resources installed.
+      # @param [String] errmsg_suffix Optional text to append to error messages when validation fails.
+      # @return [void]
+      def validate_versions!(vers, errmsg_suffix=nil)
+        s= errmsg_suffix ? errmsg_suffix.sub(/\a(?!=\s)/,' ') : ''
+        raise "Invalid version settings, hash expected. Received: #{vers.inspect}.#{s}" unless vers.is_a? Hash
+        vers.each do |p,v|
+          raise "Invalid plugin name: #{p.inspect}." unless p.is_a? String
+          raise "Invalid version for #{p}: #{v.inspect}. Number expected." unless v.is_a? Fixnum
         end
       end
 
-      # Reads and parses the contents of the client's {VERSION_FILE} if it exists.
+      # Reads and parses the contents of the client's {Constants::VERSIONS_FILE VERSIONS_FILE} if it exists.
       #
-      # @return [Fixnum] The version number.
+      # @return [Hash<String,Fixnum>] The version numbers for each plugin.
       # @raise If file not found.
       # @see read_client_version
-      def read_client_version!
-        ver= read_client_version
-        raise "File not found: #{VERSION_FILE}\nYou must install Corvid first. Try corvid init:project." if ver.nil?
-        ver
+      def read_client_versions!
+        vers= read_client_versions
+        raise "File not found: #{Constants::VERSIONS_FILE}\nYou must install Corvid first." if vers.nil?
+        vers
       end
 
       protected
@@ -118,10 +119,19 @@ module Corvid
       #
       # @return [String]
       # @raise If resources aren't available.
-      # @see #with_latest_resources
       # @see #with_resources
       def res_dir
         $corvid_global_thor_source_root || raise("Resources not available. Call with_resources() first.")
+      end
+
+      # The current resource-patch manager (as specified by {#with_resources}) that the generator will use.
+      #
+      # @return [ResPatchManager]
+      # @raise If resources aren't available.
+      # @see #with_resources
+      def rpm
+        return @@rpm if @@rpm
+        raise("Resources not available. Call with_resources() first.")
       end
 
       # Makes available to generators the latest version of Corvid resources.
@@ -129,30 +139,53 @@ module Corvid
       # @yieldparam [Fixnum] ver The version of the resources being used.
       # @return The return result of `block`.
       # @see #with_resources
-      def with_latest_resources(&block)
-        with_resources :latest, &block
+      def with_latest_resources(plugin, &block)
+        with_resources plugin, :latest, &block
       end
 
       # Works with {ResPatchManager} to provide generators with an specified version of Corvid resources.
       #
       # @note Only one version of resources can be made available at one time. Nested calls to this method requesting
-      #   the same version (reentrancy) will be allowed, but a nested call for a differing version will fail.
-      # @raise If resources of a different version are already available.
+      #   the same plugin and version (reentrancy) will be allowed, but a nested call for a differing version will fail.
+      # @raise If resources of a different plugin or version are already available.
       #
-      # @return The return result of `block`.
       # @overload with_resources(dir, &block)
       #   @param [String] dir The directory where the resources can be found.
       #   @yieldparam [void]
-      # @overload with_resources(ver, &block)
+      # @overload with_resources(plugin, ver, &block)
+      #   @param [Plugin] plugin The plugin providing the resources.
       #   @param [Fixnum, :latest] ver The version of resources to use.
       #   @yieldparam [Fixnum] ver The version of the resources being used.
-      def with_resources(ver, &block)
+      # @return The return result of `block`.
+      def with_resources(arg1, arg2=nil, &block)
+        # Parse args
+        plugin= ver= dir= nil
+        if arg2
+         plugin= arg1
+         ver= arg2
+       else
+         ver= dir= arg1
+       end
+        plugin_rpm= plugin ? rpm_for(plugin) : nil
+        plugin_name= plugin ? plugin.name : 'Not provided.'
 
         # Check args
         raise "Block required." unless block
-        ver= rpm.latest_version if ver == :latest
-        raise "Invalid version: #{ver.inspect}" unless ver.is_a?(String) or ver.is_a?(Fixnum)
-        raise "Directory doesn't exist: #{ver}" if ver.is_a?(String) and !Dir.exists?(ver)
+        case ver
+        when Fixnum
+        when :latest
+          raise "Plugin required but not provided." unless plugin_rpm
+          ver= plugin_rpm.latest_version
+        when String
+          raise "Directory doesn't exist: #{ver}" unless Dir.exists?(ver)
+        else
+          raise "Invalid version: #{ver.inspect}"
+        end
+
+        # Make sure no conflict
+        if @@with_resource_plugin and plugin_name != @@with_resource_plugin
+          raise "Nested calls with different plugins not supported. This should never occur; BUG!\nInitial: #{@@with_resource_plugin.inspect}\nProposed: #{plugin_name.inspect}"
+        end
         if @@with_resource_version and ver != @@with_resource_version
           raise "Nested calls with different versions not supported. This should never occur; BUG!\nInitial: #{@@with_resource_version.inspect}\nProposed: #{ver.inspect}"
         end
@@ -160,79 +193,60 @@ module Corvid
         @@with_resource_depth += 1
         begin
 
+          # Run locally if resources already available (i.e. nested call)
           if @@with_resource_depth > 1
-            # Run locally if already pointing at desired resources
-            return block.call(ver)
-          else
-            # Prepare initial state
-            setup_proc= lambda {|dir|
-              @@with_resource_version= ver
-              @source_paths= [dir]
-              $corvid_global_thor_source_root= dir
-            }
+            return block.(ver)
+          end
 
-            if ver.is_a?(String)
-              # Use existing resource dir
-              setup_proc.call ver
-              return block.call()
-            else
-              # Deploy resources via RPM
-              rpm.with_resources(ver) {|dir|
-                setup_proc.call dir
-                return block.call(ver)
-              }
-            end
+          # Logic for setting initial state
+          setup_proc= lambda {|dir|
+            @@with_resource_plugin= plugin_name
+            @@with_resource_version= ver
+            @@rpm= plugin_rpm
+            @source_paths= [dir]
+            $corvid_global_thor_source_root= dir
+          }
+
+          # If dir already provided, use it
+          if ver.is_a?(String)
+            setup_proc.call ver
+            return block.()
+          else
+            # Deploy resources via RPM
+            plugin_rpm.with_resources(ver) {|dir|
+              setup_proc.call dir
+              return block.(ver)
+            }
           end
 
         ensure
           # Clean up when done
           if (@@with_resource_depth -= 1) == 0
-            $corvid_global_thor_source_root= nil
+            @@with_resource_plugin= nil
             @@with_resource_version= nil
+            @@rpm= nil
             @source_paths= nil
+            $corvid_global_thor_source_root= nil
           end
         end
       end
 
-      # Declares a Thor option that allows users to opt-out of Bundler being run at the end of certain tasks.
+      # Adds feature ids to the client's {Constants::FEATURES_FILE FEATURES_FILE}.
       #
-      # @param [Base] t The calling generator.
-      # @return [void]
-      # @see RUN_BUNDLE
-      # @see #run_bundle
-      def self.declare_option_to_run_bundle(t)
-        t.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
-      end
-
-      # Unless the option to disable this specifies otherwise, asynchronously sets up `bundle install` to run in the
-      # client's project after all generators have completed.
+      # Only feature ids not already in the file will be added, and {Constants::FEATURES_FILE FEATURES_FILE} will only
+      # be updated if there are new feature ids to add.
       #
-      # @return [void]
-      def run_bundle
-        if options[RUN_BUNDLE] and !$corvid_bundle_install_at_exit_installed
-          $corvid_bundle_install_at_exit_installed= true
-          at_exit {
-            ENV['BUNDLE_GEMFILE']= nil
-            ENV['RUBYOPT']= nil
-            run "bundle install"
-          }
-        end
-      end
-
-      # Adds features to the client's {FEATURES_FILE}.
-      #
-      # Only features not already in the file will be added, and {FEATURES_FILE} will only be updated if there are new
-      # features to add.
-      #
-      # @param [Array<String>] features
+      # @param [Array<String>] feature_ids
       # @return [Boolean] `true` if new features were added to the client's features, else `false`.
-      def add_features(*features)
+      def add_features(*feature_ids)
+        validate_feature_ids! *feature_ids
+
         # Read currently installed features
-        installed= read_client_features || []
+        installed= feature_registry.read_client_features || []
         size_before= installed.size
 
         # Add features
-        features.flatten.each do |feature|
+        feature_ids.flatten.each do |feature|
           installed<< feature unless installed.include?(feature)
         end
 
@@ -246,32 +260,168 @@ module Corvid
       end
       alias :add_feature :add_features
 
+      # TODO
+      #
+      # @param [Plugin] plugin The plugin instance.
+      # @return [true]
+      def add_plugin(plugin)
+        name= plugin.name
+        validate_plugin_name! name
+        pdata= plugin_registry.read_client_plugin_details
+        pdata ||= {}
+        pdata[name]= {path: plugin.require_path, class: plugin.class.to_s}
+        create_file Constants::PLUGINS_FILE, pdata.to_yaml, force: true
+        true
+      end
+
+      def add_version(plugin_or_name, version)
+        plugin_name= plugin_or_name.is_a?(Plugin) ? plugin_or_name.name : plugin_or_name
+        vers= read_client_versions || {}
+        vers[plugin_name]= version
+        write_client_versions vers
+      end
+
+      def install_plugin(plugin_or_name)
+        plugin= plugin_or_name.is_a?(Plugin) ? plugin_or_name : plugin_registry.instance_for(plugin_or_name)
+
+        # Check if plugin installed yet
+        installed= plugin_registry.read_client_plugins || []
+        unless installed.include? plugin.name
+
+          # Validate plugin requirements
+          rv= new_requirement_validator
+          rv.add plugin.requirements
+          rv.validate!
+
+          # Install plugin
+          add_plugin plugin
+
+          # Run post-install hook
+          plugin.run_callback :after_installed, context: self
+
+          # Auto-install features
+          features= plugin.auto_install_features || []
+          features.each {|feature_name|
+            install_feature plugin, feature_name
+          }
+        end
+
+        true
+      end
+
+      def new_requirement_validator
+        rv= ::Corvid::RequirementValidator.new
+        rv.set_client_state(
+          plugin_registry.read_client_plugins,
+          feature_registry.read_client_features,
+          read_client_versions
+        )
+        rv
+      end
+
+      def validate_requirements!(*requirements)
+        rv= new_requirement_validator
+        rv.add *requirements
+        rv.validate!
+      end
+
+      # Installs a feature into an existing Corvid project.
+      #
+      # If the feature is already installed then this tells the user thus and stops.
+      #
+      # @param [String,Plugin] plugin_or_name The plugin, or name of, that the feature belongs to.
+      # @param [String] feature_name The feature name to install.
+      # @option options [Boolean] :run_bundle_at_exit (false) If enabled, then {#run_bundle_at_exit} will be called after the feature is
+      #   added.
+      # @option options [Boolean] :say_if_installed (true) If enabled and feature is already installed, then display a message
+      #   indicating so to the user.
+      # @return [void]
+      # @raise If failed to read client's installed features and resource versions.
+      # @raise If the feature isn't available at the current version of resources (i.e. update required).
+      def install_feature(plugin_or_name, feature_name, options={})
+        options= DEFAULT_OPTIONS_FOR_INSTALL_FEATURE.merge options
+        plugin= plugin_or_name.is_a?(Plugin) ? plugin_or_name : plugin_registry.instance_for(plugin_or_name)
+        feature_id= feature_id_for(plugin.name, feature_name)
+
+        # Read client details
+        vers= read_client_versions || {}
+        feature_ids= feature_registry.read_client_features || []
+
+        # Check if feature already installed
+        if feature_ids.include? feature_id
+          say "Feature '#{feature_id}' already installed." if options[:say_if_installed]
+          return
+        end
+
+        # Ensure plugin installed
+        client_plugins= plugin_registry.read_client_plugins || []
+        unless client_plugins.include? plugin.name
+          raise "Can't install feature '#{feature_id}' because '#{plugin.name}' plugin is not installed."
+        end
+
+        # Ensure resources up-to-date
+        ver= vers[plugin.name]
+        f= feature_registry.instance_for(feature_id)
+        if ver and f and f.since_ver > ver
+          raise "The #{feature_id} feature requires at least v#{f.since_ver} of #{plugin.name} resources, but you are currently on v#{ver}.\nPlease perform an update first and then try again."
+        end
+
+        # Install feature
+        # TODO remember that plugins can call install_feature 'corvid:test_unit' & install feature of a diff plugin
+        with_resources(plugin, ver || :latest) {|actual_ver|
+          fi= feature_installer!(feature_name)
+
+          # Validate feature requirements
+          rv= new_requirement_validator
+          rv.add f.requirements
+          rv.add fi.requirements if fi.respond_to?(:requirements)
+          rv.validate!
+
+          # Install
+          with_action_context fi, &:install
+          add_feature feature_id
+          add_version plugin, actual_ver unless ver == actual_ver
+          yield actual_ver if block_given?
+          run_bundle_at_exit() if options[:run_bundle_at_exit]
+        }
+      end
+
+      # @!visibility private
+      DEFAULT_OPTIONS_FOR_INSTALL_FEATURE= {
+        run_bundle_at_exit: false,
+        say_if_installed: true,
+      }.freeze
+
       # @return [String] The installer filename.
-      def feature_installer_file(dir = res_dir(), feature)
-        "#{dir}/corvid-features/#{feature}.rb"
+      def feature_installer_file(dir = res_dir(), feature_name)
+        validate_feature_name! feature_name
+        "#{dir}/corvid-features/#{feature_name}.rb"
       end
       # @return [String] The installer filename.
       # @raise If the installer file doesn't exist.
-      def feature_installer_file!(dir = res_dir(), feature)
-        filename= feature_installer_file(dir, feature)
-        raise "File not found: #{filename}" unless File.exists?(filename)
+      def feature_installer_file!(dir = res_dir(), feature_name)
+        filename= feature_installer_file(dir, feature_name)
+        unless File.exists?(filename)
+          raise "File not found: #{filename}\n"\
+            "Feature installer for '#{feature_name}' doesn't seem to exist. Check the plugin's resources and try again."
+        end
         filename
       end
 
       # @return [nil,String] The installer file contents or `nil` if the file doesn't exist.
-      def feature_installer_code(dir = res_dir(), feature)
-        file= feature_installer_file(dir, feature)
+      def feature_installer_code(dir = res_dir(), feature_name)
+        file= feature_installer_file(dir, feature_name)
         return nil unless File.exist?(file)
         code= File.read(file) # TODO encoding
-        allow_declarative_feature_installer_config code, feature
+        allow_declarative_feature_installer_config(code, feature_name)
       end
       # @return [String] The installer file contents.
       # @raise If the installer file doesn't exist.
-      def feature_installer_code!(dir = res_dir(), feature)
-        code= feature_installer_code(dir, feature)
+      def feature_installer_code!(dir = res_dir(), feature_name)
+        code= feature_installer_code(dir, feature_name)
         code or (
-          feature_installer_file!(dir, feature) # This will raise its own error if file not found
-          raise "Unable to read feature installer code for '#{feature}'."
+          feature_installer_file!(dir, feature_name) # This will raise its own error if file not found
+          raise "Unable to read feature installer code for '#{feature_name}'."
         )
       end
 
@@ -331,17 +481,17 @@ module Corvid
 
       # @return [nil, GollyUtils::Delegator<Base>] An instance of the feature installer, unless any forseeable exception
       #   (such as the installer file not existing) occurs.
-      def feature_installer(dir = res_dir(), feature)
-        code= feature_installer_code(dir, feature)
-        code && dynamic_installer(code, feature)
+      def feature_installer(dir = res_dir(), feature_name)
+        code= feature_installer_code(dir, feature_name)
+        code && dynamic_installer(code, feature_name)
       end
       # @return [GollyUtils::Delegator<Base>] An instance of the feature installer.
       # @raise If the installer file doesn't exist or any other problem occurs.
-      def feature_installer!(dir = res_dir(), feature)
-        installer= feature_installer(dir, feature)
+      def feature_installer!(dir = res_dir(), feature_name)
+        installer= feature_installer(dir, feature_name)
         installer or (
-          feature_installer_file!(dir, feature) # This will raise its own error if file not found
-          raise "Unable to create feature installer for '#{feature}'."
+          feature_installer_file!(dir, feature_name) # This will raise its own error if file not found
+          raise "Unable to create feature installer for '#{feature_name}'."
         )
       end
 
@@ -362,7 +512,7 @@ module Corvid
       #
       # @param [Object] obj The object to embelish with given code.
       # @param [String] code The Ruby code to evaluate.
-      # @param [String] feature The name of the feature that the code belongs to.
+      # @param [String] feature The name of the feature that the code belongs to (for generating clear error-messages).
       # @param [nil,Fixnum] ver The version of the resources that the code belongs to.
       # @return the same object that was provided in `obj`.
       def add_dynamic_code!(obj, code, feature, ver=nil)
@@ -388,29 +538,33 @@ module Corvid
         obj
       end
 
-      # Creates or replaces the client's {VERSION_FILE}.
+      # Creates or replaces the client's {Constants::VERSIONS_FILE VERSIONS_FILE}.
       #
-      # @param [Fixnum] ver The version to write to the file.
+      # @param [Hash<String,Fixnum>] vers A hash of plugins to the version of corresponding resources installed.
       # @return [self]
-      def write_client_version(ver)
-        rpm.validate_version! ver, 1
-        create_file VERSION_FILE, ver.to_s, force: true
+      def write_client_versions(vers)
+        # TODO doesn't call rpm.validate_version! >>> rpm[plugin].validate_version! ver, 1
+        validate_versions! vers
+        create_file Constants::VERSIONS_FILE, vers.to_yaml, force: true
         self
       end
 
-      # Creates or replaces the client's {FEATURES_FILE}.
+      # Creates or replaces the client's {Constants::FEATURES_FILE FEATURES_FILE}.
       #
-      # @param [Array<String>] features The features to write to the file
+      # @param [Array<String>] feature_ids The feature_ids to write to the file
       # @return [self]
-      def write_client_features(features)
-        raise "Invalid features. Array expected. Got: #{features.inspect}" unless features.is_a?(Array)
-        create_file FEATURES_FILE, features.to_yaml, force: true
+      def write_client_features(feature_ids)
+        raise "Invalid features. Array expected. Got: #{feature_ids.inspect}" unless feature_ids.is_a?(Array)
+        validate_feature_ids! *feature_ids
+        create_file Constants::FEATURES_FILE, feature_ids.to_yaml, force: true
         self
       end
 
       private
       @@with_resource_depth= 0
+      @@with_resource_plugin= nil
       @@with_resource_version= nil
+      @@rpm= nil
 
       # Re-enable Thor's support for assuming all public methods are tasks
       no_tasks {}

@@ -3,6 +3,8 @@ require_relative '../../spec_helper'
 require 'corvid/generators/base'
 
 describe Corvid::Generator::Base do
+  add_generator_lets
+
   def source_root; $corvid_global_thor_source_root; end
 
   class X < Corvid::Generator::Base
@@ -10,7 +12,6 @@ describe Corvid::Generator::Base do
       public :rpm, :with_latest_resources
     }
   end
-
   class Y < Corvid::Generator::Base
     no_tasks {
       public :rpm, :with_latest_resources
@@ -19,51 +20,40 @@ describe Corvid::Generator::Base do
   end
 
   describe '#with_latest_resources' do
+    let(:plugin){ BUILTIN_PLUGIN.new }
+    let(:x){ X.new }
+
+    it("should provide resources"){
+      x.rpm_for(plugin).should_not be_nil
+      x.rpm_for(plugin).should_receive(:with_resources).once
+      x.with_latest_resources(plugin) {}
+    }
+
     it("should reuse an existing res-patch deployment"){
-      x= X.new
-      y= Y.new
-      made_it_in= false
-
-      [x,y].each do |t|
-        t.rpm.instance_eval do
-          def count; @count; end
-          def with_resources(ver)
-            @count ||= 0
-            @count += 1
-            yield
-          end
-        end
-      end
-
-      def count(x,y); (x.rpm.count || 0) + (y.rpm.count || 0); end
-
-      x.with_latest_resources {
-        count(x,y).should == 1
-
-        y.with_latest_resources {
-          count(x,y).should == 1
-
-          x.with_latest_resources {
-            count(x,y).should == 1
-            made_it_in= true
-          }
+      made_y= false
+      x.with_latest_resources(plugin) {
+        x.rpm.should_not be_nil
+        x.rpm.should_not_receive(:with_resources)
+        Y.new.with_latest_resources(plugin) {
+          made_y= true
         }
       }
-      made_it_in.should == true
+      made_y.should == true
     }
 
     it("should reset the templates directory when done"){
-      Base= Corvid::Generator::Base
-      X.new.with_latest_resources {
+      made_deepest= false
+      X.new.with_latest_resources(plugin) {
         source_root.should_not be_nil
-        X.new.with_latest_resources {
+        X.new.with_latest_resources(plugin) {
           source_root.should_not be_nil
+          made_deepest= true
         }
         source_root.should_not be_nil
       }
+      made_deepest.should == true
       source_root.should be_nil
     }
-
   end
 
   describe '#feature_installer' do
@@ -100,6 +90,154 @@ describe Corvid::Generator::Base do
       f= installer_for "install{ 2 }"
       f.respond_to?(:install).should == true
       f.respond_to?(:update).should == false
+    }
+  end
+
+  describe "#install_feature" do
+    it("should fail if client resource version is prior to first feature version"){
+      stub_client_state %w[a], [], {'a'=>3}
+      f= mock 'feature b'
+      f.should_receive(:since_ver).at_least(:once).and_return(4)
+      fr.should_receive(:instance_for).with('a:b').once.and_return(f)
+      pr.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
+      subject.should_not_receive :with_resources
+      expect{
+        subject.send :install_feature, 'a', 'b'
+      }.to raise_error /update/
+    }
+
+    it("should do nothing if feature already installed"){
+      stub_client_state %w[a], %w[a:b], {'a'=>3}
+      pr.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
+      subject.should_not_receive :with_resources
+      subject.send :install_feature, 'a', 'b'
+    }
+
+    it("should fail if plugin isn't already installed"){
+      stub_client_state %w[a], %w[a:af], {'a'=>3}
+      expect{
+        subject.send :install_feature, BUILTIN_PLUGIN.new, 'whatever'
+      }.to raise_error /plugin is not installed/
+    }
+
+    it("should validate requirements in the feature class"){
+      stub_client_state %w[a], nil, nil
+      p= stub name: 'a'
+      pr.should_receive(:instance_for).with('a').once.and_return(p)
+      f= stub requirements: 'x'
+      fr.should_receive(:instance_for).with('a:b').once.and_return(f)
+      subject.stub feature_installer!: mock('fi')
+      subject.stub(:with_resources).and_yield(7)
+
+      rv= mock 'rv'
+      subject.should_receive(:new_requirement_validator).once.and_return(rv)
+      rv.stub :add
+      rv.should_receive(:add).with('x')
+      rv.should_receive(:validate!).once.and_raise(Corvid::RequirementValidator::UnsatisfiedRequirementsError)
+      subject.should_not_receive :add_feature
+      expect{ subject.send :install_feature, 'a', 'b' }.to raise_error Corvid::RequirementValidator::UnsatisfiedRequirementsError
+    }
+
+    class FakeFeatureInstaller
+      def requirements; 'y' end
+    end
+    it("should validate requirements in the feature installer"){
+      stub_client_state %w[a], nil, nil
+      p= stub name: 'a'
+      pr.should_receive(:instance_for).with('a').once.and_return(p)
+      f= stub requirements: nil
+      fr.should_receive(:instance_for).with('a:b').once.and_return(f)
+      subject.should_receive(:feature_installer!).with('b').once.and_return(FakeFeatureInstaller.new)
+      subject.should_receive(:with_resources).with(p,:latest).once.and_yield(7)
+
+      rv= mock 'rv'
+      subject.should_receive(:new_requirement_validator).once.and_return(rv)
+      rv.stub :add
+      rv.should_receive(:add).once.with('y')
+      rv.should_receive(:validate!).once.and_raise(Corvid::RequirementValidator::UnsatisfiedRequirementsError)
+      subject.should_not_receive :add_feature
+      expect{ subject.send :install_feature, 'a', 'b' }.to raise_error Corvid::RequirementValidator::UnsatisfiedRequirementsError
+    }
+  end
+
+  describe '#add_plugin' do
+    run_all_in_empty_dir { Dir.mkdir '.corvid' }
+    before(:each){ File.delete CONST::PLUGINS_FILE if File.exists? CONST::PLUGINS_FILE }
+
+    it("should create the plugins file if it doesnt exist yet"){
+      subject.send :add_plugin, BUILTIN_PLUGIN.new
+      assert_plugins_installed BUILTIN_PLUGIN_DETAILS
+    }
+
+    it("should add new plugins to the plugin file"){
+      before= {'xxx'=>{path: 'xpath', class: 'X'}}.freeze
+      File.write CONST::PLUGINS_FILE, before.to_yaml
+      subject.send :add_plugin, BUILTIN_PLUGIN.new
+      assert_plugins_installed before.merge BUILTIN_PLUGIN_DETAILS
+    }
+
+    it("should replace existing plugin details if they differ") {
+      File.write CONST::PLUGINS_FILE, {'corvid'=>{path: 'xpath', class: 'X'}}.to_yaml
+      subject.send :add_plugin, BUILTIN_PLUGIN.new
+      assert_plugins_installed BUILTIN_PLUGIN_DETAILS
+    }
+  end
+
+  describe '#install plugin' do
+    it("should do nothing if plugin already installed"){
+      pr.should_receive(:instance_for).with('a').once.and_return(stub name: 'a')
+      pr.should_receive(:read_client_plugins).once.and_return(%w[a b])
+      subject.should_not_receive :add_plugin
+      subject.send :install_plugin, 'a'
+    }
+
+    it("should update the plugins file when plugin not installed yet"){
+      p1= stub name: 'a', requirements: nil, auto_install_features: [], run_callback: true
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      pr.should_receive(:read_client_plugins).at_least(:once).and_return(%w[b])
+      subject.should_receive(:add_plugin).once.with(p1)
+      subject.should_not_receive(:install_feature)
+      subject.send :install_plugin, 'a'
+    }
+
+    it("should update the plugins file when nothing installed yet"){
+      p1= stub name: 'a', requirements: nil, auto_install_features: [], run_callback: true
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      pr.should_receive(:read_client_plugins).at_least(:once).and_return(nil)
+      subject.should_receive(:add_plugin).once.with(p1)
+      subject.should_not_receive(:install_feature)
+      subject.send :install_plugin, 'a'
+    }
+
+    it("should run the after_installed callback"){
+      p1= stub name: 'a', requirements: nil, auto_install_features: []
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      pr.should_receive(:read_client_plugins).at_least(:once).and_return(nil)
+      subject.should_receive(:add_plugin).once.with(p1)
+      subject.should_not_receive(:install_feature)
+      p1.should_receive(:run_callback).once.with(:after_installed, kind_of(Hash))
+      subject.send :install_plugin, 'a'
+    }
+
+    it("should validate plugin requirements"){
+      p1= mock 'plugin 1'
+      p1.stub name: 'a'
+      p1.stub(:requirements).and_return({'p2'=>391})
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      mock_client_state %w[p2], %w[p2:a], {'p2'=>1}
+      subject.should_not_receive :add_plugin
+      expect{ subject.send :install_plugin, 'a' }.to raise_error /[Rr]equire.+391/
+    }
+
+    it("should auto-install specified features"){
+      p1= stub name: 'a', requirements: nil, auto_install_features: %w[a b], run_callback: true
+      pr.should_receive(:instance_for).with('a').once.and_return(p1)
+      pr.should_receive(:read_client_plugins).at_least(:once).and_return(nil)
+      subject.should_receive(:add_plugin).once.with(p1)
+      subject.stub(:install_feature)
+      subject.should_receive(:install_feature).once.with(p1,'a')
+      subject.should_receive(:install_feature).once.with(p1,'b')
+      subject.send :install_plugin, 'a'
     }
   end
 end

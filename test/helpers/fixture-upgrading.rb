@@ -1,7 +1,8 @@
 require 'corvid/res_patch_manager'
+require 'thread'
 
 module Fixtures::Upgrading
-  MAX_VER= 4
+  MAX_VER= 5
 
   def fixture_dir(ver)
     "#{Fixtures::FIXTURE_ROOT}/upgrading/r#{ver}"
@@ -9,12 +10,13 @@ module Fixtures::Upgrading
 
   # Turn the r?? fixture directories into res-patches
   def prepare_res_patches
-    @rpms= [nil]
-    1.upto(MAX_VER) do |v|
-      @rpms<< create_patches(v)
-      # Make patching quiet for tests
-      @rpms.last.patch_exe += ' --quiet'
-    end
+    @rpm_at_ver= [nil] + (1..MAX_VER).to_a
+      .map{|v| Thread.new {
+        rpm= create_patches(v)
+        rpm.patch_exe += ' --quiet' # Make patching quiet for tests
+        rpm
+      }}
+      .map{|t| t.join.value }
   end
 
   # Create client installations at various versions.
@@ -25,9 +27,9 @@ module Fixtures::Upgrading
       dir= "base.#{i}"
       Dir.mkdir dir
       Dir.chdir(dir){
-        @rpm= @rpms[i]
+        @rpms= {'corvid' => @rpm_at_ver[i]}
         yield i
-        @rpm= nil
+        @rpms= nil
       }
     end
   end
@@ -80,8 +82,12 @@ module Fixtures::Upgrading
 
     def run_all_with_corvid_resources_version(ver)
       eval <<-EOB
-        before(:all){ raise "Invalid version: #{ver}" unless @rpm= @rpms[#{ver}] }
-        after(:all){ @rpm= nil }
+        before(:all){
+          rpm= @rpm_at_ver[#{ver}]
+          raise "Invalid version: #{ver}" unless rpm
+          @rpms= {'corvid' => rpm}
+        }
+        after(:all){ @rpms= nil }
       EOB
     end
 

@@ -2,7 +2,7 @@
 require_relative '../spec_helper'
 require 'corvid/res_patch_manager'
 
-describe Corvid::ResPatchManager do
+describe Corvid::ResPatchManager, :slow do
   ResPatchManager= Corvid::ResPatchManager
   run_each_in_empty_dir_unless_in_one_already
 
