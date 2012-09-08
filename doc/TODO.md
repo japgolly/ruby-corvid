@@ -58,7 +58,7 @@ COULD
 * Warn if uncommitted changes before install/update. Test with a few vcs systems; at least git and svn.
 * Allow `copy_file()` to deploy to a different filename (without breaking patches).
 * Test non-ASCII resources.
-* Should tasks be organised by content before function? i.e. `project:*, test:*, plugin:*` instead of `init:*, new:*` ![?](question.png)
+* Should tasks be organised by content before function? i.e. `project:*, test:*, plugin:*` instead of `init:*, new:*` ![?](img/question.png)
 * Handle cases where installed = n and first version of feature installer is n+1
 * Test Corvid and a plugin both modifying the same file.
 * `corvid new:feature NAME` should prompts if more than one existing plugin found
@@ -66,7 +66,7 @@ COULD
 ### New Functionality
 * Allow different dir structure than default
 * Have Corvid provide code analysis (complexity, duplication, etc).
-* Performance tests. Maybe also have results checked in so history maintained. ![?](question.png)
+* Performance tests. Maybe also have results checked in so history maintained. ![?](img/question.png)
 * Plugin CLI should load plugin & feature provided tasks when installed.
 * Plugin CLI should provide install tasks for uninstalled plugin features (unless disabled by flag in Feature).
 
@@ -105,8 +105,8 @@ $(document).ready(function(){
     .not(':first')
     .css('margin-top','30px')
   ;
-  decorate_todos(todos_between('MUST'  ,'SHOULD'), 'pin-red.png');
-  decorate_todos(todos_between('SHOULD','COULD' ), 'pin-yellow.png');
-  decorate_todos(todos_between('COULD' ,null    ), 'pin-blue.png');
+  decorate_todos(todos_between('MUST'  ,'SHOULD'), 'img/pin-red.png');
+  decorate_todos(todos_between('SHOULD','COULD' ), 'img/pin-yellow.png');
+  decorate_todos(todos_between('COULD' ,null    ), 'img/pin-blue.png');
 });
 </script>
