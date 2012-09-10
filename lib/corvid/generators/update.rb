@@ -75,7 +75,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   # @param [Array<String>] feature_names The names of features to upgrade.
   # @return [void]
   def upgrade!(plugin, from, to, feature_names)
-    #TODO update or upgrade - make up mind!
     rpm= rpm_for(plugin)
 
     # Expand versions m->n

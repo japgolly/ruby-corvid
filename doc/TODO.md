@@ -9,11 +9,14 @@
 
 ### Non-Functional / Under-The-Hood
 * Move dynamic fixtures to GU.
+* Make update/upgrade naming consistant.
 
 ### Documentation
 * Get callbacks into yard.
 * Write an _actual_ README.
 * Relearn open-source licencing. Tick the legal box. ©
+* Create a demo.
+* Doc base generators.
 
 
 
@@ -25,6 +28,7 @@
 * `.corvid/Gemfile` should check if certain features are installed rather than `Dir.exist?` checks
 * Put guard lib stuff in its own group and require 1.3.2+
 * `corvid new:test:*` shouldn't be using latest resources. They should be using `version.yml`
+* Re-eval all the old, initial Corvid template stuff (bootstraps, etc).
 
 ### New Functionality
 * Integration tests. (Like NS: new dir, Guard, Rake, Simplecov)

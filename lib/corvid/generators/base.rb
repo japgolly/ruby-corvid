@@ -412,7 +412,7 @@ module Corvid
       def feature_installer_code(dir = res_dir(), feature_name)
         file= feature_installer_file(dir, feature_name)
         return nil unless File.exist?(file)
-        code= File.read(file) # TODO encoding
+        code= File.read(file)
         allow_declarative_feature_installer_config(code, feature_name)
       end
       # @return [String] The installer file contents.

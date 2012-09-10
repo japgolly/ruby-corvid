@@ -205,8 +205,8 @@ module Corvid
         this_ver= prev_ver + 1
         this_pkg= res_patch_filename(this_ver)
 
-        File.write prev_pkg, content_backwards if prev_pkg # TODO encoding
-        File.write this_pkg, content_new # TODO encoding
+        File.write prev_pkg, content_backwards if prev_pkg
+        File.write this_pkg, content_new
 
         @latest_version= nil
 
@@ -555,7 +555,7 @@ module Corvid
       r= {}
 
       # Read migration patch
-      pkg= File.read filename # TODO encoding
+      pkg= File.read filename
       pkg= pkg.split("\n")
       header= pkg[0..2]
       r[:patch]= pkg[3..-1].join("\n") + "\n"
