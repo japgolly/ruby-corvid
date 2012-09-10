@@ -55,11 +55,11 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       if rpm_for(plugin).latest? ver
         say "Upgrading #{plugin.name}: Already up-to-date."
       else
-        # Perform upgrade
+        # Perform update
         from= ver
         to= rpm_for(plugin).latest_version
         say "Upgrading #{plugin.name} from v#{from} to v#{to}..."
-        upgrade! plugin, from, to, features
+        update! plugin, from, to, features
       end
 
       # Done with this plugin
@@ -71,10 +71,10 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   # @param [Plugin] plugin The plugin whose resources are being updated.
   # @param [Fixnum] from The version already installed.
-  # @param [Fixnum] to The target version to upgrade to.
-  # @param [Array<String>] feature_names The names of features to upgrade.
+  # @param [Fixnum] to The target version to update to.
+  # @param [Array<String>] feature_names The names of features to update.
   # @return [void]
-  def upgrade!(plugin, from, to, feature_names)
+  def update!(plugin, from, to, feature_names)
     rpm= rpm_for(plugin)
 
     # Expand versions m->n

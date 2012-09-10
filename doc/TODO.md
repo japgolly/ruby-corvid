@@ -9,7 +9,6 @@
 
 ### Non-Functional / Under-The-Hood
 * Move dynamic fixtures to GU.
-* Make update/upgrade naming consistant.
 
 ### Documentation
 * Get callbacks into yard.

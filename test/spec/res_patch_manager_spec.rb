@@ -38,14 +38,14 @@ describe Corvid::ResPatchManager, :slow do
     end
 
     context 'clean upgrading' do
-      def test_clean_upgrade(from,to)
+      def test_clean_update(from,to)
         populate_with from
         migrate from, to
         assert_files migration_dir(to)
       end
-      it("should upgrade from 001 to 002"){ test_clean_upgrade 1,2 }
-      it("should upgrade from 001 to 003"){ test_clean_upgrade 1,3 }
-      it("should upgrade from 002 to 003"){ test_clean_upgrade 2,3 }
+      it("should update from 001 to 002"){ test_clean_update 1,2 }
+      it("should update from 001 to 003"){ test_clean_update 1,3 }
+      it("should update from 002 to 003"){ test_clean_update 2,3 }
     end
 
     context 'dirty upgrading' do
@@ -53,29 +53,29 @@ describe Corvid::ResPatchManager, :slow do
         FileUtils.mkdir_p File.dirname(filename)
         FileUtils.cp "#{migration_dir ver}/#{filename}", filename
       end
-      it("should upgrade from 000 to 002 - v2 file manually copied"){
+      it("should update from 000 to 002 - v2 file manually copied"){
         copy_file 2, "stuff/.hehe"
         migrate 0, 2
         assert_files migration_dir(2)
       }
-      it("should upgrade from 000 to 002 - v1 file manually copied"){
+      it("should update from 000 to 002 - v1 file manually copied"){
         copy_file 1, "stuff/.hehe"
         migrate 0, 2
         assert_files migration_dir(2)
       }
-      it("should upgrade from 001 to 002 - v1 file edited"){
+      it("should update from 001 to 002 - v1 file edited"){
         populate_with 1
         File.write 'stuff/.hehe', "hehe\n\nawesome"
         migrate 1, 2
         assert_files migration_dir(2), 'stuff/.hehe' => "hehe2\n\nawesome"
       }
-      it("should upgrade from 001 to 003 - v2 file manually copied"){
+      it("should update from 001 to 003 - v2 file manually copied"){
         populate_with 1
         copy_file 2, "stuff/.hehe"
         migrate 1, 3
         assert_files migration_dir(3)
       }
-      it("should upgrade from 002 to 003 - file deleted in v3 edited"){
+      it("should update from 002 to 003 - file deleted in v3 edited"){
         populate_with 2
         File.write 'v2.txt', "Before\nv2 bro\nAfter"
         migrate 2, 3

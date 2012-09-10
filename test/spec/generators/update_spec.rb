@@ -41,7 +41,7 @@ describe Corvid::Generator::Update do
 
   describe 'update:all' do
     def test(*expected)
-      subject.instance_eval "@u= []; def upgrade!(*a); @u<< a; end"
+      subject.instance_eval "@u= []; def update!(*a); @u<< a; end"
       subject.all
       subject.instance_variable_get(:@u).should equal_array expected
     end
@@ -80,7 +80,7 @@ describe Corvid::Generator::Update do
 
   describe '#update(plugin_filter)' do
     def test(plugin_filter, *expected)
-      subject.instance_eval "@u= []; def upgrade!(*a); @u<< a; end"
+      subject.instance_eval "@u= []; def update!(*a); @u<< a; end"
       subject.update(plugin_filter)
       subject.instance_variable_get(:@u).should equal_array expected
     end
@@ -126,7 +126,7 @@ describe Corvid::Generator::Update do
 
       it("should refuse to update"){
         g= quiet_generator(Corvid::Generator::Update)
-        subject.should_not_receive :upgrade!
+        subject.should_not_receive :update!
         subject.all
         get_files().should be_empty
       }
@@ -143,7 +143,7 @@ describe Corvid::Generator::Update do
     #        - mergable           - Done
     #        - non-mergable       - Ignore
 
-    def self.test_upgrade_capability(max_ver)
+    def self.test_update_capability(max_ver)
       1.upto(max_ver - 1) do |inst_ver|
         eval <<-EOB
           context 'clean upgrading from v#{inst_ver}' do
@@ -152,7 +152,7 @@ describe Corvid::Generator::Update do
               run_update_task
             end
 
-            it("should upgrade from v#{inst_ver}->v#{max_ver}"){
+            it("should update from v#{inst_ver}->v#{max_ver}"){
               assert_installation #{max_ver}, #{max_ver}
             }
             it("should update the client's version number"){
@@ -182,22 +182,22 @@ describe Corvid::Generator::Update do
 
     context 'latest version available in corvid is v1' do
       run_all_with_corvid_resources_version 1
-      test_upgrade_capability 1
+      test_update_capability 1
     end
 
     context 'latest version available in corvid is v2' do
       run_all_with_corvid_resources_version 2
-      test_upgrade_capability 2
+      test_update_capability 2
     end
 
     context 'latest version available in corvid is v3' do
       run_all_with_corvid_resources_version 3
-      test_upgrade_capability 3
+      test_update_capability 3
     end
 
     context 'latest version available in corvid is v4' do
       run_all_with_corvid_resources_version 4
-      test_upgrade_capability 4
+      test_update_capability 4
 
       context 'dirty upgrading' do
         run_all_in_sandbox_copy_of(1) do
@@ -207,7 +207,7 @@ describe Corvid::Generator::Update do
         it("should patch dirty files"){
           File.read('corvid.A').should == "--- sweet ---\ncorvid A made in v1\nand in v2\nupdated in v3\n"
         }
-        it("should upgrade other files normally"){
+        it("should update other files normally"){
           assert_installation 4, 4, %w[corvid.A]
         }
         it("should update the client's version number"){

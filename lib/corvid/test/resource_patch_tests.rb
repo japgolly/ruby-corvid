@@ -132,23 +132,23 @@ module Corvid
         quiet_generator(TestInstaller).install plugin, feature_name
       end
 
-      # Install old and upgrade
-      Dir.mkdir 'upgrade'
-      Dir.chdir 'upgrade' do
+      # Install old and update
+      Dir.mkdir 'update'
+      Dir.chdir 'update' do
         quiet_generator(TestInstaller).install plugin, feature_name, starting_version
         g= quiet_generator(Corvid::Generator::Update)
         rpm= g.rpm_for(plugin)
         rpm.patch_exe += ' --quiet'
-        g.send :upgrade!, plugin, starting_version, rpm.latest_version, [feature_name]
+        g.send :update!, plugin, starting_version, rpm.latest_version, [feature_name]
       end
 
       # Compare directories
-      files= get_files('upgrade')
+      files= get_files('update')
       files.should equal_array get_files('install')
-      get_dirs('upgrade').should equal_array get_dirs('install')
+      get_dirs('update').should equal_array get_dirs('install')
       files.each do |f|
         next if f == '.corvid/versions.yml'
-        "upgrade/#{f}".should be_file_with_contents File.read("install/#{f}")
+        "update/#{f}".should be_file_with_contents File.read("install/#{f}")
       end
     end
 

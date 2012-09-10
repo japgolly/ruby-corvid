@@ -129,7 +129,7 @@ module Corvid
     # @param [Fixnum] ver The version to check.
     # @param [Fixnum] min The minimum acceptable version (inclusive). 0 is also acceptable.
     # @param [nil|String] name The name of the variable being checked. Used in error messages.
-    #   eg. `"upgrade target version"`
+    #   eg. `"update target version"`
     # @return [true]
     # @raise If given version is not a valid number.
     # @raise If given version is beyond the latest available version.
