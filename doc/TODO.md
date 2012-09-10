@@ -47,6 +47,7 @@
 * Split `corvid/rake/tasks/test.rb` into unit, spec, all.
 * Check transient dependencies. Like do corvid apps really need Thor on _their_ runtime dep list?
 * Make corvid:init work via `install_plugin`?
+* Move generator impls into builtin plugin umbrella (i.e. module).
 
 ### Documentation
 * Doco for potential plugin devs/users
