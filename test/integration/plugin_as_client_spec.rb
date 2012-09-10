@@ -1,5 +1,5 @@
 # encoding: utf-8
-require_relative '../spec_helper'
+require_relative '../bootstrap/integration'
 
 describe "Plugins from a Client's perspective" do
   INSTALL_F1_TASK= 'p1:install:f1'.freeze

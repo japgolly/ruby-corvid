@@ -1,5 +1,5 @@
 # encoding: utf-8
-require_relative '../../spec_helper'
+require_relative '../../bootstrap/spec'
 require 'corvid/generators/managed_features'
 
 describe Corvid::Generator::ManagedFeatures do

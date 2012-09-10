@@ -1,5 +1,5 @@
 # encoding: utf-8
-require_relative '../../../spec_helper'
+require_relative '../../../bootstrap/spec'
 require 'corvid/generators/new/unit_test'
 
 describe Corvid::Generator::NewUnitTest do

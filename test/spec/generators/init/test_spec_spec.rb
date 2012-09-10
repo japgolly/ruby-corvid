@@ -1,5 +1,5 @@
 # encoding: utf-8
-require_relative '../../../spec_helper'
+require_relative '../../../bootstrap/spec'
 require 'corvid/generators/init/test_spec'
 require 'helpers/test_bootstraps'
 

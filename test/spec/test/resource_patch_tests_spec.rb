@@ -1,5 +1,5 @@
 # encoding: utf-8
-require_relative '../../spec_helper'
+require_relative '../../bootstrap/spec'
 require 'corvid/test/resource_patch_tests'
 
 describe Corvid::ResourcePatchTests, :slow do
