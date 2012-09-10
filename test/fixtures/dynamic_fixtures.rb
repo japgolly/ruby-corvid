@@ -1,10 +1,10 @@
-require 'helpers/dynamic_fixtures'
+require 'golly-utils/testing/dynamic_fixtures'
 
 RSpec.configure do |config|
-  config.include DynamicFixtures
+  config.include GollyUtils::Testing::DynamicFixtures
 end
 
-module DynamicFixtures
+module GollyUtils::Testing::DynamicFixtures
 
   def_fixture :bare do
     require 'corvid/res_patch_manager'

@@ -8,7 +8,6 @@
   Idea: `templates.yml` contains template2 filename to external args. Internal template var functions should be reused.
 
 ### Non-Functional / Under-The-Hood
-* Move dynamic fixtures to GU.
 
 ### Documentation
 * Get callbacks into yard.
