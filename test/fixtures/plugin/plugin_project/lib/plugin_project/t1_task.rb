@@ -1,4 +1,4 @@
-require 'corvid/generators/base'
+require 'corvid/generator/base'
 
 class T1Task < ::Corvid::Generator::Base
   namespace 'p1'

@@ -1,5 +1,5 @@
 require 'corvid/plugin'
-require 'corvid/generators/plugin_cli'
+require 'corvid/generator/plugin_cli'
 
 module Corvid
   module CLI

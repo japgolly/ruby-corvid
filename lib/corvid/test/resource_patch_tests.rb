@@ -1,6 +1,6 @@
 require 'corvid/constants'
 require 'corvid/feature_registry'
-require 'corvid/generators/update'
+require 'corvid/generator/update'
 require 'corvid/naming_policy'
 require 'corvid/res_patch_manager'
 require 'corvid/test/helpers/plugins'
