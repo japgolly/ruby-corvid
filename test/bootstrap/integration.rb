@@ -7,13 +7,13 @@ module TestHelpers
     env ||= {}
     env['BUNDLE_GEMFILE'] ||= nil
     env['RUBYOPT'] ||= nil
-    unless @capture_sh
-      cmd+= ' >/dev/null' if [true,1].include? @quiet_sh
-      cmd+= ' 2>/dev/null' if [true,2].include? @quiet_sh
-    end
+
+    # Be silent by default
+    @quiet_sh ||= true unless $DEBUG
 
     @_sh_env,@_sh_cmd = env,cmd
-    if @capture_sh
+    if @capture_sh or @quiet_sh == true
+      # Run quietly and capture output
       require 'open3'
       Open3.popen3 env, cmd do |stdin, stdout, stderr, wait_thr|
         stdin.close
@@ -22,6 +22,10 @@ module TestHelpers
         @stderr= stderr.read
       end
     else
+      # Run with probable-noise
+      cmd+= ' >/dev/null' if [true,1].include? @quiet_sh
+      cmd+= ' 2>/dev/null' if [true,2].include? @quiet_sh
+      @_sh_cmd= cmd
       system env, cmd
       @_sh_process= $?
     end
@@ -46,6 +50,7 @@ module TestHelpers
   def invoke_sh!    (args,   env=nil) validate_sh_success{ invoke_sh     args,env } end
   def invoke_corvid!(args='',env=nil) validate_sh_success{ invoke_corvid args,env } end
   def invoke_rake!  (args='',env=nil) validate_sh_success{ invoke_rake   args,env } end
+
   def validate_sh_success
     yield.should be_true
   rescue => e
@@ -72,7 +77,7 @@ module TestHelpers
 
 end
 
-module IntegrationTestDecoration
+module IntegrationTestDebugDecoration
   SEP1= "\e[0;40;34m#{'_'*120}\e[0m"
   SEP2= "\e[0;40;34m#{'-'*120}\e[0m"
   SEP3= "\e[0;40;34m#{'='*120}\e[0m"

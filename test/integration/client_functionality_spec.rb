@@ -2,7 +2,6 @@
 require_relative '../bootstrap/integration'
 
 describe 'Client Functionality provided by Corvid' do
-  include IntegrationTestDecoration
   run_all_in_empty_dir 'int_test'
   before(:each){ clean }
 

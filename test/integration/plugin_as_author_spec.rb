@@ -2,7 +2,6 @@
 require_relative '../bootstrap/integration'
 
 describe "Plugins from an Author's perspective" do
-  include IntegrationTestDecoration
 
   run_all_in_empty_dir {
     copy_dynamic_fixture :new_hot_feature

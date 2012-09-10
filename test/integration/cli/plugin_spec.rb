@@ -3,7 +3,6 @@ require_relative '../../bootstrap/integration'
 require 'corvid/cli/plugin'
 
 describe Corvid::CLI::Plugin do
-  include IntegrationTestDecoration
 
   run_all_in_empty_dir {
     copy_dynamic_fixture :new_cool_plugin
