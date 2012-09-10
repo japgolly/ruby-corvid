@@ -14,7 +14,11 @@ module DynamicFixtures
     if !df
       raise "Undefined dynamic fixture: #{name}"
     elsif df[:block]
+
+      # Create dynamic fixture
+      before_dynamic_fixture_creation name
       dir= "#{dynamic_fixture_root}/#{name}"
+      start_time= Time.now # start after dynamic_fixture_root()
       Dir.mkdir dir
       if subdir= df[:dir_name]
         dir+= "/#{subdir}"
@@ -23,9 +27,17 @@ module DynamicFixtures
       Dir.chdir(dir){ instance_eval &df[:block] }
       df.delete :block
       df[:dir]= dir
+      end_time= Time.now
+      after_dynamic_fixture_creation name, end_time-start_time
     end
 
     df[:dir].dup
+  end
+
+  def before_dynamic_fixture_creation(name)
+  end
+
+  def after_dynamic_fixture_creation(name, creation_time_in_sec)
   end
 
   def inside_dynamic_fixture(fixture_name, cd_into=nil, &block)
