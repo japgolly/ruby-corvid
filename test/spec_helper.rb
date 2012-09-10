@@ -91,16 +91,6 @@ module TestHelpers
     raise e
   end
 
-  # TODO remove files() and dirs() test helpers.
-  def files(force=false)
-    @files= nil if force
-    @files ||= Dir['**/*'].select{|f| ! File.directory? f}.sort
-  end
-  def dirs(force=false)
-    @dirs= nil if force
-    @dirs ||= Dir['**/*'].select{|f| File.directory? f}.sort
-  end
-
   def copy_fixture(fixture_name, target_dir='.')
     FileUtils.cp_r "#{Fixtures::FIXTURE_ROOT}/#{fixture_name}/.", target_dir
   end
