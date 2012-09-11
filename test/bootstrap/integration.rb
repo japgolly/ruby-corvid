@@ -2,7 +2,7 @@ require_relative 'all'
 
 module GollyUtils::Testing::DynamicFixtures
   def after_dynamic_fixture_creation(name, creation_time_in_sec)
-    printf "\e[0;35m--> Created dynamic fixture: %s (%0.1fs)\e[0m\n", name, creation_time_in_sec
+    printf "\e[0;36m  Created dynamic fixture: %s (%0.1fs)\e[0m\n", name, creation_time_in_sec
   end
 end
 
