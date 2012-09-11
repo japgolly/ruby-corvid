@@ -12,7 +12,6 @@
 ### Documentation
 * Get callbacks into yard.
 * Write an _actual_ README.
-* Relearn open-source licencing. Tick the legal box. ©
 * Create a demo.
 * Doc base generators.
 
