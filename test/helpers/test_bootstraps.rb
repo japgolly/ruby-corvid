@@ -10,7 +10,7 @@ module TestBootstraps
     if expected
       file.should exist_as_a_file
       c= File.read(file)
-      c.send all  ? :should : :should_not, include('corvid/test/bootstrap/all')
+      c.send all  ? :should : :should_not, include('corvid/builtin/test/bootstrap/all')
       c.send unit ? :should : :should_not, include('unit')
       c.send spec ? :should : :should_not, include('spec')
     else

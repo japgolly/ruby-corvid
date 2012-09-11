@@ -4,10 +4,8 @@ module Corvid
   module Builtin
     class PluginFeature < ::Corvid::Feature
 
-      since_ver 2
-
       rake_tasks {
-        require 'corvid/rake/tasks/resources'
+        require 'corvid/builtin/rake/tasks/resources'
       }
 
     end

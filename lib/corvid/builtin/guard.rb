@@ -15,3 +15,7 @@ def read_rspec_options(app_root)
     nil
   end
 end
+
+# Ignore Vim swap files
+ignore /~$/
+ignore /^(?:.*[\\\/])?\.[^\\\/]+\.sw[p-z]$/

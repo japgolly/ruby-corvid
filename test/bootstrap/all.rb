@@ -7,7 +7,7 @@ $:<< "#{CORVID_ROOT}/test" # Add test/ to lib path
 
 require 'corvid/constants'
 require 'corvid/builtin/builtin_plugin'
-require 'corvid/test/helpers/plugins'
+require 'corvid/builtin/test/helpers/plugins'
 require 'helpers/gemfile_patching'
 require 'fixtures/dynamic_fixtures'
 require 'golly-utils/testing/rspec/files'

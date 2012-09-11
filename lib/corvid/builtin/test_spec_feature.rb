@@ -5,7 +5,7 @@ module Corvid
     class TestSpecFeature < ::Corvid::Feature
 
       rake_tasks {
-        require 'corvid/rake/tasks/test'
+        require 'corvid/builtin/rake/tasks/test'
       }
 
     end

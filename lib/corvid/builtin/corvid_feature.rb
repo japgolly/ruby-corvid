@@ -5,8 +5,8 @@ module Corvid
     class CorvidFeature < ::Corvid::Feature
 
       rake_tasks {
-        require 'corvid/rake/tasks/clean'
-        require 'corvid/rake/tasks/doc'
+        require 'corvid/builtin/rake/tasks/clean'
+        require 'corvid/builtin/rake/tasks/doc'
       }
 
     end

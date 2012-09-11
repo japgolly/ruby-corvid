@@ -5,7 +5,7 @@ require 'corvid/generator/init/corvid'
 require 'helpers/fixture-upgrading'
 require 'corvid/plugin'
 require 'corvid/feature'
-require 'corvid/test/resource_patch_tests'
+require 'corvid/builtin/test/resource_patch_tests'
 
 describe Corvid::Generator::Update do
 

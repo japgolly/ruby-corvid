@@ -2,7 +2,7 @@
 APP_ROOT = File.expand_path('../../..',__FILE__)
 require 'rubygems'
 require 'bundler/setup'
-require 'corvid/test/bootstrap/all'
+require 'corvid/builtin/test/bootstrap/all'
 
 Bundler.require :default
 

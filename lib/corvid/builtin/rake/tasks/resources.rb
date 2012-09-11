@@ -80,7 +80,7 @@ namespace CORIVD_RES_NS do
   #---------------------------------------------------------------------------------------------------------------------
   desc "Deploys the latest version of resources into #{LATEST_DIR_REL}."
   task :latest do
-    require 'corvid/rake/prompt'
+    require 'corvid/builtin/rake/prompt'
     deploy= true
 
     # Check if already populated

@@ -1,6 +1,6 @@
 # encoding: utf-8
 require_relative '../../bootstrap/spec'
-require 'corvid/test/resource_patch_tests'
+require 'corvid/builtin/test/resource_patch_tests'
 
 describe BUILTIN_PLUGIN do
   include Corvid::ResourcePatchTests

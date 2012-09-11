@@ -38,7 +38,6 @@
 * Provide ext point: code coverage settings
 
 ### Non-Functional / Under-The-Hood
-* Separate client and core stuff in corvid dir stucture. `guard.rb` and `plugin.rb` shouldn't be beside each other.
 * Is there a point for `environment.rb`?
 * Is there a point for `CORVID_ROOT`?
 * Check `APP_ROOT` reliance
