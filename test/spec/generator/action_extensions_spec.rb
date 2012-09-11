@@ -1,13 +1,13 @@
 # encoding: utf-8
 require_relative '../../bootstrap/spec'
-require 'corvid/generator/action_extentions'
+require 'corvid/generator/action_extensions'
 require 'thor'
 
-describe Corvid::Generator::ActionExtentions do
+describe Corvid::Generator::ActionExtensions do
 
   class MockGen < Thor
     include Thor::Actions
-    include Corvid::Generator::ActionExtentions
+    include Corvid::Generator::ActionExtensions
     desc '',''; def add_line; add_line_to_file 'file', 'this is the text' end
 
     no_tasks{

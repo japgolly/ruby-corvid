@@ -4,7 +4,7 @@ module Corvid
   # Currently the only usage of this is to determine whether or not a dependency is being declared in a project's
   # `Gemfile`.
   #
-  # @see Generator::ActionExtentions#add_dependencies_to_gemfile
+  # @see Generator::ActionExtensions#add_dependencies_to_gemfile
   class GemfileEvaluator
 
     # @return [Array<String>] List of declared gems.

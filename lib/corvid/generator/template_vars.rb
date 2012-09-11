@@ -19,7 +19,7 @@ module Corvid
       #
       # 1. The name of the one and only subdirectory of `lib`.
       # 2. The filename of the one and only file matching `*.gemspec` in the current directory, minus the file
-      #    extention.
+      #    extension.
       # 3. The name of the current directory.
       #
       # @example

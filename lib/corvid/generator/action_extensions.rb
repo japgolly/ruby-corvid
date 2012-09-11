@@ -4,8 +4,8 @@ require 'corvid/gemfile_evaluator'
 module Corvid
   module Generator
 
-    # Provides additional actions, and extentions to Thor actions.
-    module ActionExtentions
+    # Provides additional actions, and extensions to Thor actions.
+    module ActionExtensions
 
       # Name of the option that users can use on the CLI to opt-out of Bundler being run at the end of certain tasks.
       RUN_BUNDLE= :'run_bundle'
@@ -415,13 +415,13 @@ module Corvid
       module ClassMethods
 
         # @!visibility private
-        RUN_BUNDLE= ActionExtentions::RUN_BUNDLE
+        RUN_BUNDLE= ActionExtensions::RUN_BUNDLE
 
         # Declares a Thor option that allows users to opt-out of Bundler being run at the end of certain tasks.
         #
         # @param [Base] g The generator in which to delcare the option.
         # @return [void]
-        # @see Corvid::Generator::ActionExtentions::RUN_BUNDLE
+        # @see Corvid::Generator::ActionExtensions::RUN_BUNDLE
         # @see #run_bundle_at_exit
         def declare_option_to_run_bundle_at_exit(g)
           g.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true

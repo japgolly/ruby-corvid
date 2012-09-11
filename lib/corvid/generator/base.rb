@@ -5,7 +5,7 @@ require 'corvid/plugin_registry'
 require 'corvid/naming_policy'
 require 'corvid/requirement_validator'
 require 'corvid/res_patch_manager'
-require 'corvid/generator/action_extentions'
+require 'corvid/generator/action_extensions'
 require 'corvid/generator/template_vars'
 require 'corvid/generator/thor_monkey_patches'
 
@@ -28,7 +28,7 @@ module Corvid
     # @abstract
     class Base < Thor
       include Thor::Actions
-      include ActionExtentions
+      include ActionExtensions
       include TemplateVars
       include ::Corvid::NamingPolicy
 

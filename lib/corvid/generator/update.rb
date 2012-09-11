@@ -183,7 +183,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   end
 
   class DeployableFileExtractor
-    include ::Corvid::Generator::ActionExtentions
+    include ::Corvid::Generator::ActionExtensions
 
     attr_reader :files
     def initialize; @files= [] end
@@ -207,7 +207,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   #---------------------------------------------------------------------------------------------------------------------
 
-  # Auto-updates files deployed by `create_file`, `template`, {ActionExtentions#template2}.
+  # Auto-updates files deployed by `create_file`, `template`, {ActionExtensions#template2}.
   #
   # @param [Fixnum] from Current version of resources installed.
   # @param [Fixnum] to Version of resources to update to.
@@ -251,7 +251,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   end
 
   class TemplateProcessor
-    include ::Corvid::Generator::ActionExtentions
+    include ::Corvid::Generator::ActionExtensions
     include ::Corvid::Generator::TemplateVars
 
     attr_reader :files
