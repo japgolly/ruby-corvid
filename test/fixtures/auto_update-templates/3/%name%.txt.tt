@@ -1,0 +1,4 @@
+My name is <%= name %>.
+I'm <%= age %> years old.
+Project name <%= project_name %>
+Bye.

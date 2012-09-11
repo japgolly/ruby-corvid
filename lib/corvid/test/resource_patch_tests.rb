@@ -29,7 +29,8 @@ module Corvid
       # @return [void]
       def include_resource_patch_tests(plugin_or_dir = subject.(), &ver1_test_block)
         resources_path= plugin_or_dir.is_a?(Plugin) ? plugin_or_dir.resources_path : plugin_or_dir
-        $include_resource_patch_tests_ver1_test_block= ver1_test_block
+        ba= ($include_resource_patch_tests_ver1_test_block ||= [])
+        ba<< ver1_test_block
 
         class_eval <<-EOB
           describe "Resource Patches", slow: true do
@@ -39,7 +40,7 @@ module Corvid
             it("should be reconstructable back to v1"){
               rpm= ::Corvid::ResPatchManager.new #{resources_path.inspect}
               rpm.with_resource_versions 1 do |dir|
-                b= $include_resource_patch_tests_ver1_test_block
+                b= $include_resource_patch_tests_ver1_test_block[#{ba.size-1}]
                 instance_exec dir, &b if b
               end
             }
@@ -63,7 +64,8 @@ module Corvid
         features ||= plugin.feature_manifest.keys
         latest_resource_version= Corvid::ResPatchManager.new(plugin.resources_path).latest_version
 
-        $include_feature_update_install_tests_plugin= plugin
+        pa= ($include_feature_update_install_tests_plugin ||= [])
+        pa<< plugin
         Corvid::FeatureRegistry.clear_cache.register_features_in(plugin)
 
         tests= features.map {|feature_name|
@@ -71,8 +73,9 @@ module Corvid
                  unless f.since_ver == latest_resource_version
                    %[
                      it("Testing feature: #{feature_name}"){
-                       Corvid::PluginRegistry.clear_cache.register $include_feature_update_install_tests_plugin
-                       Corvid::FeatureRegistry.clear_cache.register_features_in $include_feature_update_install_tests_plugin
+                       p= $include_feature_update_install_tests_plugin[#{pa.size-1}]
+                       Corvid::PluginRegistry.clear_cache.register p
+                       Corvid::FeatureRegistry.clear_cache.register_features_in p
                        test_feature_updates_match_install '#{plugin.name}', '#{feature_name}', #{f.since_ver}
                      }
                    ]

@@ -2,6 +2,16 @@ require 'corvid/generator/base'
 
 class Corvid::Generator::Update < ::Corvid::Generator::Base
 
+  # List of actions (i.e. methods defined in Thor actions or ActionExtensions) that are updated automatically simply
+  # by being registered in a feature installers `install{}` block. These actions do not need to be repeated in an
+  # `update{}` block.
+  AUTO_UPDATE_ACTIONS= [
+    :copy_file,
+    :create_file,
+    :template,
+    :template2,
+  ].freeze
+
   desc 'all', 'Update all features and plugins.'
   def all
     update nil
@@ -80,55 +90,51 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     # Expand versions m->n
     rpm.with_resource_versions from, to do
 
-      # Collect a list of deployable files and installers
-      deployable_files= []
+      # Collect installer data
       installers= {}
       from.upto(to) {|v|
         installers[v]= {}
         feature_names.each {|feature_name|
           if code= feature_installer_code(rpm.ver_dir(v), feature_name)
-            feature_id= feature_id_for(plugin.name, feature_name)
-            deployable_files.concat extract_deployable_files(code, feature_id, v)
-            installer= dynamic_installer(code, feature_id, v)
-            installers[v][feature_name]= installer if installer.respond_to?(:update)
+            fd= installers[v][feature_name]= {}
+            fd[:code]= code
+            fd[:feature_id]= feature_id_for(plugin.name, feature_name)
+            fd[:installer]= dynamic_installer fd[:code], fd[:feature_id], v
           end
         }
-        deployable_files.sort!.uniq!
       }
 
       # Validate requirements
       if installers[to]
         rv= new_requirement_validator
-        rv.add installers[to].values.map{|fi| fi.respond_to?(:requirements) ? fi.requirements : nil }
+        rv.add installers[to]
+                 .values
+                 .map{|fd| fd[:installer] }
+                 .map{|fi| fi.respond_to?(:requirements) ? fi.requirements : nil }
         rv.validate!
       end
 
-      # Patch & migrate deployable files
-      unless deployable_files.empty?
-        rpm.allow_interactive_patching do
-          say_status 'patch', "Patching installed files...", :cyan
-          if rpm.migrate from, to, '.', deployable_files
-            say_status 'patch', 'Applied but with merge conflicts.', :red
-          else
-            say_status 'patch', 'Applied cleanly.', :green
-          end
-        end
-      end
+      # Auto-update eligible files
+      update_deployable_files! rpm, installers, from, to
+      update_templates! rpm, installers, from, to
 
       # Perform migration steps
       (from + 1).upto(to) do |ver|
         next unless grp= installers[ver]
         with_resources rpm.ver_dir(ver) do
-          grp.each do |feature,installer|
+          grp.each do |feature,fd|
+            installer= fd[:installer]
+            if installer.respond_to?(:update)
 
-            # So that it doesn't overwrite a file being patched, disable commands that patching is taking care of
-            installer.instance_eval "def copy_file(*) end"
+              # Disable actions that have been auto-updated so that already-patched files aren't overwritten
+              installer.instance_eval AUTO_UPDATE_ACTIONS.map{|m| "def #{m}(*) end" }.join ';'
 
-            # Call update() in the installer
-            with_action_context(installer) {
-              installer.update ver
-            }
+              # Call update() in the installer
+              with_action_context(installer) {
+                installer.update ver
+              }
 
+            end
           end
         end
       end
@@ -136,6 +142,35 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       # Update version file
       add_version plugin.name, to
     end
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+  private
+
+  # Auto-updates files deployed by `copy_file`.
+  #
+  # @param [Fixnum] from Current version of resources installed.
+  # @param [Fixnum] to Version of resources to update to.
+  # @return [void]
+  def update_deployable_files!(rpm, installers, from, to)
+
+    # Build a list of files
+    files= []
+    installers.each do |v,features|
+      features.each do |name,fd|
+        r= extract_deployable_files fd[:code], fd[:feature_id], v
+        files.concat r
+      end
+    end
+    files.sort!.uniq!
+
+    # Patch & migrate files
+    unless files.empty?
+      patch rpm, "Patching installed files..." do
+        rpm.migrate_changes_between_versions from, to, '.', files
+      end
+    end
+
   end
 
   # @param [String] installer_code The contents of the `corvid-features/{feature}.rb` script.
@@ -147,9 +182,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     x.files
   end
 
-  private
-
-  # @!visibility private
   class DeployableFileExtractor
     include ::Corvid::Generator::ActionExtentions
 
@@ -170,6 +202,112 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
     def method_missing(method,*args)
       # Ignore
+    end
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
+  # Auto-updates files deployed by `create_file`, `template`, {ActionExtentions#template2}.
+  #
+  # @param [Fixnum] from Current version of resources installed.
+  # @param [Fixnum] to Version of resources to update to.
+  # @return [void]
+  def update_templates!(rpm, installers, from, to)
+    Dir.mktmpdir {|tmpdir|
+      Dir.mkdir from_dir= "#{tmpdir}/a"
+      Dir.mkdir to_dir= "#{tmpdir}/b"
+
+      # Build a list of files
+      files= []
+      [ [from,from_dir] , [to,to_dir] ].each do |ver,dir|
+        next unless grp= installers[ver]
+        with_resources rpm.ver_dir(ver) do
+          grp.each do |feature,fd|
+
+            # Run installer and create files with dynamic content
+            Dir.chdir(dir) {
+              r= process_templates fd[:code], fd[:feature_id], ver
+              files.concat r
+            }
+
+          end
+        end
+      end
+
+      # Patch & migrate files
+      unless files.empty?
+        patch rpm, "Patching generated templates..." do
+          rpm.migrate_changes_between_dirs from_dir, to_dir, '.', files
+        end
+      end
+    }
+  end
+
+  def process_templates(installer_code, feature, ver)
+    x= TemplateProcessor.new self
+    add_dynamic_code! x, installer_code, feature, ver
+    x.install
+    x.files
+  end
+
+  class TemplateProcessor
+    include ::Corvid::Generator::ActionExtentions
+    include ::Corvid::Generator::TemplateVars
+
+    attr_reader :files
+    def initialize(base)
+      @base= base
+      @files= []
+    end
+
+    METHODS_TO_DELEGATE= [
+      :find_in_source_paths,
+    ].freeze
+
+    class_eval [:template, :template2].map {|m| <<-EOB
+        alias :xxx__#{m} :#{m}
+        def #{m}(*args, &block)
+          old= @in_template
+          @in_template= true
+          xxx__#{m} *args, &block
+        ensure
+          @in_template= old
+        end
+      EOB
+    }.join "\n"
+
+    def create_file(file, *args, &block)
+      content= args.first || block.()
+      files<< file
+      FileUtils.mkdir_p File.dirname(file)
+      File.write file, content
+    end
+
+    def method_missing(method,*args,&block)
+      if METHODS_TO_DELEGATE.include? method
+        @base.send method,*args,&block
+      elsif @in_template
+        # A missing method inside template() means a missing variable method.
+        super method,*args,&block
+      else
+        # Ignore other actions
+      end
+    end
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
+  def patch(rpm, msg, &block)
+    rpm.allow_interactive_patching do
+      say_status 'patch', msg, :cyan
+
+      conflicts= block.()
+
+      if conflicts
+        say_status 'patch', 'Applied but with merge conflicts.', :red
+      else
+        say_status 'patch', 'Applied cleanly.', :green
+      end
     end
   end
 

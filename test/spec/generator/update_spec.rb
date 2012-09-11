@@ -3,6 +3,9 @@ require_relative '../../bootstrap/spec'
 require 'corvid/generator/update'
 require 'corvid/generator/init/corvid'
 require 'helpers/fixture-upgrading'
+require 'corvid/plugin'
+require 'corvid/feature'
+require 'corvid/test/resource_patch_tests'
 
 describe Corvid::Generator::Update do
 
@@ -230,4 +233,22 @@ describe Corvid::Generator::Update do
       }
     }
   end
+end
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+class AutoUpdateTemplatesPluginFeature < Corvid::Feature
+  since_ver 1
+end
+class AutoUpdateTemplatesPlugin < Corvid::Plugin
+  name 'fake'
+  resources_path "#{Fixtures::FIXTURE_ROOT}/auto_update-templates"
+  feature_manifest ({
+    'template2' => [nil,AutoUpdateTemplatesPluginFeature.to_s]
+  })
+end
+
+describe AutoUpdateTemplatesPlugin do
+  include Corvid::ResourcePatchTests
+  include_feature_update_install_tests
 end

@@ -335,7 +335,6 @@ module Corvid
     #
     # @yield control with interactive patching enabled.
     # @return Whatever the yielded block returns.
-    # @see #migrate
     def allow_interactive_patching
       before= @interactive_patching
       begin
@@ -354,6 +353,41 @@ module Corvid
       @interactive_patching
     end
 
+    # Compares the contents of two directories.
+    #
+    # @param [String] from_dir An existing directory of old content.
+    # @param [String] to_dir An existing directory of new content.
+    # @param [Array<String>] filelist A list of files to compare.
+    # @return [Hash<String,String>] A map of filenames to patches.
+    def diff_dirs(from_dir, to_dir, filelist)
+      raise "From-dir doesn't exist: #{from_dir}" unless File.exists? from_dir
+      raise "To-dir doesn't exist: #{to_dir}" unless File.exists? to_dir
+
+      patches= {}
+
+      filelist.uniq.each do |f|
+        from_file= "#{from_dir}/#{f}"
+        to_file= "#{to_dir}/#{f}"
+        patch= diff_files f, from_file, to_file
+        patches[f]= patch if patch
+      end
+
+      patches
+    end
+
+    # Applies the differences between dir A and dir B, to potentially-dirty files in another directory.
+    #
+    # @param [String] from_dir An existing directory of old content.
+    # @param [String] to_dir An existing directory of new content.
+    # @param [String] target_dir The directory in which to apply the differences between `from_dir` and `to_dir`.
+    # @param [Array<String>] filelist The list of files to compare in `from_dir` and `to_dir`.
+    # @return [Boolean] Whether there were any merge conflicts.
+    def migrate_changes_between_dirs(from_dir, to_dir, target_dir, filelist)
+      raise "Target dir doesn't exist: #{target_dir}" unless File.exists? target_dir
+      patches= diff_dirs(from_dir, to_dir, filelist)
+      apply_patches patches, target_dir
+    end
+
     # Patches potentially-dirty, exploded files that were initially deployed at ver A, up to ver B.
     #
     # You will likely want to run this in conjunction with {#allow_interactive_patching}.
@@ -367,13 +401,13 @@ module Corvid
     # @raise If resources haven't been deployed yet.
     # @see #allow_interactive_patching
     # @see #with_resource_versions
-    def migrate(from_ver, to_ver, target_dir, filelist=nil)
+    def migrate_changes_between_versions(from_ver, to_ver, target_dir, filelist=nil)
       from_ver ||= 0
       raise "Invalid from-version. Must be a number >= 0." unless from_ver.is_a?(Fixnum) and from_ver >= 0
       raise "Invalid to-version. Must be a number." unless to_ver.is_a?(Fixnum)
       raise "Invalid versions. Can't migrate backwards." unless to_ver >= from_ver
 
-      merge_conflicts= false
+      patches= {}
 
       # Check if anything to do: version
       unless from_ver == to_ver
@@ -391,7 +425,6 @@ module Corvid
         filelist= filelist.inject({}){|h,f| h[f] ||= {}; h }
 
         # Create patches
-        patches= {}
         filelist.each do |f,fv|
           from_ver2= from_ver
           tf= "#{target_dir}/#{f}"
@@ -417,13 +450,24 @@ module Corvid
           patch= diff_files f, from_file, to_file
           patches[f]= patch if patch
         end
+      end
 
-        # Apply patches
-        unless patches.empty?
-          megapatch= patches.keys.sort.map{|f| patches[f]}.join($/) + $/
-          #puts '_'*80; puts megapatch; puts '_'*80
-          merge_conflicts= apply_patch target_dir, megapatch
-        end
+      # Apply patches
+      apply_patches patches, target_dir
+    end
+
+    # Applies a collection of patches.
+    #
+    # @param [Hash<String,String>] patches A map of filenames to patches.
+    # @param [String] target_dir The directory in which to apply the patches.
+    # @return [Boolean] Whether there were any merge conflicts.
+    def apply_patches(patches, target_dir)
+      merge_conflicts= false
+
+      unless patches.empty?
+        megapatch= patches.keys.sort.map{|f| patches[f]}.join($/) + $/
+        #puts '_'*80; puts megapatch; puts '_'*80
+        merge_conflicts= apply_patch target_dir, megapatch
       end
 
       merge_conflicts

@@ -119,4 +119,38 @@ namespace CORIVD_RES_NS do
       end
     end
   end
+
+  #---------------------------------------------------------------------------------------------------------------------
+  # Creates res-patches between numbered subdirectories in a test fixture.
+  task :fixture do
+    require 'corvid/res_patch_manager'
+    require 'fileutils'
+
+    dir= ENV['dir']
+    raise "Invalid dir: #{dir.inspect}" unless dir and Dir.exists? dir
+    dir= File.expand_path(dir)
+    vdirs= Dir["#{dir}/[0-9]*"]
+             .select{|f| File.directory? f }
+             .map{|d| File.basename d }
+             .select{|d| d =~ /^\d+$/ }
+             .sort_by(&:to_i)
+
+    rpm= Corvid::ResPatchManager.new dir
+    STDERR.puts "[WARNING] Patches already exist..." unless rpm.latest? 0
+    Dir.mktmpdir {|tmpdir|
+      Dir.chdir(tmpdir) {
+        Dir.mkdir 'old'
+        Dir.mkdir 'new'
+
+        vdirs.each {|vdir|
+          FileUtils.rm_rf 'old'
+          File.rename 'new', 'old'
+          FileUtils.cp_r "#{dir}/#{vdir}/.", 'new'
+          ver= rpm.create_res_patch_files! 'old', 'new'
+          puts "Created v#{ver}."
+        }
+      }
+    }
+  end
+
 end

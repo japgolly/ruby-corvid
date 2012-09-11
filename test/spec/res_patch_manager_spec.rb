@@ -23,7 +23,7 @@ describe Corvid::ResPatchManager, :slow do
     def migrate(from_ver, to_ver)
       rpm= ResPatchManager.new '/whatever'
       rpm.send :with_reconstruction_dir, migration_dir do
-        rpm.send :migrate, from_ver, to_ver, Dir.pwd
+        rpm.send :migrate_changes_between_versions, from_ver, to_ver, Dir.pwd
       end
     end
 

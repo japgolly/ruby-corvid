@@ -21,9 +21,10 @@ group :spec do
 
     # Fixtures
     watch(%r'^test/fixtures/migration/.+$')  {"test/spec/res_patch_manager_spec.rb"}
-    upgrading= %w[test/spec/generators/init_spec.rb test/spec/generators/update_spec.rb]
+    upgrading= %w[test/spec/generators/init_spec.rb test/spec/generator/update_spec.rb]
     watch(%r'^test/fixtures/upgrading/.+$')   {upgrading}
     watch('test/helpers/fixture-upgrading.rb'){upgrading}
+    watch(%r'^test/fixtures/auto_update.*?/[^/]+\.patch$') {"test/spec/generator/update_spec.rb"}
 
     # Exceptional cases
     watch(%r'^lib/corvid/test/resource_patch_tests\.rb') {'test/spec/builtin/builtin_plugin_spec.rb'}
