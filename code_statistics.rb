@@ -1,6 +1,6 @@
-class CodeStatistics #:nodoc:
+class CodeStatistics
 
-  TEST_TYPES = %w(Units Functionals Unit\ tests Functional\ tests Integration\ tests)
+  TEST_TYPES = /(?<![a-z])(test|spec)/i
 
   def initialize(*pairs)
     @pairs      = pairs
@@ -69,13 +69,13 @@ class CodeStatistics #:nodoc:
 
     def calculate_code
       code_loc = 0
-      @statistics.each { |k, v| code_loc += v['codelines'] unless TEST_TYPES.include? k }
+      @statistics.each { |k, v| code_loc += v['codelines'] unless in_test_category? k }
       code_loc
     end
 
     def calculate_tests
       test_loc = 0
-      @statistics.each { |k, v| test_loc += v['codelines'] if TEST_TYPES.include? k }
+      @statistics.each { |k, v| test_loc += v['codelines'] if in_test_category? k }
       test_loc
     end
 
@@ -93,11 +93,7 @@ class CodeStatistics #:nodoc:
       m_over_c   = (statistics["methods"] / statistics["classes"])   rescue m_over_c = 0
       loc_over_m = (statistics["codelines"] / statistics["methods"]) - 2 rescue loc_over_m = 0
 
-      start = if TEST_TYPES.include? name
-        "| #{name.ljust(20)} "
-      else
-        "| #{name.ljust(20)} "
-      end
+      start = "| #{name.ljust(20)} "
 
       puts start +
            "| #{statistics["lines"].to_s.rjust(5)} " +
@@ -115,4 +111,9 @@ class CodeStatistics #:nodoc:
       puts "  Code LOC: #{code}     Test LOC: #{tests}     Code to Test Ratio: 1:#{sprintf("%.1f", tests.to_f/code)}"
       puts ""
     end
+
+    def in_test_category?(name)
+      TEST_TYPES === name
+    end
+
 end
