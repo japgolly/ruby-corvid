@@ -83,16 +83,16 @@ module Corvid
 
     # The command to run `diff`.
     # @return [String]
-    attr_accessor :diff_exe
+    attr_accessor :diff_cmd
 
     # The command to run `patch`.
     # @return [String]
-    attr_accessor :patch_exe
+    attr_accessor :patch_cmd
 
     def initialize(res_patch_dir = self.class.default_res_patch_dir)
       self.res_patch_dir= res_patch_dir
-      self.diff_exe= 'diff'
-      self.patch_exe= 'patch'
+      self.diff_cmd= 'diff'
+      self.patch_cmd= 'patch'
     end
 
     def res_patch_dir=(res_patch_dir)
@@ -515,7 +515,7 @@ module Corvid
     def diff_files(relative_filename, from_file, to_file)
       from_file= '/dev/null' unless from_file and File.exists? from_file
       to_file= '/dev/null' unless to_file and File.exists? to_file
-      patch= `#{diff_exe} -u #{from_file.inspect} #{to_file.inspect}`
+      patch= `#{diff_cmd} -u #{from_file.inspect} #{to_file.inspect}`
       case $?.exitstatus
       when 0
         # No differences
@@ -553,7 +553,7 @@ module Corvid
         # check this exit status so you don't  apply  a  later  patch  to  a  partially
         # patched file.
 
-        cmd= "cd #{target_dir.inspect} && #{patch_exe} -p0 --unified -i #{tmp.path.inspect}"
+        cmd= "cd #{target_dir.inspect} && #{patch_cmd} -p0 --unified -i #{tmp.path.inspect}"
         if interactive_patching?
           system "#{cmd} --backup-if-mismatch --merge"
           case $?.exitstatus

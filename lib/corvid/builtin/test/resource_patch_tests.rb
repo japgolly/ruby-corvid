@@ -141,7 +141,7 @@ module Corvid
         quiet_generator(TestInstaller).install plugin, feature_name, starting_version
         g= quiet_generator(Corvid::Generator::Update)
         rpm= g.rpm_for(plugin)
-        rpm.patch_exe += ' --quiet'
+        rpm.patch_cmd += ' --quiet'
         g.send :update!, plugin, starting_version, rpm.latest_version, [feature_name]
       end
 

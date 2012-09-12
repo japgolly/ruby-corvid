@@ -13,7 +13,7 @@ module Fixtures::Upgrading
     @rpm_at_ver= [nil] + (1..MAX_VER).to_a
       .map{|v| Thread.new {
         rpm= create_patches(v)
-        rpm.patch_exe += ' --quiet' # Make patching quiet for tests
+        rpm.patch_cmd += ' --quiet' # Make patching quiet for tests
         rpm
       }}
       .map{|t| t.join.value }
