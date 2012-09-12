@@ -29,7 +29,6 @@
 
 ### New Functionality
 * Integration tests. (Like NS: new dir, Guard, Rake, Simplecov)
-* Have Corvid provide code stats (LOC, lib vs test, doc/undoc methods/classes etc).
 * `Guardfile` should have the allow for no-project name within test dir structure.
 * Provide ext point: test bootstraps
 * Provide ext point: test helpers
