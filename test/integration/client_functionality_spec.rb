@@ -17,6 +17,12 @@ describe 'Client Functionality provided by Corvid' do
     File.write 'lib/hehe.rb', 'class Hehe; def num; 123 end end'
   }
 
+  it("should include a stats task"){
+    @capture_sh= true
+    invoke_rake! 'stats'
+    @stdout.should match /Code LOC/
+  }
+
   it("should generate documentation"){
 
     def check_docs_exist(expected)
