@@ -9,7 +9,6 @@
   Idea: `templates.yml` contains template2 filename to external args. Internal template var functions should be reused.
 * Allow a plugin to work without need for the Corvid builtin plugin.
 * Add todo task.
-* Have Corvid provide code stats (LOC, lib vs test, doc/undoc methods/classes etc).
 
 ### Non-Functional / Under-The-Hood
 
