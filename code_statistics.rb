@@ -5,13 +5,15 @@
 
 class CodeStatistics
 
+  DEFAULT_FILE_FILTER= /\.(?:rb)$/
+
   def initialize(input)
     @input      = input
     @statistics = calculate_statistics
     @total      = calculate_total if @input.size > 1
   end
 
-  def to_s
+  def print
     print_header
     @input.keys.each {|name| print_line name, @statistics[name] }
     print_splitter
@@ -31,7 +33,10 @@ class CodeStatistics
         data[:dirs].each do |dir|
 
           # Get stats for a single dir
-          new_stats= calculate_directory_statistics(dir)
+          new_stats= calculate_directory_statistics(dir,
+                       data[:file_include_filter] || DEFAULT_FILE_FILTER,
+                       data[:file_exclude_filter]
+                     )
 
           if existing= all[name]
             # Combine results
@@ -50,16 +55,17 @@ class CodeStatistics
       all
     end
 
-    def calculate_directory_statistics(directory, pattern = /.*\.rb$/)
+    def calculate_directory_statistics(directory, file_filter = DEFAULT_FILE_FILTER, file_ignore_filter = nil)
       stats = { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0 }
 
       Dir.foreach(directory) do |file_name|
         if File.directory?(directory + "/" + file_name) and (/^\./ !~ file_name)
-          newstats = calculate_directory_statistics(directory + "/" + file_name, pattern)
+          newstats = calculate_directory_statistics(directory + "/" + file_name, file_filter, file_ignore_filter)
           stats.each { |k, v| stats[k] += newstats[k] }
         end
 
-        next unless file_name =~ pattern
+        next unless file_filter.nil? || file_filter === file_name
+        next if file_ignore_filter && file_ignore_filter === file_name
 
         f = File.open(directory + "/" + file_name)
         comment_started = false
@@ -143,5 +149,4 @@ class CodeStatistics
     def in_test_category?(name)
       category_for(name) == :test
     end
-
 end
