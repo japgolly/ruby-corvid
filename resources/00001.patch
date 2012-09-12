@@ -1,6 +1,6 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: c96dd9c2d47a102cd1200bc1e1369cab00c07c5629f32f82ce0762dd25a910fc
-Patch: 34eec024f899e6039c1225fb311d58f2d8477375caa76e6ccafb59a9a3e06801
+After: 1458e9f9475c76b0556e65dd8d8d92909da00bd58e9cfa2c18436dbc66fcc684
+Patch: 696a7b7e6f3676b1c39313fe1933d57cf45a7bfb840237f23912af3cd859929c
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
 +++ %project_name%.gemspec.tt	2012-09-07 15:57:57.000000000 +1000
 @@ -0,0 +1,23 @@
@@ -60,6 +60,22 @@ Patch: 34eec024f899e6039c1225fb311d58f2d8477375caa76e6ccafb59a9a3e06801
 +  gem 'debugger', platforms: :mri
 +end
 +
+--- /dev/null	1980-01-01 00:00:00.000000000 +1000
++++ .corvid/stats_cfg.rb	2012-09-13 08:29:17.000000000 +1000
+@@ -0,0 +1,13 @@
++# Customisable configuration for the Corvid 'rake stats' task.
++
++# Provide your own configuration
++#{
++#  'Source code'     => { category: :code, dirs: %w[src] },
++#  'Specifications'  => { category: :test, dirs: %w[test/spec], line_parser: :spec },
++#}
++
++# Add to the default configuration
++#defaults.merge 'Bin scripts' => { category: :code, dirs: %w[bin] }
++
++# Use the default configuration as is
++defaults
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
 +++ .gitignore	2012-09-06 07:57:58.000000000 +1000
 @@ -0,0 +1,17 @@
@@ -347,11 +363,18 @@ Patch: 34eec024f899e6039c1225fb311d58f2d8477375caa76e6ccafb59a9a3e06801
 +
 +load Gem.bin_path('yard', 'yri')
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
-+++ corvid-features/corvid.rb	2012-09-07 16:23:54.000000000 +1000
-@@ -0,0 +1,30 @@
++++ corvid-features/corvid.rb	2012-09-13 08:34:07.000000000 +1000
+@@ -0,0 +1,33 @@
 +install {
 +  empty_directory '.corvid'
++
++  copy_executable 'bin/rake'
++  copy_executable 'bin/yard'
++  copy_executable 'bin/yardoc'
++  copy_executable 'bin/yri'
++
 +  copy_file       '.corvid/Gemfile'
++  copy_file       '.corvid/stats_cfg.rb'
 +  copy_file       '.gitignore'
 +  copy_file       '.simplecov'
 +  copy_file       '.yardopts'
@@ -360,20 +383,16 @@ Patch: 34eec024f899e6039c1225fb311d58f2d8477375caa76e6ccafb59a9a3e06801
 +  copy_file       'Guardfile'
 +  copy_file       'Rakefile'
 +  copy_file       'README.md'
-+  copy_executable 'bin/rake'
-+  copy_executable 'bin/yard'
-+  copy_executable 'bin/yardoc'
-+  copy_executable 'bin/yri'
-+  update 2
++
++  template2       'lib/%project_name%/version.rb.tt'
++  template2       '%project_name%.gemspec.tt'
 +}
 +
-+update{|ver|
-+  case ver
-+  when 2
-+    template2       'lib/%project_name%/version.rb.tt'
-+    template2       '%project_name%.gemspec.tt'
-+  end
-+}
++#update{|ver|
++#  case ver
++#  when 2
++#  end
++#}
 +
 +# Template vars
 +def author_name_comment;  author_name  ? '' : '#' end
