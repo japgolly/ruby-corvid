@@ -26,14 +26,14 @@ class CodeStatistics
   def print
     print_header
     @input.keys.each {|name| print_line name, @statistics[name] }
-    print_splitter
+    puts splitter
 
     if @total
       print_line("Total", @total)
-      print_splitter
+      puts splitter
     end
 
-    print_code_test_stats
+    print_summary
   end
 
   private
@@ -147,26 +147,20 @@ class CodeStatistics
       total
     end
 
-    def calculate_code_loc
-      code_loc = 0
-      @statistics.each { |k, v| code_loc += v['codelines'] unless in_test_category? k }
-      code_loc
-    end
-
-    def calculate_test_loc
-      test_loc = 0
-      @statistics.each { |k, v| test_loc += v['codelines'] if in_test_category? k }
-      test_loc
+    def sum_stats
+      sum = 0
+      @statistics.each {|k, v| sum += yield(k,v) || 0 }
+      sum
     end
 
     def print_header
-      print_splitter
+      puts splitter
       puts "| Name                 | Lines |   LOC | LOD(MC) | Classes | Methods | M/C | LOC/M |"
-      print_splitter
+      puts splitter
     end
 
-    def print_splitter
-      puts "+----------------------+-------+-------+---------+---------+---------+-----+-------+"
+    def splitter
+           "+----------------------+-------+-------+---------+---------+---------+-----+-------+"
     end
 
     def print_line(name, statistics)
@@ -186,20 +180,22 @@ class CodeStatistics
            "|"
     end
 
-    def print_code_test_stats
-      code  = calculate_code_loc
-      tests = calculate_test_loc
+    def print_summary
+      code_loc = sum_stats{|name,s| s['codelines'] if category_for(name) == :code }
+      test_loc = sum_stats{|name,s| s['codelines'] if category_for(name) == :test }
+      code_lod = sum_stats{|name,s| s['cm_doco'] if category_for(name) == :code }
 
-      puts "  Code LOC: #{code}     Test LOC: #{tests}     Code to Test Ratio: 1 : #{sprintf("%.1f", tests.to_f/code)}"
-      puts ""
+      puts center sprintf "Code LOC: %d    Test LOC: %d    Test:Code = %.1f    LOD:LOC = %.1f", \
+                    code_loc, test_loc, test_loc.to_f/code_loc, code_lod.to_f/code_loc
+      puts
+    end
+
+    def center(line)
+      "#{' '*[0,(splitter.size-line.size-1)/2].max.to_i}#{line}"
     end
 
     def category_for(name)
       @input[name][:category]
-    end
-
-    def in_test_category?(name)
-      category_for(name) == :test
     end
 end
 end
