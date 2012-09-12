@@ -3,10 +3,19 @@
 #
 # This file is licenced under the MIT licence.
 
+module Corvid
 class CodeStatistics
 
   DEFAULT_FILE_FILTER= /\.(?:rb)$/
 
+  # @param [Hash<String,Hash<Symbol|Object>>] input Key = name. Value = hash of attributes.
+  # @option input.values [Symbol] :category The category that the directory contents belong to. Usually either `:code`
+  #   or `:test`.
+  # @option input.values [Array<String>] :dirs Directories containing files to scan for stats.
+  # @option input.values [nil|Regexp|String|Proc] :file_include_filter (DEFAULT_FILE_FILTER) Only files whose filenames
+  #   match this filter (using `===`) will be included in the statistics.
+  # @option input.values [nil|Regexp|String|Proc] :file_exclude_filter (nil) Files whose filenames match this filter
+  #   (using `===`) will be excluded from the statistics.
   def initialize(input)
     @input      = input
     @statistics = calculate_statistics
@@ -149,4 +158,5 @@ class CodeStatistics
     def in_test_category?(name)
       category_for(name) == :test
     end
+end
 end

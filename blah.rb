@@ -12,5 +12,5 @@ STATS_DIRECTORIES = {
 }.each   {|name, data| data[:dirs].map!{|d| "#{APP_ROOT}/#{d}" }}
  .select {|name, data| data[:dirs].any?{|d| File.directory? d }}
 
-CodeStatistics.new(STATS_DIRECTORIES).print
+Corvid::CodeStatistics.new(STATS_DIRECTORIES).print
 
