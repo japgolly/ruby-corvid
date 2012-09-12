@@ -49,15 +49,10 @@ class CodeStatistics
                        data[:line_parser] || :ruby
                      )
 
+          # Save results
           if existing= all[name]
-            # Combine results
-            keys= (existing.keys + new_stats.keys).uniq
-            keys.each do |key|
-              existing[key] ||= 0
-              existing[key] += (new_stats[key] || 0)
-            end
+            combine_stats! existing, new_stats
           else
-            # Save results
             all[name] = new_stats
           end
 
@@ -66,8 +61,17 @@ class CodeStatistics
       all
     end
 
+    def combine_stats!(existing, new_stats)
+      keys= (existing.keys + new_stats.keys).uniq
+      keys.each do |key|
+        existing[key] ||= 0
+        existing[key] += (new_stats[key] || 0)
+      end
+      existing
+    end
+
     def calculate_directory_statistics(directory, file_filter, file_ignore_filter, line_parser)
-      stats = { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0 }
+      stats = { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0 , doc_buf: 0, "cm_doco" => 0 }
       line_parser = LINE_PARSERS[line_parser] if line_parser.is_a? Symbol
 
       Dir.foreach(directory) do |file_name|
@@ -75,7 +79,7 @@ class CodeStatistics
         full_name = directory + "/" + file_name
         if File.directory? full_name
           newstats = calculate_directory_statistics full_name, file_filter, file_ignore_filter, line_parser
-          stats.each { |k, v| stats[k] += newstats[k] }
+          combine_stats! stats, newstats
         end
 
         next unless file_filter.nil? || file_filter === file_name
@@ -104,22 +108,38 @@ class CodeStatistics
     end
 
     LINE_PARSERS = {
-      ruby: lambda do |stats, line|
-              stats["classes"]   += 1 if /^\s*class\s+[_A-Z]/ === line
-              stats["methods"]   += 1 if /^\s*def\s+[_a-z]/ === line
-              stats["codelines"] += 1 unless /^\s*?(#|$)/ === line
-            end,
+      ruby: lambda {|stats, line, &block|
+              if /^\s*?#/ === line
+                stats[:doc_buf] += 1
+                block.(stats, line) if block
+              else
+                cm1= [stats["classes"],stats["methods"]]
 
-      spec: lambda do |stats, line|
-              LINE_PARSERS[:ruby].call stats, line
-              stats["classes"]   += 1 if /^\s*?describe[(\s]/ === line
-              stats["methods"]   += 1 if /^\s*?it[(\s]/ === line
-            end,
+                stats["classes"]   += 1 if /^\s*class\s+[_A-Z]/ === line
+                stats["methods"]   += 1 if /^\s*def\s+[_a-z]/ === line
+                stats["codelines"] += 1 unless /^\s*?(#|$)/ === line
+                block.(stats, line) if block
+
+                cm2= [stats["classes"],stats["methods"]]
+                stats["cm_doco"] += stats[:doc_buf] unless cm1 == cm2
+                stats[:doc_buf] = 0
+              end
+            },
+
+      spec: lambda {|stats, line, &block|
+              LINE_PARSERS[:ruby].(stats, line) {
+                stats["classes"] += 1 if /^\s*?describe[(\s]/ === line
+                stats["methods"] += 1 if /^\s*?it[(\s]/ === line
+                block.(stats, line) if block
+              }
+            },
+
+      nop: lambda{|stats, line, &block|},
     }
 
     def calculate_total
-      total = { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0 }
-      @statistics.each_value { |pair| pair.each { |k, v| total[k] += v } }
+      total = { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0, "cm_doco" => 0 }
+      @statistics.each_value { |pair| combine_stats! total, pair }
       total
     end
 
@@ -137,12 +157,12 @@ class CodeStatistics
 
     def print_header
       print_splitter
-      puts "| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |"
+      puts "| Name                 | Lines |   LOC | LOD(MC) | Classes | Methods | M/C | LOC/M |"
       print_splitter
     end
 
     def print_splitter
-      puts "+----------------------+-------+-------+---------+---------+-----+-------+"
+      puts "+----------------------+-------+-------+---------+---------+---------+-----+-------+"
     end
 
     def print_line(name, statistics)
@@ -154,10 +174,12 @@ class CodeStatistics
       puts start +
            "| #{statistics["lines"].to_s.rjust(5)} " +
            "| #{statistics["codelines"].to_s.rjust(5)} " +
+           "| #{statistics["cm_doco"].to_s.rjust(7)} " +
            "| #{statistics["classes"].to_s.rjust(7)} " +
            "| #{statistics["methods"].to_s.rjust(7)} " +
            "| #{m_over_c.to_s.rjust(3)} " +
-           "| #{loc_over_m.to_s.rjust(5)} |"
+           "| #{loc_over_m.to_s.rjust(5)} " +
+           "|"
     end
 
     def print_code_test_stats
