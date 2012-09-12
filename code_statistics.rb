@@ -70,8 +70,12 @@ class CodeStatistics
       existing
     end
 
+    def fresh_stats
+      { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0, "cm_doco" => 0 }
+    end
+
     def calculate_directory_statistics(directory, file_filter, file_ignore_filter, line_parser)
-      stats = { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0 , doc_buf: 0, "cm_doco" => 0 }
+      stats = fresh_stats.merge doc_buf: 0
       line_parser = LINE_PARSERS[line_parser] if line_parser.is_a? Symbol
 
       Dir.foreach(directory) do |file_name|
@@ -138,18 +142,18 @@ class CodeStatistics
     }
 
     def calculate_total
-      total = { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0, "cm_doco" => 0 }
+      total = fresh_stats
       @statistics.each_value { |pair| combine_stats! total, pair }
       total
     end
 
-    def calculate_code
+    def calculate_code_loc
       code_loc = 0
       @statistics.each { |k, v| code_loc += v['codelines'] unless in_test_category? k }
       code_loc
     end
 
-    def calculate_tests
+    def calculate_test_loc
       test_loc = 0
       @statistics.each { |k, v| test_loc += v['codelines'] if in_test_category? k }
       test_loc
@@ -183,8 +187,8 @@ class CodeStatistics
     end
 
     def print_code_test_stats
-      code  = calculate_code
-      tests = calculate_tests
+      code  = calculate_code_loc
+      tests = calculate_test_loc
 
       puts "  Code LOC: #{code}     Test LOC: #{tests}     Code to Test Ratio: 1 : #{sprintf("%.1f", tests.to_f/code)}"
       puts ""
