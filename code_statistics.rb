@@ -71,7 +71,7 @@ class CodeStatistics
     end
 
     def fresh_stats
-      { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0, "cm_doco" => 0 }
+      { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0, "cm_doco" => 0, "files" => 0 }
     end
 
     def calculate_directory_statistics(directory, file_filter, file_ignore_filter, line_parser)
@@ -88,6 +88,8 @@ class CodeStatistics
 
         next unless file_filter.nil? || file_filter === file_name
         next if file_ignore_filter && file_ignore_filter === file_name
+
+        stats["files"] += 1
 
         f = File.open(directory + "/" + file_name)
         comment_started = false
@@ -155,12 +157,12 @@ class CodeStatistics
 
     def print_header
       puts splitter
-      puts "| Name                 | Lines |   LOC | LOD(MC) | Classes | Methods | M/C | LOC/M |"
+      puts "| Name                 | Files | Lines |   LOC | LOD(MC) | Classes | Methods | M/C | LOC/M |"
       puts splitter
     end
 
     def splitter
-           "+----------------------+-------+-------+---------+---------+---------+-----+-------+"
+           "+----------------------+-------+-------+-------+---------+---------+---------+-----+-------+"
     end
 
     def print_line(name, statistics)
@@ -170,6 +172,7 @@ class CodeStatistics
       start = "| #{name.ljust(20)} "
 
       puts start +
+           "| #{statistics["files"].to_s.rjust(5)} " +
            "| #{statistics["lines"].to_s.rjust(5)} " +
            "| #{statistics["codelines"].to_s.rjust(5)} " +
            "| #{statistics["cm_doco"].to_s.rjust(7)} " +
