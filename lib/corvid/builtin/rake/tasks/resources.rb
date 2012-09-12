@@ -30,7 +30,7 @@ namespace CORIVD_RES_NS do
   end
 
   #---------------------------------------------------------------------------------------------------------------------
-  desc 'Recreate the latest resource patch (USE WITH CARE)'
+  desc 'Recreate the latest resource patch (USE WITH CARE).'
   task :redo do
     puts "WARNING: If the latest resource patch has been released, then recreating it rather than creating a new patch will cause all clients to miss any changes you've just made."
     puts "Only use this feature for development and testing, and if the latest resource patch hasn't been deployed yet."

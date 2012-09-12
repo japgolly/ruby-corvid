@@ -1,4 +1,4 @@
-desc "Report code statistics"
+desc "Report code statistics."
 task :stats do
   require 'corvid/builtin/code_statistics'
 

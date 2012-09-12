@@ -33,7 +33,7 @@ namespace :doc do
   task serve: :server
   task s: :server
 
-  desc 'Cleans and Serves.'
+  desc 'Clean & Serve: Wipes existing doc db and starts the YARD server.'
   task cs: [:clean, :server]
 end
 
