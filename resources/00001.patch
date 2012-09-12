@@ -1,6 +1,6 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: 0095a54c3a4874d6b2c27dfd59f72655c300a3613e5d0e481c9b4d909df73840
-Patch: 721809d710201c6bf5a2fa0a5342ff8b8810f2030f3f8cb8d34bef3271bac895
+After: c96dd9c2d47a102cd1200bc1e1369cab00c07c5629f32f82ce0762dd25a910fc
+Patch: 34eec024f899e6039c1225fb311d58f2d8477375caa76e6ccafb59a9a3e06801
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
 +++ %project_name%.gemspec.tt	2012-09-07 15:57:57.000000000 +1000
 @@ -0,0 +1,23 @@
@@ -142,9 +142,12 @@ Patch: 721809d710201c6bf5a2fa0a5342ff8b8810f2030f3f8cb8d34bef3271bac895
 +end
 +
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
-+++ Guardfile	2012-09-11 16:47:09.000000000 +1000
-@@ -0,0 +1,44 @@
++++ Guardfile	2012-09-12 12:04:30.000000000 +1000
+@@ -0,0 +1,46 @@
 +require 'corvid/builtin/guard'
++rspec_options= read_rspec_options(File.dirname __FILE__)
++
++ignore VIM_SWAP_FILES
 +
 +########################################################################################################################
 +# test/unit
@@ -170,7 +173,6 @@ Patch: 721809d710201c6bf5a2fa0a5342ff8b8810f2030f3f8cb8d34bef3271bac895
 +########################################################################################################################
 +# test/spec
 +
-+rspec_options= read_rspec_options(File.dirname __FILE__)
 +group :spec do
 +  guard 'rspec', binstubs: true, spec_paths: ['test/spec'], cli: rspec_options, all_on_start: false, all_after_pass: false do
 +

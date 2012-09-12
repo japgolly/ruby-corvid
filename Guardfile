@@ -1,6 +1,8 @@
 require 'corvid/builtin/guard'
 rspec_options= read_rspec_options(File.dirname __FILE__)
 
+ignore VIM_SWAP_FILES
+
 ########################################################################################################################
 # test/spec
 

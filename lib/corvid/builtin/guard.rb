@@ -1,6 +1,5 @@
 # This is meant to be called from Guardfile directly.
-
-require 'corvid/environment'
+require 'golly-utils/ruby_ext/env_helpers'
 
 def bulk?; ENV.on?('BULK',true) end
 
@@ -16,6 +15,4 @@ def read_rspec_options(app_root)
   end
 end
 
-# Ignore Vim swap files
-ignore /~$/
-ignore /^(?:.*[\\\/])?\.[^\\\/]+\.sw[p-z]$/
+VIM_SWAP_FILES= /^(?:(?:.*[\\\/])?\.[^\\\/]+\.sw[p-z]|.+~)$/
