@@ -1,8 +1,8 @@
 # encoding: utf-8
 require_relative '../../../bootstrap/spec'
-require 'corvid/generator/init/corvid'
+require 'corvid/builtin/generator/init_corvid'
 
-describe Corvid::Generator::InitCorvid do
+describe Corvid::Builtin::Generator::InitCorvid do
 
   def assert_corvid_version_is_latest
     v= YAML.load_file(CONST::VERSIONS_FILE)

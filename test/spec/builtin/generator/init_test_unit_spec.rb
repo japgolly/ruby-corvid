@@ -1,9 +1,9 @@
 # encoding: utf-8
 require_relative '../../../bootstrap/spec'
-require 'corvid/generator/init/test_unit'
+require 'corvid/builtin/generator/init_test_unit'
 require 'helpers/test_bootstraps'
 
-describe Corvid::Generator::InitTestUnit do
+describe Corvid::Builtin::Generator::InitTestUnit do
   include TestBootstraps
 
   describe 'init:test:unit' do

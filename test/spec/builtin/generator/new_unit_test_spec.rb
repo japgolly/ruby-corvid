@@ -1,8 +1,8 @@
 # encoding: utf-8
 require_relative '../../../bootstrap/spec'
-require 'corvid/generator/new/unit_test'
+require 'corvid/builtin/generator/new_unit_test'
 
-describe Corvid::Generator::NewUnitTest do
+describe Corvid::Builtin::Generator::NewUnitTest do
   run_each_in_dynamic_fixture :bare
   before(:each){ add_feature! 'corvid:test_unit' }
 

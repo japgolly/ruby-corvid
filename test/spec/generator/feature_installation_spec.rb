@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative '../../bootstrap/spec'
-require 'corvid/generator/init/corvid'
-require 'corvid/generator/init/test_unit'
+require 'corvid/builtin/generator/init_corvid'
+require 'corvid/builtin/generator/init_test_unit'
 require 'corvid/res_patch_manager'
 require 'helpers/fixture-upgrading'
 
@@ -11,14 +11,14 @@ describe 'Feature Installation', :slow do
   run_all_in_empty_dir {
     prepare_res_patches
     prepare_base_dirs do |ver|
-      run_generator Corvid::Generator::InitCorvid, "init --no-test-unit --no-test-spec"
+      run_generator Corvid::Builtin::Generator::InitCorvid, "init --no-test-unit --no-test-spec"
       'Gemfile'.should_not exist_as_a_file # Make sure it's not using real res-patches
       assert_installation ver, 0
     end
   }
 
   def run_init_test_unit_task
-    run_generator Corvid::Generator::InitTestUnit, 'unit'
+    run_generator Corvid::Builtin::Generator::InitTestUnit, 'unit'
   end
 
   def self.test_feature_installation(max_version_available)

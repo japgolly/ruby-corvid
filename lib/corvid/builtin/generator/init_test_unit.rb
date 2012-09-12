@@ -1,6 +1,6 @@
-require 'corvid/generator/base'
+require_relative 'base'
 
-class Corvid::Generator::InitTestUnit < ::Corvid::Generator::Base
+class Corvid::Builtin::Generator::InitTestUnit < ::Corvid::Generator::Base
   namespace 'init:test'
 
   desc 'unit', 'Adds support for unit tests.'

@@ -1,8 +1,8 @@
-require 'corvid/generator/base'
-require 'corvid/generator/init/test_unit'
-require 'corvid/generator/init/test_spec'
+require_relative 'base'
+require 'corvid/builtin/generator/init_test_unit'
+require 'corvid/builtin/generator/init_test_spec'
 
-class Corvid::Generator::InitCorvid < ::Corvid::Generator::Base
+class Corvid::Builtin::Generator::InitCorvid < ::Corvid::Generator::Base
 
   desc 'init', 'Creates a new Corvid project in the current directory.'
   method_option :'test-unit', type: :boolean

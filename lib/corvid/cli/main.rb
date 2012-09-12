@@ -14,18 +14,18 @@ module Corvid
 
         # Check if Corvid installed yet
         if features.nil?
-          require 'corvid/generator/init/corvid'
-          Generator::InitCorvid.start
+          require 'corvid/builtin/generator/init_corvid'
+          Corvid::Builtin::Generator::InitCorvid.start
 
         else
           # Load internal tasks
-          require 'corvid/generator/init/plugin'    unless features.include? 'corvid:plugin'
-          require 'corvid/generator/init/test_unit' unless features.include? 'corvid:test_unit'
-          require 'corvid/generator/init/test_spec' unless features.include? 'corvid:test_spec'
-          require 'corvid/generator/new/plugin'     if     features.include? 'corvid:plugin'
-          require 'corvid/generator/new/feature'    if     features.include? 'corvid:plugin'
-          require 'corvid/generator/new/unit_test'  if     features.include? 'corvid:test_unit'
-          require 'corvid/generator/new/spec'       if     features.include? 'corvid:test_spec'
+          require 'corvid/builtin/generator/init_plugin'    unless features.include? 'corvid:plugin'
+          require 'corvid/builtin/generator/init_test_unit' unless features.include? 'corvid:test_unit'
+          require 'corvid/builtin/generator/init_test_spec' unless features.include? 'corvid:test_spec'
+          require 'corvid/builtin/generator/new_plugin'     if     features.include? 'corvid:plugin'
+          require 'corvid/builtin/generator/new_feature'    if     features.include? 'corvid:plugin'
+          require 'corvid/builtin/generator/new_unit_test'  if     features.include? 'corvid:test_unit'
+          require 'corvid/builtin/generator/new_spec'       if     features.include? 'corvid:test_spec'
           require 'corvid/generator/update'
           Generator::Update.add_tasks_for_installed_plugins!
 

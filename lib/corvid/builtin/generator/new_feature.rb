@@ -1,6 +1,6 @@
-require 'corvid/generator/base'
+require_relative 'base'
 
-class Corvid::Generator::NewFeature < ::Corvid::Generator::Base
+class Corvid::Builtin::Generator::NewFeature < ::Corvid::Generator::Base
   namespace 'new'
 
   argument :name, type: :string

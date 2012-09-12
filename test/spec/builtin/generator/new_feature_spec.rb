@@ -1,17 +1,17 @@
 # encoding: utf-8
 require_relative '../../../bootstrap/spec'
-require 'corvid/generator/new/feature'
-require 'corvid/generator/new/plugin'
+require 'corvid/builtin/generator/new_feature'
+require 'corvid/builtin/generator/new_plugin'
 require 'corvid/extension'
 
-describe Corvid::Generator::NewFeature do
+describe Corvid::Builtin::Generator::NewFeature do
   describe 'new:feature' do
     context "with no client res-patches" do
       run_all_in_empty_dir("my_stuff") {
         copy_dynamic_fixture :bare
         add_feature! 'corvid:plugin'
         create_gemspec_file 'my_stuff'
-        run_generator Corvid::Generator::NewPlugin, 'plugin big'
+        run_generator Corvid::Builtin::Generator::NewPlugin, 'plugin big'
         run_generator described_class, 'feature small'
       }
 
@@ -28,7 +28,7 @@ describe Corvid::Generator::NewFeature do
         Dir.mkdir 'resources'
         File.write 'resources/00001.patch', ''
         File.write 'resources/00002.patch', ''
-        run_generator Corvid::Generator::NewPlugin, 'plugin big'
+        run_generator Corvid::Builtin::Generator::NewPlugin, 'plugin big'
         run_generator described_class, 'feature small'
       }
 

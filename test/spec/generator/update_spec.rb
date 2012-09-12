@@ -1,7 +1,7 @@
 # encoding: utf-8
 require_relative '../../bootstrap/spec'
 require 'corvid/generator/update'
-require 'corvid/generator/init/corvid'
+require 'corvid/builtin/generator/init_corvid'
 require 'helpers/fixture-upgrading'
 require 'corvid/plugin'
 require 'corvid/feature'
@@ -114,7 +114,7 @@ describe Corvid::Generator::Update do
     run_all_in_empty_dir {
       prepare_res_patches
       prepare_base_dirs do |ver|
-        run_generator Corvid::Generator::InitCorvid, "init --test-unit --no-test-spec"
+        run_generator Corvid::Builtin::Generator::InitCorvid, "init --test-unit --no-test-spec"
         'Gemfile'.should_not exist_as_a_file # Make sure it's not using real res-patches
         assert_installation ver, ver
       end

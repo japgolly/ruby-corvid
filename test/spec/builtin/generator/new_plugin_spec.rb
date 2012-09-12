@@ -1,8 +1,8 @@
 # encoding: utf-8
 require_relative '../../../bootstrap/spec'
-require 'corvid/generator/new/plugin'
+require 'corvid/builtin/generator/new_plugin'
 
-describe Corvid::Generator::NewPlugin do
+describe Corvid::Builtin::Generator::NewPlugin do
   describe 'new:plugin' do
 
     context "when corvid:plugin is installed" do

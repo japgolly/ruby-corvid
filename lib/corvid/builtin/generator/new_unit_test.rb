@@ -1,6 +1,6 @@
-require 'corvid/generator/base'
+require_relative 'base'
 
-class Corvid::Generator::NewUnitTest < ::Corvid::Generator::Base
+class Corvid::Builtin::Generator::NewUnitTest < ::Corvid::Generator::Base
   namespace 'new:test'
 
   argument :name, type: :string

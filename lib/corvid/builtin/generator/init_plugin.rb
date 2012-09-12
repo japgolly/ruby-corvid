@@ -1,6 +1,6 @@
-require 'corvid/generator/base'
+require_relative 'base'
 
-class Corvid::Generator::InitPlugin < ::Corvid::Generator::Base
+class Corvid::Builtin::Generator::InitPlugin < ::Corvid::Generator::Base
   namespace 'init'
 
   desc 'plugin', 'Adds plugin development support.'

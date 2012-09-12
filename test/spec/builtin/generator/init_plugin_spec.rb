@@ -1,8 +1,8 @@
 # encoding: utf-8
 require_relative '../../../bootstrap/spec'
-require 'corvid/generator/init/plugin'
+require 'corvid/builtin/generator/init_plugin'
 
-describe Corvid::Generator::InitPlugin do
+describe Corvid::Builtin::Generator::InitPlugin do
   describe 'init:plugin' do
     run_each_in_empty_dir_unless_in_one_already
 

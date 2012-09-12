@@ -1,6 +1,6 @@
-require 'corvid/generator/base'
+require_relative 'base'
 
-class Corvid::Generator::InitTestSpec < ::Corvid::Generator::Base
+class Corvid::Builtin::Generator::InitTestSpec < ::Corvid::Generator::Base
   namespace 'init:test'
 
   desc 'spec', 'Adds support for specifications.'
