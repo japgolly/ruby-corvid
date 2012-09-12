@@ -4,39 +4,40 @@
 # This file is licenced under the MIT licence.
 
 module Corvid
-class CodeStatistics
+  class CodeStatistics
 
-  DEFAULT_FILE_FILTER= /\.(?:rb)$/
+    DEFAULT_FILE_FILTER= /\.(?:rb)$/
 
-  # @param [Hash<String,Hash<Symbol|Object>>] input Key = name. Value = hash of attributes.
-  # @option input.values [Symbol] :category The category that the directory contents belong to. Usually either `:code`
-  #   or `:test`.
-  # @option input.values [Array<String>] :dirs Directories containing files to scan for stats.
-  # @option input.values [nil|Regexp|String|Proc] :file_include_filter (DEFAULT_FILE_FILTER) Only files whose filenames
-  #   match this filter (using `===`) will be included in the statistics.
-  # @option input.values [nil|Regexp|String|Proc] :file_exclude_filter (nil) Files whose filenames match this filter
-  #   (using `===`) will be excluded from the statistics.
-  # @option input.values [Symbol|Proc] :line_parser (:ruby)
-  def initialize(input)
-    @input      = input
-    @statistics = calculate_statistics
-    @total      = calculate_total if @input.size > 1
-  end
-
-  def print
-    print_header
-    @input.keys.each {|name| print_line name, @statistics[name] }
-    puts splitter
-
-    if @total
-      print_line("Total", @total)
-      puts splitter
+    # @param [Hash<String,Hash<Symbol|Object>>] input Key = name. Value = hash of attributes.
+    # @option input.values [Symbol] :category The category that the directory contents belong to. Usually either `:code`
+    #   or `:test`.
+    # @option input.values [Array<String>] :dirs Directories containing files to scan for stats.
+    # @option input.values [nil|Regexp|String|Proc] :file_include_filter (DEFAULT_FILE_FILTER) Only files whose filenames
+    #   match this filter (using `===`) will be included in the statistics.
+    # @option input.values [nil|Regexp|String|Proc] :file_exclude_filter (nil) Files whose filenames match this filter
+    #   (using `===`) will be excluded from the statistics.
+    # @option input.values [Symbol|Proc] :line_parser (:ruby)
+    def initialize(input)
+      @input      = input
+      @statistics = calculate_statistics
+      @total      = calculate_total if @input.size > 1
     end
 
-    print_summary
-  end
+    def print
+      print_header
+      @input.keys.each {|name| print_line name, @statistics[name] }
+      puts splitter
 
-  private
+      if @total
+        print_line("Total", @total)
+        puts splitter
+      end
+
+      print_summary
+    end
+
+    private
+
     def calculate_statistics
       all = {}
       @input.each do |name,data|
@@ -200,5 +201,6 @@ class CodeStatistics
     def category_for(name)
       @input[name][:category]
     end
-end
+
+  end
 end
