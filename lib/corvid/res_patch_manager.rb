@@ -525,6 +525,8 @@ module Corvid
         patchlines= patch.split($/)
         correct_filename_in_patchline! patchlines[0], relative_filename
         correct_filename_in_patchline! patchlines[1], relative_filename
+        normalise_timestamp_in_patch_header_line! patchlines[0]
+        normalise_timestamp_in_patch_header_line! patchlines[1]
         patch= patchlines.join($/)
       else
         raise "Diff failed with exit status #{$?.exitstatus} trying to compare #{relative_filename}"
@@ -674,6 +676,16 @@ module Corvid
     def correct_filename_in_patchline!(line, filename)
       return line if %r!^(?:-{3}|\+{3})\s+?/dev/null\t! === line
       line.sub! /(?<=^(?:-{3}|\+{3})\s).+?(?=\t)/, filename
+    end
+
+    def normalise_timestamp_in_patch_header_line!(line)
+      if line =~ /^(?:---|\+\+\+) /
+        # Remove millisecond precision
+        line.sub!(/(?<= \d\d:\d\d:\d\d\.)\d+/){|ms| '0' * ms.size }
+
+        # Clear timestamp on /dev/null
+        line.sub! %r!(\s/dev/null\s+)\d{4}-\d\d-\d\d \d\d:\d\d:\d\d!, '\11980-01-01 00:00:00'
+      end
     end
 
   end

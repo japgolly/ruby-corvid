@@ -2,7 +2,7 @@
 require_relative '../bootstrap/spec'
 require 'corvid/res_patch_manager'
 
-describe Corvid::ResPatchManager, :slow do
+describe Corvid::ResPatchManager do
   ResPatchManager= Corvid::ResPatchManager
   run_each_in_empty_dir_unless_in_one_already
 
@@ -12,9 +12,36 @@ describe Corvid::ResPatchManager, :slow do
     d
   end
 
+  describe '#normalise_timestamp_in_patch_header_line!' do
+    def process(str)
+      described_class.new.send :normalise_timestamp_in_patch_header_line!, str
+      nil
+    end
+
+    it("removes millisecond precision on --- lines"){
+      process x= "--- .corvid/Gemfile\t2012-09-06 07:57:58.005077313 +1000"
+      x.should == "--- .corvid/Gemfile\t2012-09-06 07:57:58.000000000 +1000"
+    }
+
+    it("removes millisecond precision on +++ lines"){
+      process x= "+++ test/unit/%src%_test.rb.tt\t2012-09-06 07:57:58.255746233 +1000"
+      x.should == "+++ test/unit/%src%_test.rb.tt\t2012-09-06 07:57:58.000000000 +1000"
+    }
+
+    it("uses a fixed date for /dev/null on --- lines"){
+      process x= "--- /dev/null\t2012-09-03 14:23:42.983420216 +1000"
+      x.should == "--- /dev/null\t1980-01-01 00:00:00.000000000 +1000"
+    }
+
+    it("uses a fixed date for /dev/null on +++ lines"){
+      process x= "+++ /dev/null\t2012-09-03 14:23:42.983420216 +1000"
+      x.should == "+++ /dev/null\t1980-01-01 00:00:00.000000000 +1000"
+    }
+  end
+
   #---------------------------------------------------------------------------------------------------------------------
 
-  context 'File migration (using reconstructed resources)' do
+  describe 'File migration (using reconstructed resources)', :slow do
 
     def populate_with(ver)
       FileUtils.cp_r "#{migration_dir ver}/.", '.'
@@ -87,7 +114,7 @@ describe Corvid::ResPatchManager, :slow do
 
   #---------------------------------------------------------------------------------------------------------------------
 
-  context 'Resource patch creation & deployment' do
+  describe 'Resource patch creation & deployment', :slow do
 
     def copy_to(ver, dir)
       FileUtils.cp_r "#{migration_dir ver}/.", dir
@@ -180,5 +207,4 @@ describe Corvid::ResPatchManager, :slow do
     end
 
   end
-
 end
