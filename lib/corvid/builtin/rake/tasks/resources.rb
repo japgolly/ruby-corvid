@@ -8,6 +8,7 @@ namespace CORIVD_RES_NS do
       require 'corvid/res_patch_manager'
       @rpm= Corvid::ResPatchManager.new "#{APP_ROOT}/resources"
       STDERR.puts "[WARNING] Resources directory doesn't exist: #{@rpm.res_patch_dir}" unless Dir.exist?(@rpm.res_patch_dir)
+      @rpm.patch_cmd= "#{@rpm.patch_cmd} --set-time"
     end
     @rpm
   end
