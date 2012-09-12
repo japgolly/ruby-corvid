@@ -15,8 +15,8 @@ class Corvid::Builtin::Generator::InitCorvid < ::Corvid::Generator::Base
       add_plugin            builtin_plugin
       add_feature           feature_id_for(builtin_plugin.name,'corvid')
 
-      invoke 'init:test:unit', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-unit', 'Add support for unit tests?'
-      invoke 'init:test:spec', [], RUN_BUNDLE => false if boolean_specified_or_ask :'test-spec', 'Add support for specs?'
+      invoke 'init:test:unit', [], RUN_BUNDLE => false if read_boolean_option_or_prompt_user :'test-unit', 'Add support for unit tests?'
+      invoke 'init:test:spec', [], RUN_BUNDLE => false if read_boolean_option_or_prompt_user :'test-spec', 'Add support for specs?'
 
       run_bundle_at_exit()
     }

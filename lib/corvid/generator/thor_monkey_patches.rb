@@ -1,5 +1,6 @@
 require 'thor/util'
 
+# @!visibility private
 module Thor::Util
 
   # PATCH

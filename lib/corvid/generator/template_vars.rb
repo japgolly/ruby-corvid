@@ -1,7 +1,7 @@
 module Corvid
   module Generator
 
-    # Provides methods that returns values that will primarily be used in templates.
+    # Provides methods returning values that will primarily be used in templates.
     module TemplateVars
       extend self
 

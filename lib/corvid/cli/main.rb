@@ -27,7 +27,7 @@ module Corvid
           require 'corvid/builtin/generator/new_unit_test'  if     features.include? 'corvid:test_unit'
           require 'corvid/builtin/generator/new_spec'       if     features.include? 'corvid:test_spec'
           require 'corvid/generator/update'
-          Generator::Update.add_tasks_for_installed_plugins!
+          Generator::Update.create_update_tasks_for_installed_plugins!
 
           # Load external tasks
           ExtensionRegistry.run_extensions_for :corvid_tasks

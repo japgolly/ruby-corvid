@@ -1,5 +1,6 @@
 require 'corvid/generator/base'
 
+# Task that updates resouces deployed in clients' Corvid projects.
 class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   # List of actions (i.e. methods defined in Thor actions or ActionExtensions) that are updated automatically simply
@@ -17,7 +18,12 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     update nil
   end
 
-  def self.add_tasks_for_installed_plugins!
+  # Dynamically creates an update task for each registered plugin installed in a client's Corvid project.
+  #
+  # Uses {Corvid::PluginRegistry#instances_for_installed} to determine which plugins to create tasks for.
+  #
+  # @return [void]
+  def self.create_update_tasks_for_installed_plugins!
     plugin_names= ::Corvid::PluginRegistry.instances_for_installed.keys
     class_eval plugin_names.map{|name|
       %|
@@ -30,6 +36,11 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   # Stupid Thor. Not using no_tasks{} cos then yard won't see this method.
   @no_tasks= true
 
+  # Updates resouces deployed in client's Corvid project.
+  #
+  # @param [nil|Regexp|String] plugin_filter A filter applied to plugin name's (via `===`) to select a subset of
+  #   installed plugins, and only update those. If `nil` then all installed plugins will be updated.
+  # @return [void]
   def update(plugin_filter)
 
     # Read client details
@@ -79,6 +90,8 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   protected
 
+  # Updates a single plugin.
+  #
   # @param [Plugin] plugin The plugin whose resources are being updated.
   # @param [Fixnum] from The version already installed.
   # @param [Fixnum] to The target version to update to.

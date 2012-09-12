@@ -11,6 +11,9 @@ module Corvid
       RUN_BUNDLE= :'run_bundle'
 
       # Copies a file and gives it 755 permissions.
+      #
+      # @param [String] name The name of the executable to copy.
+      # @param extra_args Additional, optional arguments to pass to `copy_file` and `chmod` both.
       # @return [void]
       def copy_executable(name, *extra_args)
         copy_file name, *extra_args
@@ -18,19 +21,25 @@ module Corvid
       end
 
       # Calls `copy_file` unless the file already exists.
+      #
+      # @param [String] src The source file to copy.
+      # @param [nil|String] tgt The target filename that will be created by the copy. `nil` indicates the filename is
+      #   the same as the source filename.
+      # @param [Hash] options Additional options to pass to `copy_file`.
       # @return [void]
       def copy_file_unless_exists(src, tgt=nil, options={})
         tgt ||= src
         copy_file src, tgt, options unless File.exists?(tgt)
       end
 
-      # Reads a boolean option and if it hasn't been specified on the command-line, then prompts the user to decide.
+      # Reads a boolean-valued Thor option and if it hasn't been specified (usually via the command-line), then prompts
+      # the user to provide an answer.
       #
-      # @param [String,Symbol] option_name The name of the Thor option.
-      # @param [String] question The text to display to the user (include your own question mark) when prompting them
-      #   to enter y/n.
+      # @param [String|Symbol] option_name The name of the Thor option.
+      # @param [String] question The text to display to the user (include your own question mark) when prompting the
+      #   user to enter y/n.
       # @return [Boolean]
-      def boolean_specified_or_ask(option_name, question)
+      def read_boolean_option_or_prompt_user(option_name, question)
         v= options[option_name.to_sym]
         v or v.nil? && yes?(question + ' [yn]')
       end
@@ -106,7 +115,7 @@ module Corvid
         destination = args.first || source.sub(/\.tt$/, '')
 
         source  = File.expand_path(find_in_source_paths(source.to_s))
-        #context = instance_eval('binding')
+        #context = instance_eval('binding')               # <---- monkey patch
         context = action_context.instance_eval('binding') # <---- monkey patch
 
         create_file destination, nil, config do
@@ -261,7 +270,7 @@ module Corvid
         return if options[RUN_BUNDLE] == false
 
         if options[RUN_BUNDLE].nil?
-          STDERR.puts "[WARNING] run_bundle_at_exit() called without Thor option to disable it.\n#{caller.join "\n"}\n#{'-'*80}\n\n"
+          STDERR.puts "[WARNING] run_bundle_at_exit() called without there being a Thor option to disable it.\n#{caller.join "\n"}\n#{'-'*80}\n\n"
         end
 
         $corvid_bundle_install_at_exit_installed= true
@@ -391,6 +400,7 @@ module Corvid
       end
 
       # Map of matching braces Ruby uses for things like %w[], %r<>, etc.
+      # @!visibility private
       PERCENT_SYNTAX_CLOSERS= {
         '<' => '>',
         '(' => ')',
@@ -398,11 +408,13 @@ module Corvid
         '{' => '}',
       }
 
+      # @!visibility private
       BLOCK_CLOSERS= {
         'do' => {str: 'end', regex: /(?<![a-zA-Z0-9_])end(?![a-zA-Z0-9_])/},
         '{' => {str: '}', regex: /\}/},
       }
 
+      # @!visibility private
       BLOCK_OPENERS_REGEX_STR= "(?:#{BLOCK_CLOSERS.keys.map{|k| Regexp.quote k }.join '|'})"
 
       #-----------------------------------------------------------------------------------------------------------------

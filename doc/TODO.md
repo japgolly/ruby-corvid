@@ -13,7 +13,6 @@
 * Get callbacks into yard.
 * Write an _actual_ README.
 * Create a demo.
-* Doc base generators.
 
 
 
