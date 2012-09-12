@@ -1,3 +1,8 @@
+# Originally copied from Rails 3.2.2.
+# https://github.com/rails/rails/blob/master/railties/lib/rails/code_statistics.rb
+#
+# This file is licenced under the MIT licence.
+
 class CodeStatistics
 
   def initialize(input)
