@@ -16,6 +16,7 @@ class CodeStatistics
   #   match this filter (using `===`) will be included in the statistics.
   # @option input.values [nil|Regexp|String|Proc] :file_exclude_filter (nil) Files whose filenames match this filter
   #   (using `===`) will be excluded from the statistics.
+  # @option input.values [Symbol|Proc] :line_parser (:ruby)
   def initialize(input)
     @input      = input
     @statistics = calculate_statistics
@@ -37,14 +38,15 @@ class CodeStatistics
 
   private
     def calculate_statistics
-      all= {}
+      all = {}
       @input.each do |name,data|
         data[:dirs].each do |dir|
 
           # Get stats for a single dir
           new_stats= calculate_directory_statistics(dir,
                        data[:file_include_filter] || DEFAULT_FILE_FILTER,
-                       data[:file_exclude_filter]
+                       data[:file_exclude_filter],
+                       data[:line_parser] || :ruby
                      )
 
           if existing= all[name]
@@ -56,7 +58,7 @@ class CodeStatistics
             end
           else
             # Save results
-            all[name]= new_stats
+            all[name] = new_stats
           end
 
         end
@@ -64,12 +66,15 @@ class CodeStatistics
       all
     end
 
-    def calculate_directory_statistics(directory, file_filter = DEFAULT_FILE_FILTER, file_ignore_filter = nil)
+    def calculate_directory_statistics(directory, file_filter, file_ignore_filter, line_parser)
       stats = { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0 }
+      line_parser = LINE_PARSERS[line_parser] if line_parser.is_a? Symbol
 
       Dir.foreach(directory) do |file_name|
-        if File.directory?(directory + "/" + file_name) and (/^\./ !~ file_name)
-          newstats = calculate_directory_statistics(directory + "/" + file_name, file_filter, file_ignore_filter)
+        next if /^\.{1,2}$/ === file_name
+        full_name = directory + "/" + file_name
+        if File.directory? full_name
+          newstats = calculate_directory_statistics full_name, file_filter, file_ignore_filter, line_parser
           stats.each { |k, v| stats[k] += newstats[k] }
         end
 
@@ -91,14 +96,26 @@ class CodeStatistics
               next
             end
           end
-          stats["classes"]   += 1 if line =~ /^\s*class\s+[_A-Z]/
-          stats["methods"]   += 1 if line =~ /^\s*def\s+[_a-z]/
-          stats["codelines"] += 1 unless line =~ /^\s*$/ || line =~ /^\s*#/
+          line_parser.call stats, line
         end
-      end
+      end if File.directory? directory
 
       stats
     end
+
+    LINE_PARSERS = {
+      ruby: lambda do |stats, line|
+              stats["classes"]   += 1 if /^\s*class\s+[_A-Z]/ === line
+              stats["methods"]   += 1 if /^\s*def\s+[_a-z]/ === line
+              stats["codelines"] += 1 unless /^\s*?(#|$)/ === line
+            end,
+
+      spec: lambda do |stats, line|
+              LINE_PARSERS[:ruby].call stats, line
+              stats["classes"]   += 1 if /^\s*?describe[(\s]/ === line
+              stats["methods"]   += 1 if /^\s*?it[(\s]/ === line
+            end,
+    }
 
     def calculate_total
       total = { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0 }
