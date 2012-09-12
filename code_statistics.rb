@@ -121,7 +121,7 @@ class CodeStatistics
                 block.(stats, line) if block
 
                 cm2= [stats["classes"],stats["methods"]]
-                stats["cm_doco"] += stats[:doc_buf] unless cm1 == cm2
+                stats["cm_doco"] += stats[:doc_buf] if cm1 != cm2 or /^\s*module\s+[_A-Z]/ === line
                 stats[:doc_buf] = 0
               end
             },
