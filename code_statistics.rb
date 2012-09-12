@@ -1,16 +1,14 @@
 class CodeStatistics
 
-  TEST_TYPES = /(?<![a-z])(test|spec)/i
-
-  def initialize(*pairs)
-    @pairs      = pairs
+  def initialize(input)
+    @input      = input
     @statistics = calculate_statistics
-    @total      = calculate_total if pairs.length > 1
+    @total      = calculate_total if @input.size > 1
   end
 
   def to_s
     print_header
-    @pairs.each { |pair| print_line(pair.first, @statistics[pair.first]) }
+    @input.keys.each {|name| print_line name, @statistics[name] }
     print_splitter
 
     if @total
@@ -23,7 +21,28 @@ class CodeStatistics
 
   private
     def calculate_statistics
-      Hash[@pairs.map{|pair| [pair.first, calculate_directory_statistics(pair.last)]}]
+      all= {}
+      @input.each do |name,data|
+        data[:dirs].each do |dir|
+
+          # Get stats for a single dir
+          new_stats= calculate_directory_statistics(dir)
+
+          if existing= all[name]
+            # Combine results
+            keys= (existing.keys + new_stats.keys).uniq
+            keys.each do |key|
+              existing[key] ||= 0
+              existing[key] += (new_stats[key] || 0)
+            end
+          else
+            # Save results
+            all[name]= new_stats
+          end
+
+        end
+      end
+      all
     end
 
     def calculate_directory_statistics(directory, pattern = /.*\.rb$/)
@@ -112,8 +131,12 @@ class CodeStatistics
       puts ""
     end
 
+    def category_for(name)
+      @input[name][:category]
+    end
+
     def in_test_category?(name)
-      TEST_TYPES === name
+      category_for(name) == :test
     end
 
 end

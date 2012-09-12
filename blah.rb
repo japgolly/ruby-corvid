@@ -3,13 +3,14 @@
 require './code_statistics'
 
 APP_ROOT= File.expand_path '..', __FILE__
-STATS_DIRECTORIES = [
-  %w(Libraries          lib),
-  %w(Test\ helpers      test/helpers),
-  %w(Unit\ tests        test/unit),
-  %w(Specifications     test/spec),
-  %w(Integration\ tests test/integration),
-].collect { |name, dir| [ name, "#{APP_ROOT}/#{dir}" ] }.select { |name, dir| File.directory?(dir) }
+STATS_DIRECTORIES = {
+  'Libraries'         => { category: :code, dirs: %w[lib] },
+  'Test support'      => { category: :test, dirs: %w[test/helpers test/bootstrap] },
+  'Unit tests'        => { category: :test, dirs: %w[test/unit] },
+  'Specifications'    => { category: :test, dirs: %w[test/spec] },
+  'Integration tests' => { category: :test, dirs: %w[test/integration] },
+}.each   {|name, data| data[:dirs].map!{|d| "#{APP_ROOT}/#{d}" }}
+ .select {|name, data| data[:dirs].any?{|d| File.directory? d }}
 
-CodeStatistics.new(*STATS_DIRECTORIES).to_s
+CodeStatistics.new(STATS_DIRECTORIES).to_s
 
