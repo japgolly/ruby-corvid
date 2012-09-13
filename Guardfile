@@ -1,6 +1,9 @@
 require 'corvid/builtin/guard'
 rspec_options= read_rspec_options(File.dirname __FILE__)
 
+fast_only= ENV.on?('fast')
+rspec_options+= " -t ~slow" if fast_only
+
 ignore VIM_SWAP_FILES
 
 ########################################################################################################################
@@ -40,4 +43,4 @@ group :int do
     # Lib
     watch(%r'^lib/corvid/(.+)\.rb$') {|m| "test/integration/#{m[1]}_spec.rb"}
   end
-end
+end unless fast_only
