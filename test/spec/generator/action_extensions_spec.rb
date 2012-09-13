@@ -215,6 +215,11 @@ describe Corvid::Generator::ActionExtensions do
       g.template2 'z', force: true
     }
 
+    it("passes unknown options to template()"){
+      g.should_receive(:template).once.with('z','z',{what: 123})
+      g.template2 'z', what: 123, perms: 0123
+    }
+
     it("returns the target filename"){
       g.template2('%evil%.txt.tt').should == '666.txt'
     }
