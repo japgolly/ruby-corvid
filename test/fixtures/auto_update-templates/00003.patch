@@ -1,20 +1,20 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: 412233323e7060dfdfc1775176cfa9e7f781566c2dcd5ce13f5c3dab063630ec
-Patch: ccdaa836fd0db0b8bda8334aa5a05f17868e40adcc8cb37c66e16cd4ff812257
---- /dev/null	2012-09-03 14:23:42.005077313 +1000
-+++ %name%.csv.tt	2012-09-11 13:27:33.401301034 +1000
+After: b142e882d24c6799bdfa19908631dc83d6de0947f65b63a0d8c370645089848e
+Patch: 3fea15483cbc500a42f707d1f8aeb4b9ee72d117b6147fbf2ae104fb4a839e3d
+--- /dev/null	1980-01-01 00:00:00.000000000 +1000
++++ %name%.csv.tt	2012-09-13 14:57:39.000000000 +1000
 @@ -0,0 +1,2 @@
 +NAME,AGE
 +<%= name %>,<%= age %>
---- /dev/null	2012-09-03 14:23:42.005077313 +1000
-+++ %name%.txt.tt	2012-09-11 13:27:33.401301034 +1000
+--- /dev/null	1980-01-01 00:00:00.000000000 +1000
++++ %name%.txt.tt	2012-09-13 14:57:39.000000000 +1000
 @@ -0,0 +1,4 @@
-+My name is <%= name %>.
++My name is <%= name %>!
 +I'm <%= age %> years old.
 +Project name <%= project_name %>
 +Bye.
---- /dev/null	2012-09-03 14:23:42.005077313 +1000
-+++ corvid-features/template2.rb	2012-09-11 13:27:33.401301034 +1000
+--- /dev/null	1980-01-01 00:00:00.000000000 +1000
++++ corvid-features/template2.rb	2012-09-13 14:57:39.000000000 +1000
 @@ -0,0 +1,7 @@
 +install {
 +  template2 '%name%.txt.tt'

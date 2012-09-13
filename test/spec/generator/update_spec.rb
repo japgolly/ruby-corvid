@@ -9,6 +9,91 @@ require 'corvid/builtin/test/resource_patch_tests'
 
 describe Corvid::Generator::Update do
 
+
+  describe '#create_template_var_delegator' do
+    def test(*args)
+      described_class.new.send :create_template_var_delegator, *args
+    end
+
+    it("provides methods for given args"){
+      d= test args: {str: 'good', num: 666}
+      d.str.should == 'good'
+      d.num.should == 666
+    }
+
+    context "when a generator is referenced" do
+      it("loads the generator"){
+        test generator: {require: 'corvid/plugin', class: described_class.to_s}
+        expect { test generator: {require: 'omg_bru'*7} }.to raise_error LoadError
+      }
+
+      class FakeGenerator
+        def num; 357 end
+        def dyn; num * 100 end
+      end
+
+      it("delegates to an instance of the generator"){
+        d= test generator: {class: FakeGenerator.to_s}
+        d.num.should == 357
+        d.dyn.should == 35700
+      }
+
+      it("overrides generator methods with args"){
+        d= test generator: {class: FakeGenerator.to_s}, args: {num: 9}
+        d.num.should == 9
+      }
+
+      it("generator methods access overriden methods too"){
+        d= test generator: {class: FakeGenerator.to_s}, args: {num: 9}
+        d.dyn.should == 900
+      }
+    end
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
+  describe '#update_loose_templates!' do
+    run_each_in_empty_dir
+
+    class FakeGen < ::Corvid::Generator::Base
+      desc 'make', ''
+      def make; with_resources(plugin,1){ template2 '%name%.txt.tt' } end
+      private
+      def name; 'Happy' end
+      def age; name.size end
+    end
+
+    let(:rpm){
+      Corvid::ResPatchManager.new("#{Fixtures::FIXTURE_ROOT}/auto_update-templates")
+      .tap{|rpm| rpm.patch_cmd += ' --quiet' }
+    }
+
+    it("should update templates specified in template manifest"){
+      # Deploy template at v1
+      fg= quiet_generator FakeGen
+      fg.stub rpm_for: rpm, plugin: stub(name: 'p1')
+      fg.make
+
+      # Verify
+      'Happy.txt'.should be_file_with_content /My name is Happy\./, /I'm 5 old/
+      'Happy.txt'.should_not be_file_with_content /Bye/
+
+      # Update to v3
+      rpm.with_resource_versions 1, 3 do
+        subject.send :update_loose_templates!, rpm, 1, 3, [{
+          filename: '%name%.txt.tt',
+          args: {name: 'Happy'},
+          generator: {class: FakeGen.to_s},
+        }]
+      end
+
+      # Verify
+      'Happy.txt'.should be_file_with_content /My name is Happy!/, /I'm 5 years old/, /Bye/
+    }
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
   describe '#extract_deployable_files' do
     %w[
       copy_file

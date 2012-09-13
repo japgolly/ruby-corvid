@@ -130,6 +130,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       # Auto-update eligible files
       update_deployable_files! rpm, installers, from, to
       update_templates! rpm, installers, from, to
+#      update_loose_templates! rpm, from, to
 
       # Perform migration steps
       (from + 1).upto(to) do |ver|
@@ -322,6 +323,80 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         say_status 'patch', 'Applied cleanly.', :green
       end
     end
+  end
+
+  # @param [Array<Hash>]
+  def update_loose_templates!(rpm, from, to, template_manifest)
+    return unless template_manifest && !template_manifest.empty?
+
+    # TODO should template var methods in FIs be available??
+    # TODO rename update_loose_templates, create_template_var_delegator, patch() msg
+
+    @destination_stack.push '.'
+    begin
+      Dir.mktmpdir {|tmpdir|
+        Dir.mkdir from_dir= "#{tmpdir}/a"
+        Dir.mkdir to_dir= "#{tmpdir}/b"
+
+        # Build a list of files
+        files= []
+        [ [from,from_dir] , [to,to_dir] ].each do |ver,dir|
+          with_resources rpm.ver_dir(ver) do
+              Dir.chdir(dir) {
+
+                template_manifest.each do |td|
+                  filename= td[:filename]
+                  options= td[:options] || {}
+                  d= create_template_var_delegator(td)
+                  with_action_context(d){
+                    files<< template2(filename, options)
+                  }
+                end
+
+              }
+          end
+        end
+
+        # Patch & migrate files
+        unless files.empty?
+          patch rpm, "TODO Patching other generated templates..." do
+            rpm.migrate_changes_between_dirs from_dir, to_dir, '.', files
+          end
+        end
+      }
+
+    ensure
+      @destination_stack.pop
+    end
+  end
+
+  def create_template_var_delegator(td)
+
+    generator= nil
+    if gd= td[:generator]
+      require gd[:require] if gd[:require]
+      raise "Class name not provided for generator.\n#{td.inspect}" unless gd[:class]
+      klass= eval gd[:class]
+      generator= klass.new
+    end
+
+    # TODO cache delegator within this method, created in `from`, reused in `to`
+    args_provider= nil
+    args= td[:args]
+    if args && !args.empty?
+
+      if generator
+        args.each{|k,v| generator.instance_variable_set :"@_corvid_#{k}", v }
+        generator.instance_eval args.keys.map{|k| "def #{k}; @_corvid_#{k} end" }.join ';'
+      else
+        klass= Struct.new(*args.keys)
+        generator= klass[*args.values]
+      end
+    end
+
+#    delegates= [args_provider,generator].compact
+#    d= GollyUtils::Delegator.new *delegates, allow_protected: true
+    generator
   end
 
   # Re-enable Thor's support for assuming all public methods are tasks

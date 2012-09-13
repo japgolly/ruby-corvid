@@ -1,20 +1,21 @@
 Before: 9b49c54dd5e08528fa5b3f21c95fb89aa3e82057afa908e8853fd10704f95181
-After: f7e940a0f042ad6c084bd4c4dc4e4c3dd83b74b06fb8970871ff4d5c938ccc7f
-Patch: a3591c9c331d8cf931c62101f4d6b92f71299b2321d8313dc10c55739e780a61
---- %name%.csv.tt	2012-09-11 13:27:33.354634088 +1000
-+++ /dev/null	2012-09-03 14:23:42.005077313 +1000
+After: 0b306d5e7aa0b934a74846565778aee9371625f40b3721a31ed567b5b50bfc7c
+Patch: 9ea7bfef9ec2ac5f80a72237e8924ab2ad514990d03603a95b9ad57d218ba02f
+--- %name%.csv.tt	2012-09-13 14:57:39.000000000 +1000
++++ /dev/null	1980-01-01 00:00:00.000000000 +1000
 @@ -1,2 +0,0 @@
 -NAME,AGE
 -<%= name %>,<%= age %>
---- %name%.txt.tt	2012-09-11 13:27:33.354634088 +1000
-+++ %name%.txt.tt	2012-09-11 13:27:33.321300555 +1000
+--- %name%.txt.tt	2012-09-13 14:57:39.000000000 +1000
++++ %name%.txt.tt	2012-09-13 14:57:39.000000000 +1000
 @@ -1,3 +1,3 @@
  My name is <%= name %>.
- I'm <%= age %> years old.
+-I'm <%= age %> years old.
 -Project name <%= project_name %>
++I'm <%= age %> old.
 +
---- corvid-features/template2.rb	2012-09-11 13:27:33.354634088 +1000
-+++ corvid-features/template2.rb	2012-09-11 13:27:33.321300555 +1000
+--- corvid-features/template2.rb	2012-09-13 14:57:39.000000000 +1000
++++ corvid-features/template2.rb	2012-09-13 14:57:39.000000000 +1000
 @@ -1,6 +1,5 @@
  install {
    template2 '%name%.txt.tt'
