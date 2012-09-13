@@ -240,4 +240,81 @@ describe Corvid::Generator::Base do
       subject.send :install_plugin, 'a'
     }
   end
+
+  describe '#template2_au' do
+    class AU < Corvid::Generator::Base
+      attr_accessor :with_args, :t2_args
+      desc 'asd',''
+      def asd
+        with_auto_update_details(*with_args){
+          template2_au *t2_args
+        }
+      end
+      private
+      def name; 'bob' end
+      def age; 100 end
+    end
+
+    before(:each){
+      g.with_args= ['p1',g,nil]
+      g.t2_args= ['file.tt']
+      @expected_au_data= {filename: 'file.tt', generator: {class: AU.to_s}}
+      @expected_t_args= ['file.tt' ,'file', {}]
+    }
+
+    let(:g){
+      g= quiet_generator AU
+      g.stub create_file: nil, chmod: nil
+      g
+    }
+
+    def test
+      g.should_receive(:template).once.with *@expected_t_args
+      g.should_receive(:add_to_auto_update_file).once.with do |type, plugin_name, data|
+        type.should == 'template2'
+        plugin_name.should == g.with_args[0]
+        data.should == @expected_au_data
+      end
+      g.asd
+    end
+
+    it("generates template and updates auto-update file"){
+      test
+    }
+
+    it("records the generator class's require path"){
+      @expected_au_data[:generator][:require]= g.with_args[2]= 'a/b/c'
+      test
+    }
+
+    it("accepts the generator class instead of self"){
+      g.with_args[1]= AU
+      test
+    }
+
+    it("saves specified arg values"){
+      g.t2_args += [:name, :age]
+      @expected_au_data[:args]= {name: 'bob', age: 100}
+      test
+    }
+
+    it("saves template2 options"){
+      g.t2_args<< {perms: 0755}
+      g.should_receive(:chmod).once
+      @expected_au_data[:options]= {perms: 0755}
+      test
+    }
+
+    it("all options at once"){
+      g.t2_args += [:name, :age, {perms: 0755}]
+      g.should_receive(:chmod).once
+      @expected_au_data[:args]= {name: 'bob', age: 100}
+      @expected_au_data[:options]= {perms: 0755}
+      test
+    }
+
+    it("fails unless with_auto_update_details() called first"){
+      expect{ g.send :template2_au, 'abc' }.to raise_error /with_auto_update_details/
+    }
+  end
 end

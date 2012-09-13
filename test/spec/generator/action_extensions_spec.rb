@@ -24,6 +24,7 @@ describe Corvid::Generator::ActionExtensions do
     insert_into_file
     run
     run_bundle_at_exit
+    add_to_auto_update_file
   ].map(&:to_sym)
   def safe_gen
     g= quiet_generator(MockGen)
@@ -223,6 +224,12 @@ describe Corvid::Generator::ActionExtensions do
     it("returns the target filename"){
       g.template2('%evil%.txt.tt').should == '666.txt'
     }
+
+    it("doesn't register file for auto-update by default"){
+      g.should_not_receive :add_to_auto_update_file
+      g.should_receive(:template).once
+      g.template2 '%evil%.txt.tt'
+    }
   end
 
   #---------------------------------------------------------------------------------------------------------------------
@@ -405,6 +412,77 @@ describe Corvid::Generator::ActionExtensions do
       expect{ g.add_executable_to_gemspec 'what_file_is_this', 3 }.to raise_error /Invalid name/
       expect{ g.add_executable_to_gemspec 'what_file_is_this', :hehe }.to raise_error /Invalid name/
       expect{ g.add_executable_to_gemspec 'what_file_is_this', {b:2} }.to raise_error /Invalid name/
+    }
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
+  describe '#add_to_auto_update_file' do
+    let(:subject) {
+      Object.new.tap{|o|
+        o.extend Corvid::Generator::ActionExtensions
+        o.stub read_client_auto_update_file: nil, create_file: nil
+      }
+    }
+
+    def expect_write(array)
+      subject.should_receive(:create_file).once.with { |file,yml,options|
+        file.should == CONST::AUTO_UPDATE_FILE
+        YAML.load(yml).should equal_array array
+      }
+    end
+
+    it("creates file"){
+      subject.should_receive(:read_client_auto_update_file).once.and_return(nil)
+      expect_write [ {type:'ah',plugin:'p1',data:{a:2,b:'5'}} ]
+      subject.add_to_auto_update_file 'ah', 'p1', a:2, b:"5"
+    }
+
+    it("adds to file"){
+      subject.should_receive(:read_client_auto_update_file).once.and_return [{hehe:'hehe'}]
+      expect_write [ {hehe:'hehe'}, {type:'ah',plugin:'p1',data:{a:2,b:'5'}} ]
+      subject.add_to_auto_update_file 'ah', 'p1', a:2, b:"5"
+    }
+
+    it("does nothing when file already contains input"){
+      subject.should_receive(:read_client_auto_update_file).once.and_return [{type:'ah',data:{b:'5',a:2},plugin:'p1'}]
+      subject.should_not_receive :create_file
+      subject.add_to_auto_update_file 'ah', 'p1', a:2, b:"5"
+    }
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
+  describe '#read_client_auto_update_file' do
+    let(:subject) {
+      Object.new.tap{|o|
+        o.extend Corvid::Generator::ActionExtensions
+      }
+    }
+
+    it("returns nil when file doesn't exist"){
+      File.should_receive(:exists?).once.and_return(false)
+      subject.read_client_auto_update_file.should be_nil
+    }
+
+    def mock_file(content)
+      File.stub exists?: true
+      YAML.should_receive(:load_file).once.with(CONST::AUTO_UPDATE_FILE).and_return content
+    end
+
+    it("returns the contents when file exists"){
+      mock_file content= [ {type:'ah',plugin:'p1',data:{a:2,b:'5'}} ]
+      subject.read_client_auto_update_file.should == content
+    }
+
+    it("fails when top-level object is not an array"){
+      mock_file :what
+      expect{ subject.read_client_auto_update_file }.to raise_error /array/i
+    }
+
+    it("fails when any 2nd-level object is not a hash"){
+      mock_file [ {type:'ah',plugin:'p1',data:{a:2,b:'5'}}, :what ]
+      expect{ subject.read_client_auto_update_file }.to raise_error /hash/i
     }
   end
 end

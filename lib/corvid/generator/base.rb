@@ -615,6 +615,36 @@ module Corvid
         self
       end
 
+      # TODO doco
+      def with_auto_update_details(plugin_or_name, generator_class, generator_require_path)
+        plugin_name= plugin_or_name.is_a?(Plugin) ? plugin_or_name.name : plugin_or_name
+        generator_class= generator_class.class unless generator_class.is_a? Class
+        raise "Class expected, not #{generator_class.inspect}" unless generator_class.new.is_a? Base
+
+        old= @with_auto_update_details
+        @with_auto_update_details= {plugin: plugin_name, generator: {class: generator_class.to_s}}
+        @with_auto_update_details[:generator][:require]= generator_require_path if generator_require_path
+        begin
+          yield
+        ensure
+          @with_auto_update_details= old
+        end
+      end
+
+      def template2_au(file, *args)
+        raise "Call with_auto_update_details() first." unless @with_auto_update_details
+
+        arg_keys= args.dup
+        options= arg_keys.last.is_a?(Hash) ? arg_keys.pop : {}
+        au= @with_auto_update_details
+        unless arg_keys.empty?
+          au= au.merge args: Hash[arg_keys.map{|k| [k,action_context.send(k)] }]
+        end
+        au= au.merge options: options
+
+        template2 file, options.merge(auto_update: au)
+      end
+
       private
       @@with_resource_depth= 0
       @@with_resource_plugin= nil

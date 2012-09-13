@@ -1,4 +1,5 @@
 require 'golly-utils/ruby_ext/kernel'
+require 'corvid/constants'
 require 'corvid/gemfile_evaluator'
 
 module Corvid
@@ -89,7 +90,9 @@ module Corvid
         src= file
 
         # Parse options
+        options= options.dup
         perms= options.delete :perms
+        au= options.delete :auto_update
 
         # Substitute tags in filename
         target= file.sub /\.tt$/, ''
@@ -101,6 +104,16 @@ module Corvid
         # Create file
         template src, target, options
         chmod target, perms if perms
+
+        # Register for auto-update
+        if au
+          au= au.dup
+          plugin= au.delete :plugin
+          au.delete :args if au[:args] and au[:args].empty?
+          au.delete :options if au[:options] and au[:options].empty?
+          au[:filename]= src
+          add_to_auto_update_file 'template2', plugin, au
+        end
 
         target
       end
@@ -371,6 +384,39 @@ module Corvid
       end
 
       alias :add_executables_to_gemspec :add_executable_to_gemspec
+
+      # TODO doc add_to_auto_update_file & read_client_auto_update_file
+      def add_to_auto_update_file(type, plugin_name, data)
+        raise "Invalid type, String expected: #{type.inspect}" unless type.is_a? String
+        raise "Invalid plugin name, String expected: #{plugin_name.inspect}" unless plugin_name.is_a? String
+        raise "Invalid data, Hash expected: #{data.inspect}" unless data.is_a? Hash
+
+        entry= {type: type, plugin: plugin_name, data: data}
+
+        au= read_client_auto_update_file || []
+        unless au.include? entry
+          au<< entry
+          create_file Constants::AUTO_UPDATE_FILE, au.to_yaml, force: true
+        end
+      end
+
+      # Reads and parses the contents of the client's {Constants::AUTO_UPDATE_FILE AUTO_UPDATE_FILE} if it exists.
+      #
+      # @return [nil|Array<Hash>] If the file exists then an array of hashes will be returned.
+      def read_client_auto_update_file
+        if File.exists?(Constants::AUTO_UPDATE_FILE)
+          r= YAML.load_file(Constants::AUTO_UPDATE_FILE)
+          unless r.is_a? Array
+            raise "File invalid: #{Constants::AUTO_UPDATE_FILE}\nTop-level object should be an array."
+          end
+          unless r.all?{|e| e.is_a? Hash }
+            raise "File invalid: #{Constants::AUTO_UPDATE_FILE}\nEach 2nd-level element should be an hash."
+          end
+          r
+        else
+          nil
+        end
+      end
 
       private
 
