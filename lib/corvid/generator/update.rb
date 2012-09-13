@@ -371,14 +371,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   end
 
   def create_template_var_delegator(td)
-
-    generator= nil
-    if gd= td[:generator]
-      require gd[:require] if gd[:require]
-      raise "Class name not provided for generator.\n#{td.inspect}" unless gd[:class]
-      klass= eval gd[:class]
-      generator= klass.new
-    end
+    generator= create_generator_from_autd(td)
 
     # TODO cache delegator within this method, created in `from`, reused in `to`
     args_provider= nil

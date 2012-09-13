@@ -9,14 +9,16 @@ class Corvid::Builtin::Generator::NewFeature < ::Corvid::Generator::Base
   def feature
     validate_requirements! 'corvid:plugin'
     with_latest_resources(builtin_plugin) {
-      template2 'lib/%project_name%/%feature_name%_feature.rb.tt'
-      template2 'resources/latest/corvid-features/%feature_name%.rb.tt'
+      with_auto_update_details(require: __FILE__) {
+        template2_au 'lib/%project_name%/%feature_name%_feature.rb.tt'
+        template2_au 'resources/latest/corvid-features/%feature_name%.rb.tt'
 
-      # Add to feature manifest
-      if plugin_file= find_client_plugin
-        insert_into_file plugin_file, "      '#{feature_name}' => ['#{require_path}','::#{full_class_name}'],\n",
-          after: /^\s*feature_manifest\s*\(.*?\n/
-      end
+        # Add to feature manifest
+        if plugin_file= find_client_plugin
+          insert_into_file plugin_file, "      '#{feature_name}' => ['#{require_path}','::#{full_class_name}'],\n",
+            after: /^\s*feature_manifest\s*\(.*?\n/
+        end
+      }
     }
   end
 

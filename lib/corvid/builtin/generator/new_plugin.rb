@@ -9,10 +9,12 @@ class Corvid::Builtin::Generator::NewPlugin < ::Corvid::Generator::Base
   def plugin
     validate_requirements! 'corvid:plugin'
     with_latest_resources(builtin_plugin) {
-      template2 'lib/%project_name%/%plugin_name%_plugin.rb.tt'
-      template2 'test/spec/%plugin_name%_plugin_spec.rb.tt'
-      template2 'bin/%plugin_name%.tt', perms: 0755
-      add_executable_to_gemspec "#{project_name}.gemspec", plugin_name
+      with_auto_update_details(require: __FILE__) {
+        template2_au 'lib/%project_name%/%plugin_name%_plugin.rb.tt'
+        template2_au 'test/spec/%plugin_name%_plugin_spec.rb.tt'
+        template2_au 'bin/%plugin_name%.tt', perms: 0755
+        add_executable_to_gemspec "#{project_name}.gemspec", plugin_name
+      }
     }
   end
 

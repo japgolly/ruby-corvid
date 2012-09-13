@@ -628,19 +628,53 @@ module Corvid
 
 
       # TODO doco
-      def with_auto_update_details(plugin_or_name, generator_class, generator_require_path)
-        plugin_name= plugin_or_name.is_a?(Plugin) ? plugin_or_name.name : plugin_or_name
+      def with_auto_update_details(options = {})
+
+        # Option: plugin_name / plugin
+        plugin_name= options[:plugin_name] || options[:plugin] || @@with_resource_plugin
+        plugin_name= plugin_name.name if plugin_name.is_a?(Plugin)
+        raise "Plugin name not provided." unless plugin_name
+
+        # Option: generator
+        generator_class= options[:generator] || self
         generator_class= generator_class.class unless generator_class.is_a? Class
         raise "Invalid generator class: #{generator_class.inspect}" unless superclasses(generator_class).include? Base
-        begin
-          require generator_require_path
-        rescue LoadError
-          raise "Invalid require path '#{generator_require_path}' for #{generator_class}.\nJust tried requiring it and got a LoadError."
-        end if generator_require_path
 
+        # Option: require
+        if generator_require_path= options[:require]
+          # Convert full paths
+          if /^\/|\.rb$/ === generator_require_path
+            generator_require_path= File.expand_path generator_require_path
+            candidates= $:.map{|p|
+              generator_require_path.sub /#{Regexp.quote File.expand_path p}[\\\/]+/, ''
+            }
+            c= candidates.sort_by(&:size).first
+            if c == generator_require_path
+              raise "Unable to turn full path into a $LOAD_PATH-relative require-path: #{generator_require_path}"
+            end
+            generator_require_path= c.sub /\.rb$/, ''
+          end
+        end
+
+        # Option: cli_args & cli_opts
+        generator_cli_args= options[:cli_args] || @_initializer[0]
+        generator_cli_opts= options[:cli_opts] || @_initializer[1]
+
+        #---------------------------
+
+        # Create auto-update details
+        aug= {class: generator_class.to_s}
+        aug[:require]= generator_require_path if generator_require_path
+        aug[:args]= generator_cli_args if generator_cli_args && !generator_cli_args.empty?
+        aug[:opts]= generator_cli_opts if generator_cli_opts && !generator_cli_opts.empty?
+        au= {plugin: plugin_name, generator: aug}
+
+        # Confirm data allows successful re-creation of generator
+        create_generator_from_autd au
+
+        # Yield with details in place
         old= @with_auto_update_details
-        @with_auto_update_details= {plugin: plugin_name, generator: {class: generator_class.to_s}}
-        @with_auto_update_details[:generator][:require]= generator_require_path if generator_require_path
+        @with_auto_update_details= au
         begin
           yield
         ensure
@@ -661,6 +695,19 @@ module Corvid
 
         template2 file, options.merge(auto_update: au)
       end
+
+  def create_generator_from_autd(td)
+    if gd= td[:generator]
+      require gd[:require] if gd[:require]
+      raise "Class name not provided for generator.\n#{td.inspect}" unless gd[:class]
+      klass= eval gd[:class]
+      cli_args= gd[:args] || []
+      cli_opts= gd[:opts] || []
+      generator= klass.new(cli_args, cli_opts)
+    else
+      nil
+    end
+  end
 
       private
       @@with_resource_depth= 0

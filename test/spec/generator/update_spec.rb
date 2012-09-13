@@ -28,6 +28,7 @@ describe Corvid::Generator::Update do
       }
 
       class FakeGenerator
+        def initialize(*) end
         def num; 357 end
         def dyn; num * 100 end
       end
