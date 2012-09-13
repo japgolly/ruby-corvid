@@ -17,6 +17,8 @@ module Corvid
         */.settings/*
         */.metadata/*
         */target/*
+        */log/*
+        */tmp/*
       ]
       self.ignore_names= %w[
         .*.sw[p-z]
