@@ -190,24 +190,33 @@ describe Corvid::Generator::ActionExtensions do
     let(:g) { safe_gen }
 
     it("removes .tt from end of filename"){
-      g.should_receive(:template).once.with('hehe.rb.tt','hehe.rb')
+      g.should_receive(:template).once.with('hehe.rb.tt','hehe.rb',{})
       g.template2 'hehe.rb.tt'
     }
 
     it("doesn't remove .tt from middle of filename"){
-      g.should_receive(:template).once.with('hehe.tt.rb','hehe.tt.rb')
+      g.should_receive(:template).once.with('hehe.tt.rb','hehe.tt.rb',{})
       g.template2 'hehe.tt.rb'
     }
 
     it("substitutes tags in filename"){
-      g.should_receive(:template).once.with('%omg%/%evil%-%evil%.rb','123/666-666.rb')
+      g.should_receive(:template).once.with('%omg%/%evil%-%evil%.rb','123/666-666.rb',{})
       g.template2 '%omg%/%evil%-%evil%.rb'
     }
 
     it("calls chmod when perms provided"){
-      g.should_receive(:template).once.with('hehe.rb','hehe.rb').ordered
+      g.should_receive(:template).once.with('hehe.rb','hehe.rb',{}).ordered
       g.should_receive(:chmod).once.with('hehe.rb',0123).ordered
       g.template2 'hehe.rb', perms: 0123
+    }
+
+    it("passes the :force option to template()"){
+      g.should_receive(:template).once.with('z','z',{force: true})
+      g.template2 'z', force: true
+    }
+
+    it("returns the target filename"){
+      g.template2('%evil%.txt.tt').should == '666.txt'
     }
   end
 
