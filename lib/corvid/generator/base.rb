@@ -615,11 +615,28 @@ module Corvid
         self
       end
 
+  # TODO move to GU
+  def superclasses(obj)
+    if obj == Object
+      [Object]
+    elsif obj.is_a? Class
+      [obj] + superclasses(obj.superclass)
+    else
+      superclasses obj.class
+    end
+  end
+
+
       # TODO doco
       def with_auto_update_details(plugin_or_name, generator_class, generator_require_path)
         plugin_name= plugin_or_name.is_a?(Plugin) ? plugin_or_name.name : plugin_or_name
         generator_class= generator_class.class unless generator_class.is_a? Class
-        raise "Class expected, not #{generator_class.inspect}" unless generator_class.new.is_a? Base
+        raise "Invalid generator class: #{generator_class.inspect}" unless superclasses(generator_class).include? Base
+        begin
+          require generator_require_path
+        rescue LoadError
+          raise "Invalid require path '#{generator_require_path}' for #{generator_class}.\nJust tried requiring it and got a LoadError."
+        end if generator_require_path
 
         old= @with_auto_update_details
         @with_auto_update_details= {plugin: plugin_name, generator: {class: generator_class.to_s}}

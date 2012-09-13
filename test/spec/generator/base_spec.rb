@@ -283,7 +283,7 @@ describe Corvid::Generator::Base do
     }
 
     it("records the generator class's require path"){
-      @expected_au_data[:generator][:require]= g.with_args[2]= 'a/b/c'
+      @expected_au_data[:generator][:require]= g.with_args[2]= 'corvid/plugin'
       test
     }
 
@@ -306,6 +306,7 @@ describe Corvid::Generator::Base do
     }
 
     it("all options at once"){
+      @expected_au_data[:generator][:require]= g.with_args[2]= 'corvid/plugin'
       g.t2_args += [:name, :age, {perms: 0755}]
       g.should_receive(:chmod).once
       @expected_au_data[:args]= {name: 'bob', age: 100}
@@ -315,6 +316,11 @@ describe Corvid::Generator::Base do
 
     it("fails unless with_auto_update_details() called first"){
       expect{ g.send :template2_au, 'abc' }.to raise_error /with_auto_update_details/
+    }
+
+    it("fails if an incorrect require path is given"){
+      g.with_args[2]= 'so_wrong_man'
+      expect{ g.asd }.to raise_error /so_wrong_man/
     }
   end
 end
