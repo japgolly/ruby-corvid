@@ -15,6 +15,14 @@ describe 'Client Functionality provided by Corvid' do
     invoke_corvid! "init --no-#{RUN_BUNDLE} --test-unit --test-spec"
     init_gemfile
     File.write 'lib/hehe.rb', 'class Hehe; def num; 123 end end'
+    File.write 'lib/unfinished.rb', "# TODO whatever"
+  }
+
+  it("should include a todo task"){
+    @capture_sh= true
+    invoke_rake! 'todo'
+    @stdout.should match /unfinished\.rb/
+    @stdout.should_not match /hehe\.rb/
   }
 
   it("should include a stats task"){

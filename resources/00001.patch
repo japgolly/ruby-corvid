@@ -1,6 +1,6 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: 1458e9f9475c76b0556e65dd8d8d92909da00bd58e9cfa2c18436dbc66fcc684
-Patch: 696a7b7e6f3676b1c39313fe1933d57cf45a7bfb840237f23912af3cd859929c
+After: e34e0efeb8ffc29e360c71a978e766eb11deb89813c1c08a1203200514d73e07
+Patch: 911d5db62e45e43a73a6845f6479513d88caaab5206328ba083d2f583e109efe
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
 +++ %project_name%.gemspec.tt	2012-09-07 15:57:57.000000000 +1000
 @@ -0,0 +1,23 @@
@@ -76,6 +76,24 @@ Patch: 696a7b7e6f3676b1c39313fe1933d57cf45a7bfb840237f23912af3cd859929c
 +
 +# Use the default configuration as is
 +defaults
+--- /dev/null	1980-01-01 00:00:00.000000000 +1000
++++ .corvid/todo_cfg.rb	2012-09-13 10:09:44.000000000 +1000
+@@ -0,0 +1,15 @@
++# Customisable configuration for the Corvid 'rake todo' task.
++#
++# See Corvid's corvid/builtin/todo_finder.rb for more details.
++
++# Ignore files that match find's -path switch.
++#todo_finder.ignore_paths += %w[
++#  */test/fixtures/*
++#  */vendor/*
++#]
++
++# Ignore files that match find's -name switch.
++#todo_finder.ignore_names += %w[
++#  *_spec.rb
++#  *.html
++#]
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
 +++ .gitignore	2012-09-06 07:57:58.000000000 +1000
 @@ -0,0 +1,17 @@
@@ -363,8 +381,8 @@ Patch: 696a7b7e6f3676b1c39313fe1933d57cf45a7bfb840237f23912af3cd859929c
 +
 +load Gem.bin_path('yard', 'yri')
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
-+++ corvid-features/corvid.rb	2012-09-13 08:34:07.000000000 +1000
-@@ -0,0 +1,33 @@
++++ corvid-features/corvid.rb	2012-09-13 10:10:04.000000000 +1000
+@@ -0,0 +1,34 @@
 +install {
 +  empty_directory '.corvid'
 +
@@ -375,6 +393,7 @@ Patch: 696a7b7e6f3676b1c39313fe1933d57cf45a7bfb840237f23912af3cd859929c
 +
 +  copy_file       '.corvid/Gemfile'
 +  copy_file       '.corvid/stats_cfg.rb'
++  copy_file       '.corvid/todo_cfg.rb'
 +  copy_file       '.gitignore'
 +  copy_file       '.simplecov'
 +  copy_file       '.yardopts'
