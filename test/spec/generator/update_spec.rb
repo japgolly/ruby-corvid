@@ -53,7 +53,7 @@ describe Corvid::Generator::Update do
 
   #---------------------------------------------------------------------------------------------------------------------
 
-  describe '#update_loose_templates!' do
+  describe '#update_loose_templates_for_template2!' do
     run_each_in_empty_dir
 
     class FakeGen < ::Corvid::Generator::Base
@@ -81,7 +81,7 @@ describe Corvid::Generator::Update do
 
       # Update to v3
       rpm.with_resource_versions 1, 3 do
-        subject.send :update_loose_templates!, rpm, 1, 3, [{
+        subject.send :update_loose_templates_for_template2!, rpm, 1, 3, [{
           filename: '%name%.txt.tt',
           args: {name: 'Happy'},
           generator: {class: FakeGen.to_s},

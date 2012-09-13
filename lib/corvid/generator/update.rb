@@ -130,7 +130,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       # Auto-update eligible files
       update_deployable_files! rpm, installers, from, to
       update_templates! rpm, installers, from, to
-#      update_loose_templates! rpm, from, to
 
       # Perform migration steps
       (from + 1).upto(to) do |ver|
@@ -152,6 +151,9 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
           end
         end
       end
+
+      # TODO rename Auto-update loose templates
+      update_loose_templates! rpm, from, to
 
       # Update version file
       add_version plugin.name, to
@@ -325,8 +327,18 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     end
   end
 
+  def update_loose_templates!(rpm, from, to)
+    t2= (read_client_auto_update_file || [])
+        .select{|e| e[:type] == 'template2' && e[:plugin] == plugin.name }
+        .map{|e| e[:data] }
+        .compact
+    unless t2.empty?
+      update_loose_templates_for_template2! rpm, from, to, t2
+    end
+  end
+
   # @param [Array<Hash>]
-  def update_loose_templates!(rpm, from, to, template_manifest)
+  def update_loose_templates_for_template2!(rpm, from, to, template_manifest)
     return unless template_manifest && !template_manifest.empty?
 
     # TODO should template var methods in FIs be available??
@@ -346,6 +358,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
                 template_manifest.each do |td|
                   filename= td[:filename]
+                  raise "Filename not specified in TODO" unless filename
                   options= td[:options] || {}
                   d= create_template_var_delegator(td)
                   with_action_context(d){
