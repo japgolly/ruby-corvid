@@ -99,6 +99,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   # @return [void]
   def update!(plugin, from, to, feature_names)
     rpm= rpm_for(plugin)
+    project_dir_name= File.basename(Dir.pwd)
 
     # Expand versions m->n
     rpm.with_resource_versions from, to do
@@ -129,11 +130,12 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
       # Auto-update eligible files
       update_deployable_files! rpm, installers, from, to
-      update_templates! rpm, installers, from, to
+      update_templates! rpm, installers, from, to, project_dir_name
 
       # Perform migration steps
       (from + 1).upto(to) do |ver|
         next unless grp= installers[ver]
+        reset_template_var_cache
         with_resources rpm.ver_dir(ver) do
           grp.each do |feature,fd|
             installer= fd[:installer]
@@ -153,7 +155,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       end
 
       # TODO rename Auto-update loose templates
-      update_loose_templates! rpm, from, to
+      update_loose_templates! plugin.name, rpm, from, to, project_dir_name
 
       # Update version file
       add_version plugin.name, to
@@ -228,10 +230,12 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   # @param [Fixnum] from Current version of resources installed.
   # @param [Fixnum] to Version of resources to update to.
   # @return [void]
-  def update_templates!(rpm, installers, from, to)
+  def update_templates!(rpm, installers, from, to, project_dir_name)
     Dir.mktmpdir {|tmpdir|
       Dir.mkdir from_dir= "#{tmpdir}/a"
+      Dir.mkdir from_dir= "#{from_dir}/#{project_dir_name}"
       Dir.mkdir to_dir= "#{tmpdir}/b"
+      Dir.mkdir to_dir= "#{to_dir}/#{project_dir_name}"
 
       # Build a list of files
       files= []
@@ -242,6 +246,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
             # Run installer and create files with dynamic content
             Dir.chdir(dir) {
+              reset_template_var_cache
               r= process_templates fd[:code], fd[:feature_id], ver
               files.concat r
             }
@@ -257,6 +262,8 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         end
       end
     }
+  ensure
+    reset_template_var_cache
   end
 
   def process_templates(installer_code, feature, ver)
@@ -327,18 +334,18 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     end
   end
 
-  def update_loose_templates!(rpm, from, to)
+  def update_loose_templates!(plugin_name, rpm, from, to, project_dir_name)
     t2= (read_client_auto_update_file || [])
-        .select{|e| e[:type] == 'template2' && e[:plugin] == plugin.name }
+        .select{|e| e[:type] == 'template2' && e[:plugin] == plugin_name }
         .map{|e| e[:data] }
         .compact
     unless t2.empty?
-      update_loose_templates_for_template2! rpm, from, to, t2
+      update_loose_templates_for_template2! rpm, from, to, project_dir_name, t2
     end
   end
 
   # @param [Array<Hash>]
-  def update_loose_templates_for_template2!(rpm, from, to, template_manifest)
+  def update_loose_templates_for_template2!(rpm, from, to, project_dir_name, template_manifest)
     return unless template_manifest && !template_manifest.empty?
 
     # TODO should template var methods in FIs be available??
@@ -348,13 +355,16 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     begin
       Dir.mktmpdir {|tmpdir|
         Dir.mkdir from_dir= "#{tmpdir}/a"
+        Dir.mkdir from_dir= "#{from_dir}/#{project_dir_name}"
         Dir.mkdir to_dir= "#{tmpdir}/b"
+        Dir.mkdir to_dir= "#{to_dir}/#{project_dir_name}"
 
         # Build a list of files
         files= []
         [ [from,from_dir] , [to,to_dir] ].each do |ver,dir|
           with_resources rpm.ver_dir(ver) do
               Dir.chdir(dir) {
+                reset_template_var_cache
 
                 template_manifest.each do |td|
                   filename= td[:filename]
@@ -380,6 +390,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
     ensure
       @destination_stack.pop
+      reset_template_var_cache
     end
   end
 

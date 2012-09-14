@@ -81,7 +81,7 @@ describe Corvid::Generator::Update do
 
       # Update to v3
       rpm.with_resource_versions 1, 3 do
-        subject.send :update_loose_templates_for_template2!, rpm, 1, 3, [{
+        subject.send :update_loose_templates_for_template2!, rpm, 1, 3, 'bob', [{
           filename: '%name%.txt.tt',
           args: {name: 'Happy'},
           generator: {class: FakeGen.to_s},
