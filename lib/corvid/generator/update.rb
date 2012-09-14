@@ -231,29 +231,18 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   # @param [Fixnum] to Version of resources to update to.
   # @return [void]
   def update_templates!(rpm, installers, from, to, project_dir_name)
-    Dir.mktmpdir {|tmpdir|
-      Dir.mkdir from_dir= "#{tmpdir}/a"
-      Dir.mkdir from_dir= "#{from_dir}/#{project_dir_name}"
-      Dir.mkdir to_dir= "#{tmpdir}/b"
-      Dir.mkdir to_dir= "#{to_dir}/#{project_dir_name}"
+    with_temp_from_to_dirs(project_dir_name) {|from_dir, to_dir|
 
       # Build a list of files
       files= []
-      [ [from,from_dir] , [to,to_dir] ].each do |ver,dir|
-        next unless grp= installers[ver]
-        with_resources rpm.ver_dir(ver) do
-          grp.each do |feature,fd|
+      run_for_each_ver(rpm, from, from_dir, to, to_dir) {|ver|
+        (installers[ver] || []).each do |feature,fd|
 
-            # Run installer and create files with dynamic content
-            Dir.chdir(dir) {
-              reset_template_var_cache
-              r= process_templates fd[:code], fd[:feature_id], ver
-              files.concat r
-            }
-
-          end
+          # Run installer and create files with dynamic content
+          r= process_templates fd[:code], fd[:feature_id], ver
+          files.concat r
         end
-      end
+      }
 
       # Patch & migrate files
       unless files.empty?
@@ -262,8 +251,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         end
       end
     }
-  ensure
-    reset_template_var_cache
   end
 
   def process_templates(installer_code, feature, ver)
@@ -320,20 +307,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   #---------------------------------------------------------------------------------------------------------------------
 
-  def patch(rpm, msg, &block)
-    rpm.allow_interactive_patching do
-      say_status 'patch', msg, :cyan
-
-      conflicts= block.()
-
-      if conflicts
-        say_status 'patch', 'Applied but with merge conflicts.', :red
-      else
-        say_status 'patch', 'Applied cleanly.', :green
-      end
-    end
-  end
-
   def update_loose_templates!(plugin_name, rpm, from, to, project_dir_name)
     t2= (read_client_auto_update_file || [])
         .select{|e| e[:type] == 'template2' && e[:plugin] == plugin_name }
@@ -349,71 +322,97 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     return unless template_manifest && !template_manifest.empty?
 
     # TODO should template var methods in FIs be available??
-    # TODO rename update_loose_templates, create_template_var_delegator, patch() msg
+    # TODO rename update_loose_templates, action_context_for_template2_au, patch() msg
 
-    @destination_stack.push '.'
-    begin
-      Dir.mktmpdir {|tmpdir|
-        Dir.mkdir from_dir= "#{tmpdir}/a"
-        Dir.mkdir from_dir= "#{from_dir}/#{project_dir_name}"
-        Dir.mkdir to_dir= "#{tmpdir}/b"
-        Dir.mkdir to_dir= "#{to_dir}/#{project_dir_name}"
+    action_context_cache= {}
+    with_temp_from_to_dirs(project_dir_name) {|from_dir, to_dir|
 
-        # Build a list of files
-        files= []
-        [ [from,from_dir] , [to,to_dir] ].each do |ver,dir|
-          with_resources rpm.ver_dir(ver) do
-              Dir.chdir(dir) {
-                reset_template_var_cache
+      # Create templates at before/after versions
+      files= []
+      run_for_each_ver(rpm, from, from_dir, to, to_dir) {
+        template_manifest.each do |td|
 
-                template_manifest.each do |td|
-                  filename= td[:filename]
-                  raise "Filename not specified in TODO" unless filename
-                  options= td[:options] || {}
-                  d= create_template_var_delegator(td)
-                  with_action_context(d){
-                    files<< template2(filename, options)
-                  }
-                end
-
-              }
-          end
-        end
-
-        # Patch & migrate files
-        unless files.empty?
-          patch rpm, "TODO Patching other generated templates..." do
-            rpm.migrate_changes_between_dirs from_dir, to_dir, '.', files
-          end
+          # Create template
+          filename= td[:filename]
+          raise "Filename not specified in TODO" unless filename
+          options= td[:options] || {}
+          ac= action_context_cache.has_key?(td) ? action_context_cache[td] : action_context_cache[td]= \
+              action_context_for_template2_au(td)
+          with_action_context(ac){
+            files<< template2(filename, options)
+          }
         end
       }
 
-    ensure
-      @destination_stack.pop
-      reset_template_var_cache
-    end
+      # Patch & migrate files
+      unless files.empty?
+        patch rpm, "TODO Patching other generated templates..." do
+          rpm.migrate_changes_between_dirs from_dir, to_dir, '.', files
+        end
+      end
+    }
   end
 
-  def create_template_var_delegator(td)
-    generator= create_generator_from_autd(td)
+  def action_context_for_template2_au(td)
 
-    # TODO cache delegator within this method, created in `from`, reused in `to`
-    args_provider= nil
+    # Create instance of generator
+    c= create_generator_from_autd(td)
+
+    # Provide methods for :args
     args= td[:args]
     if args && !args.empty?
-
-      if generator
-        args.each{|k,v| generator.instance_variable_set :"@_corvid_#{k}", v }
-        generator.instance_eval args.keys.map{|k| "def #{k}; @_corvid_#{k} end" }.join ';'
+      if c
+        args.each{|k,v| c.instance_variable_set :"@_corvid_#{k}", v }
+        c.instance_eval args.keys.map{|k| "def #{k}; @_corvid_#{k} end" }.join ';'
       else
         klass= Struct.new(*args.keys)
-        generator= klass[*args.values]
+        c= klass[*args.values]
       end
     end
 
-#    delegates= [args_provider,generator].compact
-#    d= GollyUtils::Delegator.new *delegates, allow_protected: true
-    generator
+    c
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
+  def with_temp_from_to_dirs(project_dir_name)
+    @destination_stack.push '.'
+    pop_dest_stack= true
+    Dir.mktmpdir {|tmpdir|
+      Dir.mkdir from_dir= "#{tmpdir}/a"
+      Dir.mkdir from_dir= "#{from_dir}/#{project_dir_name}"
+      Dir.mkdir to_dir= "#{tmpdir}/b"
+      Dir.mkdir to_dir= "#{to_dir}/#{project_dir_name}"
+      yield from_dir, to_dir
+    }
+  ensure
+    reset_template_var_cache
+    @destination_stack.pop if pop_dest_stack
+  end
+
+  def run_for_each_ver(rpm, from_ver, from_dir, to_ver, to_dir)
+    [ [from_ver,from_dir] , [to_ver,to_dir] ].each do |ver,dir|
+      with_resources rpm.ver_dir(ver) do
+        Dir.chdir dir do
+          reset_template_var_cache
+          yield ver
+        end
+      end
+    end
+  end
+
+  def patch(rpm, msg, &block)
+    rpm.allow_interactive_patching do
+      say_status 'patch', msg, :cyan
+
+      conflicts= block.()
+
+      if conflicts
+        say_status 'patch', 'Applied but with merge conflicts.', :red
+      else
+        say_status 'patch', 'Applied cleanly.', :green
+      end
+    end
   end
 
   # Re-enable Thor's support for assuming all public methods are tasks

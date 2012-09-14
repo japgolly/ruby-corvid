@@ -10,9 +10,9 @@ require 'corvid/builtin/test/resource_patch_tests'
 describe Corvid::Generator::Update do
 
 
-  describe '#create_template_var_delegator' do
+  describe '#action_context_for_template2_au' do
     def test(*args)
-      described_class.new.send :create_template_var_delegator, *args
+      described_class.new.send :action_context_for_template2_au, *args
     end
 
     it("provides methods for given args"){
