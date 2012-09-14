@@ -12,6 +12,7 @@ require 'corvid/generator/thor_monkey_patches'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/inflections'
 require 'golly-utils/delegator'
+require 'golly-utils/ruby_ext/classes_and_types'
 require 'golly-utils/ruby_ext/options'
 require 'thor'
 require 'yaml'
@@ -615,18 +616,6 @@ module Corvid
         self
       end
 
-  # TODO move to GU
-  def superclasses(obj)
-    if obj == Object
-      [Object]
-    elsif obj.is_a? Class
-      [obj] + superclasses(obj.superclass)
-    else
-      superclasses obj.class
-    end
-  end
-
-
       # TODO doco
       def with_auto_update_details(options = {})
 
@@ -638,7 +627,7 @@ module Corvid
         # Option: generator
         generator_class= options[:generator] || self
         generator_class= generator_class.class unless generator_class.is_a? Class
-        raise "Invalid generator class: #{generator_class.inspect}" unless superclasses(generator_class).include? Base
+        raise "Invalid generator class: #{generator_class.inspect}" unless generator_class.superclasses.include? Base
 
         # Option: require
         if generator_require_path= options[:require]
