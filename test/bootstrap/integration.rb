@@ -15,7 +15,7 @@ module TestHelpers
     env['RUBYOPT'] ||= nil
 
     # Be silent by default
-    @quiet_sh ||= true unless $DEBUG
+    @quiet_sh= true if @quiet_sh.nil? and not $DEBUG
 
     @_sh_env,@_sh_cmd = env,cmd
     if @capture_sh or @quiet_sh == true
