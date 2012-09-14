@@ -616,7 +616,27 @@ module Corvid
         self
       end
 
-      # TODO doco
+      # Generates and records a bunch of state needed to register files for auto-update.
+      #
+      # @example
+      #     with_auto_update_details(require: __FILE__) {
+      #       template2_au 'lib/%project_name%/some_template.rb.tt'
+      #     }
+      #
+      # @yield Invokes the given block with the auto-update state in place.
+      # @param [Hash] options
+      # @option options [String] :plugin_name The name of the plugin providing the updatable resource.
+      #   Determined automatically if not provided provided {#with_resources} has been called.
+      # @option options [Plugin] :plugin An alternative to specifying `:plugin`.
+      # @option options [Base|Class<Base>] :generator (self) The generator (or class) that is generating the file.
+      #   Determined automatically if not provided.
+      # @option options [nil|String] :require (nil) An optional path to `require` to load the generator class. Absolute
+      #   paths will be converted so it is recommended you pass in `__FILE__`.
+      # @option options [Array<String>] :cli_args CLI arguements the generator requires for instanciation.
+      #   Determined automatically if not provided.
+      # @option options [Array<String>] :cli_opts CLI arguments that configure Thor options. Required for instanciation.
+      #   Determined automatically if not provided.
+      # @return [void]
       def with_auto_update_details(options = {})
 
         # Option: plugin_name / plugin
@@ -649,8 +669,6 @@ module Corvid
         generator_cli_args= options[:cli_args] || @_initializer[0]
         generator_cli_opts= options[:cli_opts] || @_initializer[1]
 
-        #---------------------------
-
         # Create auto-update details
         aug= {class: generator_class.to_s}
         aug[:require]= generator_require_path if generator_require_path
@@ -659,7 +677,7 @@ module Corvid
         au= {plugin: plugin_name, generator: aug}
 
         # Confirm data allows successful re-creation of generator
-        create_generator_from_autd au
+        create_generator_from_au_data au
 
         # Yield with details in place
         old= @with_auto_update_details
@@ -671,6 +689,15 @@ module Corvid
         end
       end
 
+      # A special version of {ActionExtensions#template2} that registers the target file for auto-updates.
+      #
+      # @overload template2_au(file, *template_var_keys, options={})
+      #   @param [String] file The template source file.
+      #   @param [Array<Symbol>] template_var_keys A list of method names that provide template values, that should
+      #     have their current values saved and reused in future updates.
+      #   @param [Hash] options Options for {ActionExtensions#template2}.
+      # @return Whatever {ActionExtensions#template2} returns.
+      # @raise If {#with_auto_update_details} hasn't been called first.
       def template2_au(file, *args)
         raise "Call with_auto_update_details() first." unless @with_auto_update_details
 
@@ -685,18 +712,22 @@ module Corvid
         template2 file, options.merge(auto_update: au)
       end
 
-  def create_generator_from_autd(td)
-    if gd= td[:generator]
-      require gd[:require] if gd[:require]
-      raise "Class name not provided for generator.\n#{td.inspect}" unless gd[:class]
-      klass= eval gd[:class]
-      cli_args= gd[:args] || []
-      cli_opts= gd[:opts] || []
-      generator= klass.new(cli_args, cli_opts)
-    else
-      nil
-    end
-  end
+      # Creates a new instance of a generator whose details have been saved in {Constants::AUTO_UPDATE_FILE}.
+      #
+      # @param [Hash<Symbol,Object>] au_data Auto-update data.
+      # @return [nil|Base] A new instance of the generator or `nil` if the data doesn't specify generator details.
+      def create_generator_from_au_data(au_data)
+        if gd= au_data[:generator]
+          require gd[:require] if gd[:require]
+          raise "Class name not provided for generator.\n#{au_data.inspect}" unless gd[:class]
+          klass= eval gd[:class]
+          cli_args= gd[:args] || []
+          cli_opts= gd[:opts] || []
+          generator= klass.new(cli_args, cli_opts)
+        else
+          nil
+        end
+      end
 
       private
       @@with_resource_depth= 0

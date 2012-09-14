@@ -377,7 +377,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   def action_context_for_template2_au(td)
 
     # Create instance of generator
-    c= create_generator_from_autd(td)
+    c= create_generator_from_au_data(td)
 
     # Provide methods for :args
     args= td[:args]

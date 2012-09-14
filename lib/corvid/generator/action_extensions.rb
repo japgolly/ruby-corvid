@@ -385,14 +385,26 @@ module Corvid
 
       alias :add_executables_to_gemspec :add_executable_to_gemspec
 
-      # TODO doc add_to_auto_update_file & read_client_auto_update_file
+      # Adds auto-update data to the client's {Constants::AUTO_UPDATE_FILE AUTO_UPDATE_FILE}.
+      #
+      # If the file doesn't exist yet, it will be created.
+      #
+      # If the given data already exists in the file, it will be discarded.
+      #
+      # @param [String] type The auto-update type.
+      # @param [String|Plugin] plugin_name The plugin name (or instance) the maintains the resource used to generate
+      #   the target file.
+      # @param [Hash] data Set of key/values, the format dependant on the type.
+      # @return [void]
       def add_to_auto_update_file(type, plugin_name, data)
-        raise "Invalid type, String expected: #{type.inspect}" unless type.is_a? String
-        raise "Invalid plugin name, String expected: #{plugin_name.inspect}" unless plugin_name.is_a? String
-        raise "Invalid data, Hash expected: #{data.inspect}" unless data.is_a? Hash
+        # Validate args
+        plugin_name= plugin_name.name if plugin_name.is_a? Plugin
+        :type.validate_lvar_type!{ String }
+        :plugin_name.validate_lvar_type!{ String }
+        :data.validate_lvar_type!{ Hash }
 
+        # Add to file
         entry= {type: type, plugin: plugin_name, data: data}
-
         au= read_client_auto_update_file || []
         unless au.include? entry
           au<< entry
