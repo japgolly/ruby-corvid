@@ -24,6 +24,12 @@ def add_files_to_coverage_at_exit(glob_pattern)
   end
 end
 
+def skip_boring_loc_in_coverage
+  $corvid_skip_boring_lines= true
+end
+
+#-----------------------------------------------------------------------------------------------------------------------
+
 require 'simplecov'
 SimpleCov.command_name $coverage_name || 'test'
 SimpleCov.coverage_dir 'target/coverage'
@@ -32,11 +38,11 @@ SimpleCov.start unless SimpleCov.running
 # Avoid simplecov/result_merger.rb:72:in `block in store_result': undefined method `pretty_generate' for JSON:Module (NoMethodError)
 require 'json'
 
-# Ignore lines that make no sense covering
 class SimpleCov::SourceFile
-  alias :old_process_skipped_lines :process_skipped_lines!
+  alias :process_skipped_lines_pre_corvid :process_skipped_lines!
   def process_skipped_lines!
-    old_process_skipped_lines
+    process_skipped_lines_pre_corvid
+
     lines.each {|line|
       # Remove comments and surrounding from line
       # (Actually if a string contains a hash then this will delete everything from that hash onwards BUT that's ok
@@ -53,6 +59,6 @@ class SimpleCov::SourceFile
       elsif /^def\s+[^\s;\(.]+?([ \(][^);=]+?\)?)?[;\s]*$/ === l
         line.skipped!
       end
-    }
+    } if $corvid_skip_boring_lines
   end
 end

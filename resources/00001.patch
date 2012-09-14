@@ -1,6 +1,6 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: e34e0efeb8ffc29e360c71a978e766eb11deb89813c1c08a1203200514d73e07
-Patch: 911d5db62e45e43a73a6845f6479513d88caaab5206328ba083d2f583e109efe
+After: f3838f4e7116ec64801ae19321103deb8f58b63008869fdfb744deea4f82503c
+Patch: 99ba3e8aeed6e2aab577e55a220c9509d72fc278e3ced5f1496783ed8f4ff0e1
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
 +++ %project_name%.gemspec.tt	2012-09-07 15:57:57.000000000 +1000
 @@ -0,0 +1,23 @@
@@ -126,19 +126,22 @@ Patch: 911d5db62e45e43a73a6845f6479513d88caaab5206328ba083d2f583e109efe
 +--format documentation
 +
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
-+++ .simplecov	2012-09-06 07:57:58.000000000 +1000
-@@ -0,0 +1,14 @@
++++ .simplecov	2012-09-15 09:45:05.000000000 +1000
+@@ -0,0 +1,17 @@
 +SimpleCov.start do
 +  # project_name 'My Awesome Project'
 +
 +  # add_group 'Models', 'app/model'
 +  # add_group 'Plugins', '(app|lib)/plugins'
 +
-+  # Remove test code from coverage
-+  add_filter 'test'
++  # Exclude tests from coverage
++  add_filter '^(?:(?<!/(?:app|lib)/).)*/test/'
 +
 +  # Add files that don't get required to coverage too
 +  add_files_to_coverage_at_exit '{app,lib}/**/*.rb'
++
++  # Skip LOC that contain nothing but "end", "ensure", and so on.
++  skip_boring_loc_in_coverage
 +end
 +
 +# vim:ft=ruby et ts=2 sw=2:
