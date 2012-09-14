@@ -9,6 +9,98 @@ require 'corvid/builtin/test/resource_patch_tests'
 
 describe Corvid::Generator::Update do
 
+  add_generator_lets
+
+  def mock_plugin(name, latest_version)
+    p1= stub(name).tap{|p| p.stub name: name }
+    rpm1= Corvid::ResPatchManager.new
+    rpm1.stub latest_version: latest_version
+    subject.stub(:rpm_for).with(p1).and_return(rpm1)
+    pr.register p1
+    p1
+  end
+
+  describe '#action_context_for_template2_au' do
+    def test(*args)
+      described_class.new.send :action_context_for_template2_au, *args
+    end
+
+    it("provides methods for given args"){
+      d= test args: {str: 'good', num: 666}
+      d.str.should == 'good'
+      d.num.should == 666
+    }
+
+    context "when a generator is referenced" do
+      it("loads the generator"){
+        test generator: {require: 'corvid/plugin', class: described_class.to_s}
+        expect { test generator: {require: 'omg_bru'*7} }.to raise_error LoadError
+      }
+
+      class FakeGenerator
+        def initialize(*) end
+        def num; 357 end
+        def dyn; num * 100 end
+      end
+
+      it("delegates to an instance of the generator"){
+        d= test generator: {class: FakeGenerator.to_s}
+        d.num.should == 357
+        d.dyn.should == 35700
+      }
+
+      it("overrides generator methods with args"){
+        d= test generator: {class: FakeGenerator.to_s}, args: {num: 9}
+        d.num.should == 9
+      }
+
+      it("generator methods access overriden methods too"){
+        d= test generator: {class: FakeGenerator.to_s}, args: {num: 9}
+        d.dyn.should == 900
+      }
+    end
+  end
+
+  describe '#update_loose_templates_for_template2!' do
+    run_each_in_empty_dir
+
+    class FakeGen < ::Corvid::Generator::Base
+      desc 'make', ''
+      def make; with_resources(plugin,1){ template2 '%name%.txt.tt' } end
+      private
+      def name; 'Happy' end
+      def age; name.size end
+    end
+
+    let(:rpm){
+      Corvid::ResPatchManager.new("#{Fixtures::FIXTURE_ROOT}/auto_update-templates")
+      .tap{|rpm| rpm.patch_cmd += ' --quiet' }
+    }
+
+    it("should update templates specified in template manifest"){
+      # Deploy template at v1
+      fg= quiet_generator FakeGen
+      fg.stub rpm_for: rpm, plugin: stub(name: 'p1')
+      fg.make
+
+      # Verify
+      'Happy.txt'.should be_file_with_content /My name is Happy\./, /I'm 5 old/
+      'Happy.txt'.should_not be_file_with_content /Bye/
+
+      # Update to v3
+      rpm.with_resource_versions 1, 3 do
+        subject.send :update_loose_templates_for_template2!, rpm, 1, 3, 'bob', [{
+          filename: '%name%.txt.tt',
+          args: {name: 'Happy'},
+          generator: {class: FakeGen.to_s},
+        }]
+      end
+
+      # Verify
+      'Happy.txt'.should be_file_with_content /My name is Happy!/, /I'm 5 years old/, /Bye/
+    }
+  end
+
   describe '#extract_deployable_files' do
     %w[
       copy_file
@@ -29,17 +121,6 @@ describe Corvid::Generator::Update do
       c= "def install(); copy_file 'f1'; copy_file 'f2'; end"
       subject.send(:extract_deployable_files, c, 'a',1).should == %w[f1 f2]
     }
-  end
-
-  add_generator_lets
-
-  def mock_plugin(name, latest_version)
-    p1= stub(name).tap{|p| p.stub name: name }
-    rpm1= Corvid::ResPatchManager.new
-    rpm1.stub latest_version: latest_version
-    subject.stub(:rpm_for).with(p1).and_return(rpm1)
-    pr.register p1
-    p1
   end
 
   describe 'update:all' do

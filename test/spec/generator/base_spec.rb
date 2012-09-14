@@ -240,4 +240,117 @@ describe Corvid::Generator::Base do
       subject.send :install_plugin, 'a'
     }
   end
+
+  describe '#template2_au' do
+    class AU < Corvid::Generator::Base
+      attr_accessor :with_args, :t2_args, :plugin
+      desc 'asd',''
+      def asd
+        with_resources(plugin,3){
+          with_auto_update_details(with_args){
+            template2_au *t2_args
+          }
+        }
+      end
+      private
+      def name; 'bob' end
+      def age; 100 end
+    end
+    class AU2 < AU
+      argument :name, type: :string
+    end
+
+    before(:each){
+      @plugin= stub name: 'p1'
+      @cli_args= []
+      @with_args= {}
+      @t2_args= ['file.tt']
+      @expected_au_data= {filename: 'file.tt', generator: {class: AU.to_s}}
+      @expected_t_args= ['file.tt' ,'file', {}]
+    }
+
+    let(:g){
+      g= quiet_generator AU, @cli_args
+      g.plugin    = @plugin
+      g.with_args = @with_args
+      g.t2_args   = @t2_args
+      rpm= mock 'rpm'
+      rpm.stub(:with_resources).and_yield 'dir'
+      g.stub rpm_for: rpm
+      g.stub create_file: nil, chmod: nil
+      g
+    }
+
+    def test
+      g.should_receive(:template).once.with *@expected_t_args
+      g.should_receive(:add_to_auto_update_file).once.with do |type, plugin_name, data|
+        type.should == 'template2'
+        plugin_name.should == @plugin.name
+        data.should == @expected_au_data
+      end
+      g.asd
+    end
+
+    it("generates template and updates auto-update file"){
+      test
+    }
+
+    it("records the generator class's require path"){
+      @expected_au_data[:generator][:require]= @with_args[:require]= 'corvid/plugin'
+      test
+    }
+
+    it("accepts the generator class instead of self"){
+      @with_args[:generator]= AU
+      test
+    }
+
+    it("determines the generator's CLI args automatically"){
+      @expected_au_data[:generator][:args]= @cli_args= %w[good stuff]
+      test
+    }
+
+    it("saves specified arg values"){
+      @t2_args += [:name, :age]
+      @expected_au_data[:args]= {name: 'bob', age: 100}
+      test
+    }
+
+    it("saves template2 options"){
+      @t2_args<< {perms: 0755}
+      g.should_receive(:chmod).once
+      @expected_au_data[:options]= {perms: 0755}
+      test
+    }
+
+    it("all options at once"){
+      @with_args[:generator]= AU
+      @expected_au_data[:generator][:require]= @with_args[:require]= 'corvid/plugin'
+      @t2_args += [:name, :age, {perms: 0755}]
+      g.should_receive(:chmod).once
+      @expected_au_data[:args]= {name: 'bob', age: 100}
+      @expected_au_data[:options]= {perms: 0755}
+      test
+    }
+
+    it("fails unless with_auto_update_details() called first"){
+      expect{ g.send :template2_au, 'abc' }.to raise_error /with_auto_update_details/
+    }
+
+    it("fails if an incorrect require path is given"){
+      @with_args[:require]= 'so_wrong_man'
+      expect{ g.asd }.to raise_error /so_wrong_man/
+    }
+
+    it("when a full path is provided for :require, it changes it into a path relative to the $LOAD_PATH"){
+      @with_args[:require]= __FILE__
+      @expected_au_data[:generator][:require]= 'spec/generator/base_spec'
+      test
+    }
+
+    it("fails if it cant create a new instance of the generator"){
+      @with_args[:generator]= AU2
+      expect{ g.asd }.to raise_error /required arg.*name/
+    }
+  end
 end

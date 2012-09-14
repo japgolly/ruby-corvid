@@ -99,6 +99,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   # @return [void]
   def update!(plugin, from, to, feature_names)
     rpm= rpm_for(plugin)
+    project_dir_name= File.basename(Dir.pwd)
 
     # Expand versions m->n
     rpm.with_resource_versions from, to do
@@ -127,13 +128,14 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         rv.validate!
       end
 
-      # Auto-update eligible files
-      update_deployable_files! rpm, installers, from, to
-      update_templates! rpm, installers, from, to
+      # Auto-update eligible feature files
+      update_feature_files!     rpm, installers, from, to
+      update_feature_templates! rpm, installers, from, to, project_dir_name
 
-      # Perform migration steps
+      # Perform feature migration steps
       (from + 1).upto(to) do |ver|
         next unless grp= installers[ver]
+        reset_template_var_cache
         with_resources rpm.ver_dir(ver) do
           grp.each do |feature,fd|
             installer= fd[:installer]
@@ -152,6 +154,9 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         end
       end
 
+      # Auto-update loose templates
+      update_loose_templates! plugin.name, rpm, from, to, project_dir_name
+
       # Update version file
       add_version plugin.name, to
     end
@@ -162,10 +167,12 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   # Auto-updates files deployed by `copy_file`.
   #
+  # @param [ResPatchManager] rpm RPM configured for the relevant plugin.
+  # @param [Hash<Fixnum,Hash<String,Hash<Symbol,Object>>>] installers Map of version -> feature name -> K:V.
   # @param [Fixnum] from Current version of resources installed.
   # @param [Fixnum] to Version of resources to update to.
   # @return [void]
-  def update_deployable_files!(rpm, installers, from, to)
+  def update_feature_files!(rpm, installers, from, to)
 
     # Build a list of files
     files= []
@@ -179,7 +186,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
     # Patch & migrate files
     unless files.empty?
-      patch rpm, "Patching installed files..." do
+      patch rpm, "Patching feature files..." do
         rpm.migrate_changes_between_versions from, to, '.', files
       end
     end
@@ -222,34 +229,28 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   # Auto-updates files deployed by `create_file`, `template`, {ActionExtensions#template2}.
   #
+  # @param [ResPatchManager] rpm RPM configured for the relevant plugin.
+  # @param [Hash<Fixnum,Hash<String,Hash<Symbol,Object>>>] installers Map of version -> feature name -> K:V.
   # @param [Fixnum] from Current version of resources installed.
   # @param [Fixnum] to Version of resources to update to.
   # @return [void]
-  def update_templates!(rpm, installers, from, to)
-    Dir.mktmpdir {|tmpdir|
-      Dir.mkdir from_dir= "#{tmpdir}/a"
-      Dir.mkdir to_dir= "#{tmpdir}/b"
+  def update_feature_templates!(rpm, installers, from, to, project_dir_name)
+    with_temp_from_to_dirs(project_dir_name) {|from_dir, to_dir|
 
       # Build a list of files
       files= []
-      [ [from,from_dir] , [to,to_dir] ].each do |ver,dir|
-        next unless grp= installers[ver]
-        with_resources rpm.ver_dir(ver) do
-          grp.each do |feature,fd|
+      run_for_each_ver(rpm, from, from_dir, to, to_dir) {|ver|
+        (installers[ver] || []).each do |feature,fd|
 
-            # Run installer and create files with dynamic content
-            Dir.chdir(dir) {
-              r= process_templates fd[:code], fd[:feature_id], ver
-              files.concat r
-            }
-
-          end
+          # Run installer and create files with dynamic content
+          r= process_templates fd[:code], fd[:feature_id], ver
+          files.concat r
         end
-      end
+      }
 
       # Patch & migrate files
       unless files.empty?
-        patch rpm, "Patching generated templates..." do
+        patch rpm, "Patching feature templates..." do
           rpm.migrate_changes_between_dirs from_dir, to_dir, '.', files
         end
       end
@@ -309,6 +310,117 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
   end
 
   #---------------------------------------------------------------------------------------------------------------------
+
+  # Auto-updates files deployed outside of feature installers, and registered for auto-update.
+  #
+  # @param [String] plugin_name The name of the relevant plugin.
+  # @param [ResPatchManager] rpm RPM configured for the relevant plugin.
+  # @param [Fixnum] from Current version of resources installed.
+  # @param [Fixnum] to Version of resources to update to.
+  # @param [String] project_dir_name The basename of the client project's directory.
+  # @return [void]
+  def update_loose_templates!(plugin_name, rpm, from, to, project_dir_name)
+    t2= (read_client_auto_update_file || [])
+        .select{|e| e[:type] == 'template2' && e[:plugin] == plugin_name }
+        .map{|e| e[:data] }
+        .compact
+    unless t2.empty?
+      update_loose_templates_for_template2! rpm, from, to, project_dir_name, t2
+    end
+  end
+
+  # Auto-updates files deployed outside of feature installers via {ActionExtensions#template2}.
+  #
+  # @param [ResPatchManager] rpm RPM configured for the relevant plugin.
+  # @param [Fixnum] from Current version of resources installed.
+  # @param [Fixnum] to Version of resources to update to.
+  # @param [String] project_dir_name The basename of the client project's directory.
+  # @param [Array<Hash>] au_data An array of data hash objects created by {ActionExtensions#template2}.
+  # @return [void]
+  def update_loose_templates_for_template2!(rpm, from, to, project_dir_name, au_data)
+    return unless au_data && !au_data.empty?
+
+    action_context_cache= {}
+    with_temp_from_to_dirs(project_dir_name) {|from_dir, to_dir|
+
+      # Create templates at before/after versions
+      files= []
+      run_for_each_ver(rpm, from, from_dir, to, to_dir) {
+        au_data.each do |td|
+
+          # Create template
+          filename= td[:filename]
+          raise "Filename field not specified in template2 auto-update data: #{td.inspect}" unless filename
+          options= td[:options] || {}
+          ac= action_context_cache.has_key?(td) ? action_context_cache[td] : action_context_cache[td]= \
+              action_context_for_template2_au(td)
+          with_action_context(ac){
+            files<< template2(filename, options)
+          }
+        end
+      }
+
+      # Patch & migrate files
+      unless files.empty?
+        patch rpm, "Patching loose templates..." do
+          rpm.migrate_changes_between_dirs from_dir, to_dir, '.', files
+        end
+      end
+    }
+  end
+
+  # Creates an action context (i.e. an object with a bunch of dynamic methods that return template values) based on
+  # a data hash generated by `template2`.
+  #
+  # @param [Hash] td A data object created by {ActionExtensions#template2}.
+  # @return [Object]
+  def action_context_for_template2_au(td)
+
+    # Create instance of generator
+    c= create_generator_from_au_data(td)
+
+    # Provide methods for :args
+    args= td[:args]
+    if args && !args.empty?
+      if c
+        args.each{|k,v| c.instance_variable_set :"@_corvid_#{k}", v }
+        c.instance_eval args.keys.map{|k| "def #{k}; @_corvid_#{k} end" }.join ';'
+      else
+        klass= Struct.new(*args.keys)
+        c= klass[*args.values]
+      end
+    end
+
+    c
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+
+  def with_temp_from_to_dirs(project_dir_name)
+    @destination_stack.push '.'
+    pop_dest_stack= true
+    Dir.mktmpdir {|tmpdir|
+      Dir.mkdir from_dir= "#{tmpdir}/a"
+      Dir.mkdir from_dir= "#{from_dir}/#{project_dir_name}"
+      Dir.mkdir to_dir= "#{tmpdir}/b"
+      Dir.mkdir to_dir= "#{to_dir}/#{project_dir_name}"
+      yield from_dir, to_dir
+    }
+  ensure
+    reset_template_var_cache
+    @destination_stack.pop if pop_dest_stack
+  end
+
+  def run_for_each_ver(rpm, from_ver, from_dir, to_ver, to_dir)
+    [ [from_ver,from_dir] , [to_ver,to_dir] ].each do |ver,dir|
+      with_resources rpm.ver_dir(ver) do
+        Dir.chdir dir do
+          reset_template_var_cache
+          yield ver
+        end
+      end
+    end
+  end
 
   def patch(rpm, msg, &block)
     rpm.allow_interactive_patching do

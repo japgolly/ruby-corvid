@@ -12,6 +12,7 @@ require 'corvid/generator/thor_monkey_patches'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/inflections'
 require 'golly-utils/delegator'
+require 'golly-utils/ruby_ext/classes_and_types'
 require 'golly-utils/ruby_ext/options'
 require 'thor'
 require 'yaml'
@@ -613,6 +614,119 @@ module Corvid
         validate_feature_ids! *feature_ids
         create_file Constants::FEATURES_FILE, feature_ids.to_yaml, force: true
         self
+      end
+
+      # Generates and records a bunch of state needed to register files for auto-update.
+      #
+      # @example
+      #     with_auto_update_details(require: __FILE__) {
+      #       template2_au 'lib/%project_name%/some_template.rb.tt'
+      #     }
+      #
+      # @yield Invokes the given block with the auto-update state in place.
+      # @param [Hash] options
+      # @option options [String] :plugin_name The name of the plugin providing the updatable resource.
+      #   Determined automatically if not provided provided {#with_resources} has been called.
+      # @option options [Plugin] :plugin An alternative to specifying `:plugin`.
+      # @option options [Base|Class<Base>] :generator (self) The generator (or class) that is generating the file.
+      #   Determined automatically if not provided.
+      # @option options [nil|String] :require (nil) An optional path to `require` to load the generator class. Absolute
+      #   paths will be converted so it is recommended you pass in `__FILE__`.
+      # @option options [Array<String>] :cli_args CLI arguements the generator requires for instanciation.
+      #   Determined automatically if not provided.
+      # @option options [Array<String>] :cli_opts CLI arguments that configure Thor options. Required for instanciation.
+      #   Determined automatically if not provided.
+      # @return [void]
+      def with_auto_update_details(options = {})
+
+        # Option: plugin_name / plugin
+        plugin_name= options[:plugin_name] || options[:plugin] || @@with_resource_plugin
+        plugin_name= plugin_name.name if plugin_name.is_a?(Plugin)
+        raise "Plugin name not provided." unless plugin_name
+
+        # Option: generator
+        generator_class= options[:generator] || self
+        generator_class= generator_class.class unless generator_class.is_a? Class
+        raise "Invalid generator class: #{generator_class.inspect}" unless generator_class.superclasses.include? Base
+
+        # Option: require
+        if generator_require_path= options[:require]
+          # Convert full paths
+          if /^\/|\.rb$/ === generator_require_path
+            generator_require_path= File.expand_path generator_require_path
+            candidates= $:.map{|p|
+              generator_require_path.sub /#{Regexp.quote File.expand_path p}[\\\/]+/, ''
+            }
+            c= candidates.sort_by(&:size).first
+            if c == generator_require_path
+              raise "Unable to turn full path into a $LOAD_PATH-relative require-path: #{generator_require_path}"
+            end
+            generator_require_path= c.sub /\.rb$/, ''
+          end
+        end
+
+        # Option: cli_args & cli_opts
+        generator_cli_args= options[:cli_args] || @_initializer[0]
+        generator_cli_opts= options[:cli_opts] || @_initializer[1]
+
+        # Create auto-update details
+        aug= {class: generator_class.to_s}
+        aug[:require]= generator_require_path if generator_require_path
+        aug[:args]= generator_cli_args if generator_cli_args && !generator_cli_args.empty?
+        aug[:opts]= generator_cli_opts if generator_cli_opts && !generator_cli_opts.empty?
+        au= {plugin: plugin_name, generator: aug}
+
+        # Confirm data allows successful re-creation of generator
+        create_generator_from_au_data au
+
+        # Yield with details in place
+        old= @with_auto_update_details
+        @with_auto_update_details= au
+        begin
+          yield
+        ensure
+          @with_auto_update_details= old
+        end
+      end
+
+      # A special version of {ActionExtensions#template2} that registers the target file for auto-updates.
+      #
+      # @overload template2_au(file, *template_var_keys, options={})
+      #   @param [String] file The template source file.
+      #   @param [Array<Symbol>] template_var_keys A list of method names that provide template values, that should
+      #     have their current values saved and reused in future updates.
+      #   @param [Hash] options Options for {ActionExtensions#template2}.
+      # @return Whatever {ActionExtensions#template2} returns.
+      # @raise If {#with_auto_update_details} hasn't been called first.
+      def template2_au(file, *args)
+        raise "Call with_auto_update_details() first." unless @with_auto_update_details
+
+        arg_keys= args.dup
+        options= arg_keys.last.is_a?(Hash) ? arg_keys.pop : {}
+        au= @with_auto_update_details
+        unless arg_keys.empty?
+          au= au.merge args: Hash[arg_keys.map{|k| [k,action_context.send(k)] }]
+        end
+        au= au.merge options: options
+
+        template2 file, options.merge(auto_update: au)
+      end
+
+      # Creates a new instance of a generator whose details have been saved in {Constants::AUTO_UPDATE_FILE}.
+      #
+      # @param [Hash<Symbol,Object>] au_data Auto-update data.
+      # @return [nil|Base] A new instance of the generator or `nil` if the data doesn't specify generator details.
+      def create_generator_from_au_data(au_data)
+        if gd= au_data[:generator]
+          require gd[:require] if gd[:require]
+          raise "Class name not provided for generator.\n#{au_data.inspect}" unless gd[:class]
+          klass= eval gd[:class]
+          cli_args= gd[:args] || []
+          cli_opts= gd[:opts] || []
+          generator= klass.new(cli_args, cli_opts)
+        else
+          nil
+        end
       end
 
       private

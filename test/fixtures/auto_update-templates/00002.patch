@@ -1,15 +1,16 @@
-Before: 412233323e7060dfdfc1775176cfa9e7f781566c2dcd5ce13f5c3dab063630ec
+Before: b142e882d24c6799bdfa19908631dc83d6de0947f65b63a0d8c370645089848e
 After: 9b49c54dd5e08528fa5b3f21c95fb89aa3e82057afa908e8853fd10704f95181
-Patch: 7d79f486c13f8a440b418f05e9fc4579e1925ab6cad050a90bf24c69332cda88
---- %name%.txt.tt	2012-09-11 13:27:33.401301034 +1000
-+++ %name%.txt.tt	2012-09-11 13:27:33.354634088 +1000
+Patch: c07ed89424b12845a6ee3c2332bb878037bd5b7f1b94a08699eb90ae06e410e3
+--- %name%.txt.tt	2012-09-13 14:57:39.000000000 +1000
++++ %name%.txt.tt	2012-09-13 14:57:39.000000000 +1000
 @@ -1,4 +1,3 @@
- My name is <%= name %>.
+-My name is <%= name %>!
++My name is <%= name %>.
  I'm <%= age %> years old.
  Project name <%= project_name %>
 -Bye.
---- corvid-features/template2.rb	2012-09-11 13:27:33.401301034 +1000
-+++ corvid-features/template2.rb	2012-09-11 13:27:33.354634088 +1000
+--- corvid-features/template2.rb	2012-09-13 14:57:39.000000000 +1000
++++ corvid-features/template2.rb	2012-09-13 14:57:39.000000000 +1000
 @@ -4,4 +4,4 @@
  }
  

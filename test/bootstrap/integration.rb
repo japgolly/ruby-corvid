@@ -15,7 +15,7 @@ module TestHelpers
     env['RUBYOPT'] ||= nil
 
     # Be silent by default
-    @quiet_sh ||= true unless $DEBUG
+    @quiet_sh= true if @quiet_sh.nil? and not $DEBUG
 
     @_sh_env,@_sh_cmd = env,cmd
     if @capture_sh or @quiet_sh == true
@@ -81,6 +81,19 @@ module TestHelpers
     available_tasks_for 'corvid', &:invoke_corvid!
   end
 
+  def debug_view_dir(options={})
+    options= {dir: '.', find: ''}.merge options
+
+    puts '>'*80
+    if t= options[:title]
+      puts "> #{t}"
+      puts '>'*80
+    end
+    pipe= [options[:pipe],'sort'].flatten.compact.join ' | '
+    system "find #{options[:dir].inspect} #{options[:find]} | #{pipe}"
+    puts '<'*80
+    puts
+  end
 end
 
 module IntegrationTestDebugDecoration
