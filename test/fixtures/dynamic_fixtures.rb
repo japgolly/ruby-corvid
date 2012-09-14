@@ -39,6 +39,8 @@ module GollyUtils::Testing::DynamicFixtures
     copy_fixture 'plugin'
     %w[client_project plugin_project].each do |dir|
       Dir.chdir dir do
+        # Remove expanded resources
+        FileUtils.rm_rf 'resources/latest'
 
         # Change relative paths to Corvid, into absolute paths
         gsub_files! %r|(?<![./a-z])\.\./\.\./\.\./\.\.(?![./a-z])|, "#{CORVID_ROOT}", 'Gemfile', '.corvid/Gemfile'

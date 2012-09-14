@@ -17,6 +17,8 @@ describe 'Auto-Update Functionality' do
 
   def add_templates_to_plugin
     Dir.chdir('plugin_project') {
+      # Expand resources
+      invoke_rake! 'res:latest'
 
       # plugin has feature with templates that use %project_name%
       File.write 'resources/latest/mock-%project_name%.txt.tt', <<-EOB
