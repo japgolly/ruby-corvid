@@ -128,11 +128,11 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         rv.validate!
       end
 
-      # Auto-update eligible files
-      update_deployable_files! rpm, installers, from, to
-      update_templates! rpm, installers, from, to, project_dir_name
+      # Auto-update eligible feature files
+      update_feature_files!     rpm, installers, from, to
+      update_feature_templates! rpm, installers, from, to, project_dir_name
 
-      # Perform migration steps
+      # Perform feature migration steps
       (from + 1).upto(to) do |ver|
         next unless grp= installers[ver]
         reset_template_var_cache
@@ -154,7 +154,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         end
       end
 
-      # TODO rename Auto-update loose templates
+      # Auto-update loose templates
       update_loose_templates! plugin.name, rpm, from, to, project_dir_name
 
       # Update version file
@@ -167,10 +167,12 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   # Auto-updates files deployed by `copy_file`.
   #
+  # @param [ResPatchManager] rpm RPM configured for the relevant plugin.
+  # @param [Hash<Fixnum,Hash<String,Hash<Symbol,Object>>>] installers Map of version -> feature name -> K:V.
   # @param [Fixnum] from Current version of resources installed.
   # @param [Fixnum] to Version of resources to update to.
   # @return [void]
-  def update_deployable_files!(rpm, installers, from, to)
+  def update_feature_files!(rpm, installers, from, to)
 
     # Build a list of files
     files= []
@@ -184,7 +186,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
     # Patch & migrate files
     unless files.empty?
-      patch rpm, "Patching installed files..." do
+      patch rpm, "Patching feature files..." do
         rpm.migrate_changes_between_versions from, to, '.', files
       end
     end
@@ -227,10 +229,12 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   # Auto-updates files deployed by `create_file`, `template`, {ActionExtensions#template2}.
   #
+  # @param [ResPatchManager] rpm RPM configured for the relevant plugin.
+  # @param [Hash<Fixnum,Hash<String,Hash<Symbol,Object>>>] installers Map of version -> feature name -> K:V.
   # @param [Fixnum] from Current version of resources installed.
   # @param [Fixnum] to Version of resources to update to.
   # @return [void]
-  def update_templates!(rpm, installers, from, to, project_dir_name)
+  def update_feature_templates!(rpm, installers, from, to, project_dir_name)
     with_temp_from_to_dirs(project_dir_name) {|from_dir, to_dir|
 
       # Build a list of files
@@ -246,7 +250,7 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
       # Patch & migrate files
       unless files.empty?
-        patch rpm, "Patching generated templates..." do
+        patch rpm, "Patching feature templates..." do
           rpm.migrate_changes_between_dirs from_dir, to_dir, '.', files
         end
       end
@@ -307,6 +311,14 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   #---------------------------------------------------------------------------------------------------------------------
 
+  # Auto-updates files deployed outside of feature installers, and registered for auto-update.
+  #
+  # @param [String] plugin_name The name of the relevant plugin.
+  # @param [ResPatchManager] rpm RPM configured for the relevant plugin.
+  # @param [Fixnum] from Current version of resources installed.
+  # @param [Fixnum] to Version of resources to update to.
+  # @param [String] project_dir_name The basename of the client project's directory.
+  # @return [void]
   def update_loose_templates!(plugin_name, rpm, from, to, project_dir_name)
     t2= (read_client_auto_update_file || [])
         .select{|e| e[:type] == 'template2' && e[:plugin] == plugin_name }
@@ -317,12 +329,16 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     end
   end
 
-  # @param [Array<Hash>]
-  def update_loose_templates_for_template2!(rpm, from, to, project_dir_name, template_manifest)
-    return unless template_manifest && !template_manifest.empty?
-
-    # TODO should template var methods in FIs be available??
-    # TODO rename update_loose_templates, action_context_for_template2_au, patch() msg
+  # Auto-updates files deployed outside of feature installers via {ActionExtensions#template2}.
+  #
+  # @param [ResPatchManager] rpm RPM configured for the relevant plugin.
+  # @param [Fixnum] from Current version of resources installed.
+  # @param [Fixnum] to Version of resources to update to.
+  # @param [String] project_dir_name The basename of the client project's directory.
+  # @param [Array<Hash>] au_data An array of data hash objects created by {ActionExtensions#template2}.
+  # @return [void]
+  def update_loose_templates_for_template2!(rpm, from, to, project_dir_name, au_data)
+    return unless au_data && !au_data.empty?
 
     action_context_cache= {}
     with_temp_from_to_dirs(project_dir_name) {|from_dir, to_dir|
@@ -330,11 +346,11 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       # Create templates at before/after versions
       files= []
       run_for_each_ver(rpm, from, from_dir, to, to_dir) {
-        template_manifest.each do |td|
+        au_data.each do |td|
 
           # Create template
           filename= td[:filename]
-          raise "Filename not specified in TODO" unless filename
+          raise "Filename field not specified in template2 auto-update data: #{td.inspect}" unless filename
           options= td[:options] || {}
           ac= action_context_cache.has_key?(td) ? action_context_cache[td] : action_context_cache[td]= \
               action_context_for_template2_au(td)
@@ -346,13 +362,18 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
       # Patch & migrate files
       unless files.empty?
-        patch rpm, "TODO Patching other generated templates..." do
+        patch rpm, "Patching loose templates..." do
           rpm.migrate_changes_between_dirs from_dir, to_dir, '.', files
         end
       end
     }
   end
 
+  # Creates an action context (i.e. an object with a bunch of dynamic methods that return template values) based on
+  # a data hash generated by `template2`.
+  #
+  # @param [Hash] td A data object created by {ActionExtensions#template2}.
+  # @return [Object]
   def action_context_for_template2_au(td)
 
     # Create instance of generator
