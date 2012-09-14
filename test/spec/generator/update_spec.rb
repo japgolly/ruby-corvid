@@ -9,6 +9,16 @@ require 'corvid/builtin/test/resource_patch_tests'
 
 describe Corvid::Generator::Update do
 
+  add_generator_lets
+
+  def mock_plugin(name, latest_version)
+    p1= stub(name).tap{|p| p.stub name: name }
+    rpm1= Corvid::ResPatchManager.new
+    rpm1.stub latest_version: latest_version
+    subject.stub(:rpm_for).with(p1).and_return(rpm1)
+    pr.register p1
+    p1
+  end
 
   describe '#action_context_for_template2_au' do
     def test(*args)
@@ -51,8 +61,6 @@ describe Corvid::Generator::Update do
     end
   end
 
-  #---------------------------------------------------------------------------------------------------------------------
-
   describe '#update_loose_templates_for_template2!' do
     run_each_in_empty_dir
 
@@ -93,8 +101,6 @@ describe Corvid::Generator::Update do
     }
   end
 
-  #---------------------------------------------------------------------------------------------------------------------
-
   describe '#extract_deployable_files' do
     %w[
       copy_file
@@ -115,17 +121,6 @@ describe Corvid::Generator::Update do
       c= "def install(); copy_file 'f1'; copy_file 'f2'; end"
       subject.send(:extract_deployable_files, c, 'a',1).should == %w[f1 f2]
     }
-  end
-
-  add_generator_lets
-
-  def mock_plugin(name, latest_version)
-    p1= stub(name).tap{|p| p.stub name: name }
-    rpm1= Corvid::ResPatchManager.new
-    rpm1.stub latest_version: latest_version
-    subject.stub(:rpm_for).with(p1).and_return(rpm1)
-    pr.register p1
-    p1
   end
 
   describe 'update:all' do
