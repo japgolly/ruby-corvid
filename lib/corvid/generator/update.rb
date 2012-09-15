@@ -128,6 +128,9 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         rv.validate!
       end
 
+      # Pre-load template vars in the client project before creating templates and such in temp dirs for auto-patching.
+      preload_template_vars
+
       # Auto-update eligible feature files
       update_feature_files!     rpm, installers, from, to
       update_feature_templates! rpm, installers, from, to, project_dir_name
@@ -135,7 +138,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       # Perform feature migration steps
       (from + 1).upto(to) do |ver|
         next unless grp= installers[ver]
-        reset_template_var_cache
         with_resources rpm.ver_dir(ver) do
           grp.each do |feature,fd|
             installer= fd[:installer]
@@ -407,7 +409,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
       yield from_dir, to_dir
     }
   ensure
-    reset_template_var_cache
     @destination_stack.pop if pop_dest_stack
   end
 
@@ -415,7 +416,6 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     [ [from_ver,from_dir] , [to_ver,to_dir] ].each do |ver,dir|
       with_resources rpm.ver_dir(ver) do
         Dir.chdir dir do
-          reset_template_var_cache
           yield ver
         end
       end

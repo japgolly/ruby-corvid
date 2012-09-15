@@ -13,6 +13,14 @@ module Corvid
         self
       end
 
+      # Evaluates all cachable template values.
+      #
+      # @return [self]
+      def preload_template_vars
+        project_name
+        self
+      end
+
       # Guesses the name of the project in the current directory.
       #
       # Infers the project name from the following, in order of precedence.
@@ -39,15 +47,18 @@ module Corvid
         @@template_var_project_name ||= (
 
           # Look for single lib/ dir
-          dirs= Dir['lib/*'].select{|d| File.directory? d }
-          return File.basename dirs[0] if dirs.size == 1
+          if (dirs= Dir['lib/*'].select{|d| File.directory? d }).size == 1
+            File.basename dirs[0]
 
           # *.gemspec
-          gemspecs= Dir['*.gemspec'].select{|f| File.file? f }
-          return File.basename(gemspecs[0]).sub /\.gemspec$/, '' if gemspecs.size == 1
+          elsif (gemspecs= Dir['*.gemspec'].select{|f| File.file? f }).size == 1
+            File.basename(gemspecs[0]).sub /\.gemspec$/, ''
 
           # pwd
-          File.basename Dir.pwd
+          else
+            File.basename Dir.pwd
+
+          end
         )
       end
 
