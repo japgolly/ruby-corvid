@@ -14,6 +14,8 @@ module Corvid
     # Plugins can be extensions but are not by default.
     # include Extension
 
+    # @!group Attributes
+
     # @!attribute [rw] name
     #   The name of the plugin. Must conform to format enforced by {Corvid::NamingPolicy#validate_plugin_name!}.
     #   @return [String] The plugin name.
@@ -42,16 +44,22 @@ module Corvid
     #     array of the feature's require-path, and class name, respectively.
     attr_declarative feature_manifest: {}
 
-    # TODO Find a way to get callbacks into Yard.
-    # Callback that is run after the plugin is installed.
-    #
-    # Generator actions are available and can be invoked as if the callback function were a generator method.
-    define_callback :after_installed
-
     # @!attribute [rw] auto_install_features
     #   A list of features to install automatically when the plugin itself is installed.
     #   @return [Array<String>] An array of feature names. Do not include the plugin prefix.
     attr_declarative auto_install_features: []
+
+    # @!group Callbacks
+
+    # @!parse
+    #   # Callback that is run after the plugin is installed.
+    #   #
+    #   # Generator actions are available and can be invoked as if the callback function were a generator method.
+    #   #
+    #   # @yield Perform additional actions after installation.
+    #   # @return [void]
+    #   def after_installed; end
+    define_callback :after_installed
 
   end
 end

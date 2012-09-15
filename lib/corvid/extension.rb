@@ -19,7 +19,23 @@ module Corvid
   module Extension
     include GollyUtils::Callbacks
 
-    # TODO Find a way to get callbacks into Yard.
-    define_callbacks :rake_tasks, :corvid_tasks
+    # @!group Extension Points (Callbacks)
+
+    # @!parse
+    #   # Invoked when a client project starts up Rake. Allows additional Rake tasks to be loaded.
+    #   #
+    #   # @yield Require Rake tasks in this callback.
+    #   # @return [void]
+    #   def rake_tasks; end
+    define_callback :rake_tasks
+
+    # @!parse
+    #   # Invoked when Corvid CLI starts up in a client project. Allows additional Corvid tasks to be loaded.
+    #   #
+    #   # @yield Require Corvid tasks in this callback.
+    #   # @return [void]
+    #   def corvid_tasks; end
+    define_callback :corvid_tasks
+
   end
 end

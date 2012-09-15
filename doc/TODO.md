@@ -10,7 +10,6 @@
 ### Non-Functional / Under-The-Hood
 
 ### Documentation
-* Get callbacks into yard.
 * Write an _actual_ README.
 * Create a demo.
 
