@@ -72,11 +72,11 @@ module Corvid
     end
 
     def fresh_stats
-      { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0, "cm_doco" => 0, "files" => 0 }
+      { "lines" => 0, "codelines" => 0, "classes" => 0, "methods" => 0, "doco" => 0, "files" => 0 }
     end
 
     def calculate_directory_statistics(directory, file_filter, file_ignore_filter, line_parser)
-      stats = fresh_stats.merge doc_buf: 0
+      stats = fresh_stats
       line_parser = LINE_PARSERS[line_parser] if line_parser.is_a? Symbol
 
       Dir.foreach(directory) do |file_name|
@@ -91,6 +91,8 @@ module Corvid
         next if file_ignore_filter && file_ignore_filter === file_name
 
         stats["files"] += 1
+        stats[:doc_buf]= 0
+        stats[:keep_doc]= false
 
         f = File.open(directory + "/" + file_name)
         comment_started = false
@@ -116,20 +118,29 @@ module Corvid
 
     LINE_PARSERS = {
       ruby: lambda {|stats, line, &block|
-              if /^\s*?#/ === line
-                stats[:doc_buf] += 1
+              if /^\s*?#\s*(.*)$/ === line
+                comment= $1
+                if /^@!(group|endgroup|scope|visibility)/ === comment
+                  stats["doco"] += 1
+                else
+                  stats[:keep_doc] ||= /^@!(?:attribute|macro|method|parse)/ === comment
+                  stats[:doc_buf] += 1
+                end
                 block.(stats, line) if block
               else
-                cm1= [stats["classes"],stats["methods"]]
-
-                stats["classes"]   += 1 if /^\s*class\s+[_A-Z]/ === line
-                stats["methods"]   += 1 if /^\s*def\s+[_a-z]/ === line
+                old_cm= [stats["classes"],stats["methods"]]
+                stats["classes"]   += 1 if     /^\s*class\s+[_A-Z]/ === line
+                stats["methods"]   += 1 if     /^\s*def\s+[_a-z]/ === line
                 stats["codelines"] += 1 unless /^\s*?(#|$)/ === line
+
                 block.(stats, line) if block
 
-                cm2= [stats["classes"],stats["methods"]]
-                stats["cm_doco"] += stats[:doc_buf] if cm1 != cm2 or /^\s*module\s+[_A-Z]/ === line
+                stats["doco"] += stats[:doc_buf] if stats[:keep_doc] or
+                  old_cm != [stats["classes"],stats["methods"]] or # Class/method doc
+                  /^\s*module\s+[_A-Z]/ === line or                # Module doc
+                  /^\s*[A-Z][A-Za-z0-9_]*\s*=/ === line            # Constant doc
                 stats[:doc_buf] = 0
+                stats[:keep_doc]= false
               end
             },
 
@@ -158,12 +169,12 @@ module Corvid
 
     def print_header
       puts splitter
-      puts "| Name                 | Files | Lines |   LOC | LOD(MC) | Classes | Methods | M/C | LOC/M |"
+      puts "| Name                 | Files | Lines |   LOC |   LOD | Classes | Methods | M/C | LOC/M |"
       puts splitter
     end
 
     def splitter
-           "+----------------------+-------+-------+-------+---------+---------+---------+-----+-------+"
+           "+----------------------+-------+-------+-------+-------+---------+---------+-----+-------+"
     end
 
     def print_line(name, statistics)
@@ -176,7 +187,7 @@ module Corvid
            "| #{statistics["files"].to_s.rjust(5)} " +
            "| #{statistics["lines"].to_s.rjust(5)} " +
            "| #{statistics["codelines"].to_s.rjust(5)} " +
-           "| #{statistics["cm_doco"].to_s.rjust(7)} " +
+           "| #{statistics["doco"].to_s.rjust(5)} " +
            "| #{statistics["classes"].to_s.rjust(7)} " +
            "| #{statistics["methods"].to_s.rjust(7)} " +
            "| #{m_over_c.to_s.rjust(3)} " +
@@ -187,7 +198,7 @@ module Corvid
     def print_summary
       code_loc = sum_stats{|name,s| s['codelines'] if category_for(name) == :code }
       test_loc = sum_stats{|name,s| s['codelines'] if category_for(name) == :test }
-      code_lod = sum_stats{|name,s| s['cm_doco'] if category_for(name) == :code }
+      code_lod = sum_stats{|name,s| s['doco'] if category_for(name) == :code }
 
       puts center sprintf "Code LOC: %d    Test LOC: %d    Test:Code = %.1f    LOD:LOC = %.1f", \
                     code_loc, test_loc, test_loc.to_f/code_loc, code_lod.to_f/code_loc
