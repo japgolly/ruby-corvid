@@ -330,6 +330,6 @@ class AutoUpdateTemplatesPlugin < Corvid::Plugin
 end
 
 describe AutoUpdateTemplatesPlugin do
-  include Corvid::ResourcePatchTests
+  include Corvid::Builtin::ResourcePatchTests
   include_feature_update_install_tests
 end

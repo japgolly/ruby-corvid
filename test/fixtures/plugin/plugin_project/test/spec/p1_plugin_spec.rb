@@ -4,7 +4,7 @@ require 'corvid/builtin/test/resource_patch_tests'
 require 'plugin_project/p1_plugin'
 
 describe PluginProject::P1Plugin do
-  include Corvid::ResourcePatchTests
+  include Corvid::Builtin::ResourcePatchTests
 
   include_resource_patch_tests
 

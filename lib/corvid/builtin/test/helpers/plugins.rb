@@ -2,8 +2,9 @@ require 'corvid/constants'
 require 'corvid/plugin'
 require 'yaml'
 
-module Corvid
+module Corvid::Builtin
   module PluginTestHelpers
+    Constants= Corvid::Constants
 
     def assert_features_installed(*expected)
       client_features.should equal_array expected.flatten

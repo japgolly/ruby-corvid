@@ -8,7 +8,7 @@ require 'golly-utils/testing/rspec/arrays'
 require 'golly-utils/testing/rspec/files'
 require 'yaml'
 
-module Corvid
+module Corvid::Builtin
   module ResourcePatchTests
     include PluginTestHelpers
     include Corvid::NamingPolicy
@@ -28,7 +28,7 @@ module Corvid
       # @yieldparam [String] dir The directory containing the exploded v1 resources.
       # @return [void]
       def include_resource_patch_tests(plugin_or_dir = subject.(), &ver1_test_block)
-        resources_path= plugin_or_dir.is_a?(Plugin) ? plugin_or_dir.resources_path : plugin_or_dir
+        resources_path= plugin_or_dir.is_a?(Corvid::Plugin) ? plugin_or_dir.resources_path : plugin_or_dir
         ba= ($include_resource_patch_tests_ver1_test_block ||= [])
         ba<< ver1_test_block
 
@@ -69,7 +69,7 @@ module Corvid
         Corvid::FeatureRegistry.clear_cache.register_features_in(plugin)
 
         tests= features.map {|feature_name|
-                 f= FeatureRegistry.instance_for(feature_id_for(plugin.name, feature_name))
+                 f= Corvid::FeatureRegistry.instance_for(feature_id_for(plugin.name, feature_name))
                  unless f.since_ver == latest_resource_version
                    %[
                      it("Testing feature: #{feature_name}"){
@@ -99,7 +99,7 @@ module Corvid
     # @!visibility private
     class TestInstaller < Corvid::Generator::Base
       no_tasks{
-        include Corvid::PluginTestHelpers
+        include Corvid::Builtin::PluginTestHelpers
 
         def install(plugin, feature_name, ver=nil)
           new_options= options.merge(RUN_BUNDLE => false)
@@ -126,7 +126,7 @@ module Corvid
 
     # @!visibility private
     def test_feature_updates_match_install(plugin_or_name, feature_name, starting_version=1)
-      plugin= plugin_or_name.is_a?(Plugin) ? plugin_or_name : ::Corvid::PluginRegistry.instance_for(plugin_or_name)
+      plugin= plugin_or_name.is_a?(Corvid::Plugin) ? plugin_or_name : ::Corvid::PluginRegistry.instance_for(plugin_or_name)
       Dir.stub pwd: '/tmp/pwd_stub'
 
       # Install latest

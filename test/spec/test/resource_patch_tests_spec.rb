@@ -2,8 +2,8 @@
 require_relative '../../bootstrap/spec'
 require 'corvid/builtin/test/resource_patch_tests'
 
-describe Corvid::ResourcePatchTests, :slow do
-  include Corvid::ResourcePatchTests
+describe Corvid::Builtin::ResourcePatchTests, :slow do
+  include Corvid::Builtin::ResourcePatchTests
 
   run_each_in_empty_dir
 

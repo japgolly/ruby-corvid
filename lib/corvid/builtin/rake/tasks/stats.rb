@@ -27,5 +27,5 @@ task :stats do
                       .select {|name, data| data[:dirs].any?{|d| File.directory? d }}
 
   # Generate stats
-  Corvid::CodeStatistics.new(stats_cfg).print
+  Corvid::Builtin::CodeStatistics.new(stats_cfg).print
 end

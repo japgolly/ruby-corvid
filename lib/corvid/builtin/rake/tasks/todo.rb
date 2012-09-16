@@ -3,7 +3,7 @@ task :todo do
 
   # Create finder
   require 'corvid/builtin/todo_finder'
-  todo_finder= Corvid::TodoFinder.new
+  todo_finder= Corvid::Builtin::TodoFinder.new
 
   # Allow external customisation
   file= "#{APP_ROOT}/.corvid/todo_cfg.rb"

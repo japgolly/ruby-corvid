@@ -25,7 +25,7 @@ describe Corvid::Builtin::Generator::NewPlugin do
       it("should create a plugin test"){
         'test/spec/happy_plugin_spec.rb'.should be_file_with_contents(%r|require 'my_thing/happy_plugin'|)
           .and(%r|describe MyThing::HappyPlugin do|)
-          .and(%r|include Corvid::ResourcePatchTests|)
+          .and(%r|include Corvid::Builtin::ResourcePatchTests|)
           .and(%r|include_resource_patch_tests|)
           .and(%r|include_feature_update_install_tests|)
       }

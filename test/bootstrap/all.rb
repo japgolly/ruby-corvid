@@ -82,7 +82,7 @@ module TestHelpers
 end
 
 RSpec.configure do |config|
-  config.include Corvid::PluginTestHelpers
+  config.include Corvid::Builtin::PluginTestHelpers
   config.include GemfilePatching
   config.include TestHelpers
   config.after(:each){

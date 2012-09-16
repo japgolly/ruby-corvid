@@ -4,5 +4,6 @@
 --readme     README.md
 --files      doc/*.md
 --asset      doc/img:img
+--exclude    lib/corvid/builtin/test/bootstrap/.*
 --protected
 lib/**/*.rb
