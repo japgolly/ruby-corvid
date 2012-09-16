@@ -56,6 +56,27 @@ describe Corvid::Generator::Base do
     }
   end
 
+
+  describe '#with_installed_resources' do
+    let(:plugin){ BUILTIN_PLUGIN.new }
+    let(:rpm){ mock 'rpm' }
+    def run; subject.send(:with_installed_resources, plugin){|d|} end
+
+    it("fails if resouce version isn't available"){
+      subject.should_receive(:read_client_versions!).once.and_return 'abc'=>5
+      subject.should_receive(:rpm_for).with(plugin).once.and_return rpm
+      rpm.should_not_receive(:with_resources)
+      expect{ run }.to raise_error /Version not available/
+    }
+
+    it("uses version of installed resources"){
+      subject.should_receive(:read_client_versions!).once.and_return 'abc'=>5, plugin.name => 3
+      subject.should_receive(:rpm_for).with(plugin).once.and_return rpm
+      rpm.should_receive(:with_resources).with(3).once.and_yield 'x'
+      run
+    }
+  end
+
   describe '#feature_installer' do
     def installer_for(code)
       subject.stub feature_installer_file: 'as.rb'

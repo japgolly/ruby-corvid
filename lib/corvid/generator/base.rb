@@ -140,13 +140,25 @@ module Corvid
         raise("Resources not available. Call with_resources() first.")
       end
 
-      # Makes the latest version of Corvid resources available to generators.
+      # Makes the latest version of a plugin's resources available to generators.
       #
+      # @param [Plugin] plugin The plugin providing the resources.
       # @yieldparam [Fixnum] ver The version of the resources being used.
       # @return The return result of `block`.
       # @see #with_resources
       def with_latest_resources(plugin, &block)
         with_resources plugin, :latest, &block
+      end
+
+      # Makes available to generators the version of a plugin's resources as declared in the client's
+      # {Constants::VERSIONS_FILE VERSIONS_FILE}.
+      #
+      # @param [Plugin] plugin The plugin providing the resources.
+      # @yieldparam [Fixnum] ver The version of the resources being used.
+      # @return The return result of `block`.
+      # @see #with_resources
+      def with_installed_resources(plugin, &block)
+        with_resources plugin, :installed, &block
       end
 
       # Works with {ResPatchManager} to provide generators with an specified version of Corvid resources.
@@ -159,7 +171,7 @@ module Corvid
       #   @yieldparam [void]
       # @overload with_resources(plugin, ver, &block)
       #   @param [Plugin] plugin The plugin providing the resources.
-      #   @param [Fixnum|:latest] ver The version of resources to use.
+      #   @param [Fixnum|:installed|:latest] ver The version of resources to use.
       #   @yieldparam [Fixnum] ver The version of the resources being used.
       # @return The return result of `block`.
       # @raise If resources of a different plugin or version are already available.
@@ -167,11 +179,10 @@ module Corvid
         # Parse args
         plugin= ver= dir= nil
         if arg2
-         plugin= arg1
-         ver= arg2
-       else
-         ver= dir= arg1
-       end
+          plugin,ver = arg1,arg2
+        else
+          ver= dir= arg1
+        end
         plugin_rpm= plugin ? rpm_for(plugin) : nil
         plugin_name= plugin ? plugin.name : 'Not provided.'
 
@@ -182,6 +193,10 @@ module Corvid
         when :latest
           raise "Plugin required but not provided." unless plugin_rpm
           ver= plugin_rpm.latest_version
+        when :installed
+          raise "Plugin required but not provided." unless plugin_rpm
+          ver= read_client_versions![plugin_name]
+          raise "Version not available for plugin '#{plugin_name}', resources don't seem to have been installed yet." unless ver
         when String
           raise "Directory doesn't exist: #{ver}" unless Dir.exists?(ver)
         else

@@ -38,7 +38,6 @@ module TestHelpers
           g= quiet_generator(described_class)
           g.plugin_registry= pr
           g.feature_registry= fr
-          g.stub(:rpm_for).and_raise('rpm_for() called with wrong args')
           g.stub :say
           g
         }

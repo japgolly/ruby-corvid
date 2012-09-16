@@ -8,7 +8,7 @@ class Corvid::Builtin::Generator::NewUnitTest < ::Corvid::Generator::Base
   desc 'unit', 'Generates a new unit test.'
   def unit
     validate_requirements! 'corvid:test_unit'
-    with_latest_resources(builtin_plugin) {
+    with_installed_resources(builtin_plugin) {
       template2 'test/unit/%src%_test.rb.tt'
     }
   end

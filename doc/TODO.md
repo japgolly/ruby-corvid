@@ -4,7 +4,6 @@
 ### Fix / Enhance Existing Functionality
 
 ### New Functionality
-* `corvid new:test:*` shouldn't be using latest resources. They should be using `version.yml`
 * Allow a plugin to work without need for the Corvid builtin plugin.
 
 ### Non-Functional / Under-The-Hood

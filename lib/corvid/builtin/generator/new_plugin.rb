@@ -8,7 +8,7 @@ class Corvid::Builtin::Generator::NewPlugin < ::Corvid::Generator::Base
   desc 'plugin', 'Creates a new Corvid plugin.'
   def plugin
     validate_requirements! 'corvid:plugin'
-    with_latest_resources(builtin_plugin) {
+    with_installed_resources(builtin_plugin) {
       with_auto_update_details(require: __FILE__) {
         template2_au 'lib/%project_name%/%plugin_name%_plugin.rb.tt'
         template2_au 'test/spec/%plugin_name%_plugin_spec.rb.tt'

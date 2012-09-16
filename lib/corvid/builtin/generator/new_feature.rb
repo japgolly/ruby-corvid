@@ -8,7 +8,7 @@ class Corvid::Builtin::Generator::NewFeature < ::Corvid::Generator::Base
   desc 'feature', 'Generates a new plugin feature.'
   def feature
     validate_requirements! 'corvid:plugin'
-    with_latest_resources(builtin_plugin) {
+    with_installed_resources(builtin_plugin) {
       with_auto_update_details(require: __FILE__) {
         template2_au 'lib/%project_name%/%feature_name%_feature.rb.tt'
         template2_au 'resources/latest/corvid-features/%feature_name%.rb.tt'
