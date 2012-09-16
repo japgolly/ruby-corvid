@@ -56,6 +56,14 @@ module Corvid
         r
       end
 
+      # Attemps to determine the project name.
+      #
+      # @return [String] A guess at the project name.
+      def determine_project_name
+        require 'corvid/generator/template_vars'
+        Corvid::Generator::TemplateVars.project_name
+      end
+
       # Regex that matches swap files that Vim creates.
       VIM_SWAP_FILES= /^(?:(?:.*[\\\/])?\.[^\\\/]+\.sw[p-z]|.+~)$/
 
@@ -63,4 +71,4 @@ module Corvid
   end
 end
 
-include Corvid::Builtin::GuardExt
+include Corvid::Builtin::GuardExt unless $weave_corvid_guard_ext == false

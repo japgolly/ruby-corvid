@@ -1,6 +1,37 @@
-Before: b5da6b945112e50e6ec9a7d9185815c058244614f8320e999d4dc49140614ad9
+Before: aadf2d8f053d6a9d6dced24007c9fed2928b54d4b603847c429a352af62efc62
 After: f3838f4e7116ec64801ae19321103deb8f58b63008869fdfb744deea4f82503c
-Patch: 9dcaa10d553ed3a1c757b2be878852619a2e5f597b153d248ee5c7a588808595
+Patch: 372e15628c7069e8f9e722179c02907af9d93a1c0c39bde6b7723776ec0f5a3a
+--- Guardfile	2012-09-16 16:33:53.000000000 +1000
++++ Guardfile	2012-09-12 12:04:30.000000000 +1000
+@@ -1,7 +1,5 @@
+ require 'corvid/builtin/guard'
+-
+-project_name  = Regexp.quote(determine_project_name)
+-rspec_options = read_rspec_options(File.dirname __FILE__)
++rspec_options= read_rspec_options(File.dirname __FILE__)
+ 
+ ignore VIM_SWAP_FILES
+ 
+@@ -12,8 +10,7 @@
+   guard 'minitest', test_folders: 'test/unit', test_file_patterns: '*_test.rb' do
+ 
+     # Src files
+-    watch(%r'^lib/(.+)\.rb$')                 {|m| "test/unit/#{m[1]}_test.rb"}
+-    watch(%r'^lib/#{project_name}/(.+)\.rb$') {|m| "test/unit/#{m[1]}_test.rb"}
++    watch(%r'^lib/(.+)\.rb$') {|m| "test/unit/#{m[1]}_test.rb"}
+ 
+     # Each test
+     watch(%r'^test/unit/.+_test\.rb$')
+@@ -34,8 +31,7 @@
+   guard 'rspec', binstubs: true, spec_paths: ['test/spec'], cli: rspec_options, all_on_start: false, all_after_pass: false do
+ 
+     # Src files
+-    watch(%r'^lib/(.+)\.rb$')                 {|m| "test/spec/#{m[1]}_spec.rb"}
+-    watch(%r'^lib/#{project_name}/(.+)\.rb$') {|m| "test/spec/#{m[1]}_spec.rb"}
++    watch(%r'^lib/(.+)\.rb$') {|m| "test/spec/#{m[1]}_spec.rb"}
+ 
+     # Each spec
+     watch(%r'^test/spec/.+_spec\.rb$')
 --- test/spec/%plugin_name%_plugin_spec.rb.tt	2012-09-16 14:54:37.000000000 +1000
 +++ test/spec/%plugin_name%_plugin_spec.rb.tt	2012-09-11 16:52:34.000000000 +1000
 @@ -4,7 +4,7 @@

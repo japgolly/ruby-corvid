@@ -1,8 +1,11 @@
 # encoding: utf-8
 require_relative '../../bootstrap/spec'
+
+$weave_corvid_guard_ext= false
 require 'corvid/builtin/guard'
 
 describe Corvid::Builtin::GuardExt do
+  let(:subject){ Object.new.tap{|o| o.extend described_class }}
 
   describe '#read_rspec_options' do
     before(:each){
@@ -46,5 +49,16 @@ describe Corvid::Builtin::GuardExt do
         subject.read_rspec_options('.').should == '--tag ~slow'
       }
     end
+  end
+
+  describe '#determine_project_name' do
+    it("works"){
+      Dir.stub :[] => [], :pwd => 'hehe'
+      subject.determine_project_name().should == 'hehe'
+    }
+#    it("quotes for regex"){
+#      Dir.stub :[] => [], :pwd => 'a+b'
+#      subject.determine_project_name().should == 'a\+b'
+#    }
   end
 end

@@ -1,6 +1,8 @@
 require 'corvid/builtin/guard'
 
-rspec_options= read_rspec_options(File.dirname __FILE__)
+project_name  = Regexp.quote(determine_project_name)
+rspec_options = read_rspec_options(File.dirname __FILE__)
+
 ignore VIM_SWAP_FILES
 
 ########################################################################################################################
@@ -10,11 +12,12 @@ group :spec do
   guard 'rspec', binstubs: true, spec_paths: ['test/spec'], cli: rspec_options, all_on_start: false, all_after_pass: false, keep_failed: false do
     #watch(%r{^(.+)$}) { |m| puts "------------------------------------------> #{m[1]} modified" }
 
+    # Lib
+    watch(%r'^lib/(.+)\.rb$')                 {|m| "test/spec/#{m[1]}_spec.rb"}
+    watch(%r'^lib/#{project_name}/(.+)\.rb$') {|m| "test/spec/#{m[1]}_spec.rb"}
+
     # Each spec
     watch(%r'^test/spec/.+_spec\.rb$')
-
-    # Lib
-    watch(%r'^lib/corvid/(.+)\.rb$') {|m| "test/spec/#{m[1]}_spec.rb"}
 
     # Fixtures
     watch(%r'^test/fixtures/migration/.+$')  {"test/spec/res_patch_manager_spec.rb"}
@@ -34,10 +37,11 @@ end
 group :int do
   guard 'rspec', binstubs: true, spec_paths: ['test/integration'], cli: rspec_options, all_on_start: false, all_after_pass: false, keep_failed: false do
 
+    # Lib
+    watch(%r'^lib/(.+)\.rb$')                 {|m| "test/integration/#{m[1]}_test.rb"}
+    watch(%r'^lib/#{project_name}/(.+)\.rb$') {|m| "test/integration/#{m[1]}_test.rb"}
+
     # Each spec
     watch(%r'^test/integration/.+_spec\.rb$')
-
-    # Lib
-    watch(%r'^lib/corvid/(.+)\.rb$') {|m| "test/integration/#{m[1]}_spec.rb"}
   end
 end unless fast_only?

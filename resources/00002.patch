@@ -1,6 +1,6 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: b5da6b945112e50e6ec9a7d9185815c058244614f8320e999d4dc49140614ad9
-Patch: ef8646440d80914edd5439e687b015ee02bb3855bfa7de9506dccb353b5e0983
+After: aadf2d8f053d6a9d6dced24007c9fed2928b54d4b603847c429a352af62efc62
+Patch: cf7ef866a6769671e845536e4fe6e50aad86be8b1f2463e597da8a36e8ab48ad
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
 +++ %project_name%.gemspec.tt	2012-09-07 15:57:57.000000000 +1000
 @@ -0,0 +1,23 @@
@@ -179,10 +179,12 @@ Patch: ef8646440d80914edd5439e687b015ee02bb3855bfa7de9506dccb353b5e0983
 +end
 +
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
-+++ Guardfile	2012-09-12 12:04:30.000000000 +1000
-@@ -0,0 +1,46 @@
++++ Guardfile	2012-09-16 16:33:53.000000000 +1000
+@@ -0,0 +1,50 @@
 +require 'corvid/builtin/guard'
-+rspec_options= read_rspec_options(File.dirname __FILE__)
++
++project_name  = Regexp.quote(determine_project_name)
++rspec_options = read_rspec_options(File.dirname __FILE__)
 +
 +ignore VIM_SWAP_FILES
 +
@@ -193,7 +195,8 @@ Patch: ef8646440d80914edd5439e687b015ee02bb3855bfa7de9506dccb353b5e0983
 +  guard 'minitest', test_folders: 'test/unit', test_file_patterns: '*_test.rb' do
 +
 +    # Src files
-+    watch(%r'^lib/(.+)\.rb$') {|m| "test/unit/#{m[1]}_test.rb"}
++    watch(%r'^lib/(.+)\.rb$')                 {|m| "test/unit/#{m[1]}_test.rb"}
++    watch(%r'^lib/#{project_name}/(.+)\.rb$') {|m| "test/unit/#{m[1]}_test.rb"}
 +
 +    # Each test
 +    watch(%r'^test/unit/.+_test\.rb$')
@@ -214,7 +217,8 @@ Patch: ef8646440d80914edd5439e687b015ee02bb3855bfa7de9506dccb353b5e0983
 +  guard 'rspec', binstubs: true, spec_paths: ['test/spec'], cli: rspec_options, all_on_start: false, all_after_pass: false do
 +
 +    # Src files
-+    watch(%r'^lib/(.+)\.rb$') {|m| "test/spec/#{m[1]}_spec.rb"}
++    watch(%r'^lib/(.+)\.rb$')                 {|m| "test/spec/#{m[1]}_spec.rb"}
++    watch(%r'^lib/#{project_name}/(.+)\.rb$') {|m| "test/spec/#{m[1]}_spec.rb"}
 +
 +    # Each spec
 +    watch(%r'^test/spec/.+_spec\.rb$')
