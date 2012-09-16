@@ -3,6 +3,7 @@ require_relative '../../bootstrap/spec'
 require 'corvid/generator/base'
 
 describe Corvid::Generator::Base do
+  $corvid_generator_base_spec_loaded= true
   add_generator_lets
 
   def source_root; $corvid_global_thor_source_root; end
@@ -374,4 +375,4 @@ describe Corvid::Generator::Base do
       expect{ g.asd }.to raise_error /required arg.*name/
     }
   end
-end
+end unless $corvid_generator_base_spec_loaded
