@@ -6,7 +6,9 @@ gem 'golly-utils', git: 'git://github.com/japgolly/golly-utils.git' # TODO use p
 # Testing
 group :test do
   gem 'simplecov', require: false
-  gem 'guard-rspec'
+  gem 'guard', '>= 1.3.2', require: false
+  gem 'guard-rspec', require: false
+  gem 'rb-inotify', '>= 0.8.8', require: false
 end
 
 # CI
