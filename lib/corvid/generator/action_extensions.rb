@@ -497,7 +497,8 @@ module Corvid
         # @see Corvid::Generator::ActionExtensions::RUN_BUNDLE
         # @see #run_bundle_at_exit
         def declare_option_to_run_bundle_at_exit(g)
-          g.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true
+          g.method_option RUN_BUNDLE, type: :boolean, default: true, optional: true,
+            desc: %[Run 'bundle install' after the task completes.]
         end
 
       end

@@ -3,7 +3,7 @@ require_relative 'base'
 class Corvid::Builtin::Generator::NewSpec < ::Corvid::Generator::Base
   namespace 'new:test'
 
-  argument :name, type: :string
+  argument :name, type: :string, desc: "The specification name, or source file for which to generate a spec."
 
   desc 'spec', 'Generates a new specification.'
   def spec
@@ -15,7 +15,13 @@ class Corvid::Builtin::Generator::NewSpec < ::Corvid::Generator::Base
 
   # Template vars
   private
-  def src; name.underscore.gsub(/^[\\\/]+|\.rb$/,'').sub(/_spec$/,'') end
+  def src
+    name.underscore
+        .gsub(/^[\\\/]+|\.rb$/,'')
+        .sub(/^lib[\\\/]+/,'')
+        .sub(/^#{Regexp.quote project_name}[\\\/]+/,'')
+        .sub(/_spec$/,'')
+  end
   def bootstrap_dir; '../'*src.split(/[\\\/]+/).size + 'bootstrap' end
   def testcase_name; src.split(/[\\\/]+/).last.camelcase end
   def subject; src.camelcase end

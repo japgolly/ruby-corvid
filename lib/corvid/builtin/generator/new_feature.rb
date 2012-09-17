@@ -5,7 +5,7 @@ class Corvid::Builtin::Generator::NewFeature < ::Corvid::Generator::Base
 
   argument :name, type: :string
 
-  desc 'feature', 'Generates a new plugin feature.'
+  desc 'feature', 'Generates a new Corvid plugin feature.'
   def feature
     validate_requirements! 'corvid:plugin'
     with_installed_resources(builtin_plugin) {

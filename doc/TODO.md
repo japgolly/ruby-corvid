@@ -17,7 +17,6 @@
 --------
 
 ### Fix / Enhance Existing Functionality
-* Fix up `corvid --help` messages
 * `.corvid/Gemfile` should check if certain features are installed rather than `Dir.exist?` checks
 * Put guard lib stuff in its own group and require 1.3.2+
 * Re-eval all the old, initial Corvid template stuff (bootstraps, etc).
@@ -47,6 +46,7 @@
 -------
 
 ### Fix / Enhance Existing Functionality
+* `corvid help new:test:spec` doesn't work.
 * Warn if uncommitted changes before install/update. Test with a few vcs systems; at least git and svn.
 * Allow `copy_file()` to deploy to a different filename (without breaking patches).
 * Test non-ASCII resources.
