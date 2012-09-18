@@ -2,8 +2,14 @@
 ------
 
 ### Fix / Enhance Existing Functionality
+* Put guard lib stuff in its own group and require 1.3.2+
+* Determine whether best to generate Gemfile and patch via `regenerate_tempalte_with_feature`,
+  or keep using `.corvid/Gemfile`
 
 ### New Functionality
+* Integration tests. (Like NS: new dir, Guard, Rake, Simplecov)
+* Something that re-evals a template with an without feature and applies patch.
+  `add_changes_to_feature`, `regenerate_tempalte_with_feature`
 
 ### Non-Functional / Under-The-Hood
 
@@ -18,12 +24,10 @@
 
 ### Fix / Enhance Existing Functionality
 * `.corvid/Gemfile` should check if certain features are installed rather than `Dir.exist?` checks
-* Put guard lib stuff in its own group and require 1.3.2+
 * Re-eval all the old, initial Corvid template stuff (bootstraps, etc).
 * Corvid init should take a project name arg and verify that it's valid.
 
 ### New Functionality
-* Integration tests. (Like NS: new dir, Guard, Rake, Simplecov)
 * Provide ext point: test bootstraps
 * Provide ext point: `Gemfile`
 * Allow a plugin to work without need for the Corvid builtin plugin.
@@ -54,6 +58,7 @@
 * Handle cases where installed = n and first version of feature installer is n+1
 * Test Corvid and a plugin both modifying the same file.
 * `corvid new:feature NAME` should prompts if more than one existing plugin found
+* Update `auto-update.yml` once at end instead of after every template generated.
 
 ### New Functionality
 * Provide ext point: `Guardfile`
