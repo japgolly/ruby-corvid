@@ -3,6 +3,12 @@ require 'yard'
 YARD::Rake::YardocTask.new(:doc)
 
 namespace :doc do
+  def yard_cmd
+    stub= "#{APP_ROOT}/bin/yard"
+    return stub if File.exists? stub
+    "bundle exec yard"
+  end
+
   def get_doc_output_dirs
     yardopts= File.read("#{APP_ROOT}/.yardopts").gsub(/[\r\n]+/,' ')
     %w[db output-dir].map do |opt_key|
@@ -35,6 +41,14 @@ namespace :doc do
 
   desc 'Clean & Serve: Wipes existing doc db and starts the YARD server.'
   task cs: [:clean, :server]
+
+  desc 'Lists all undocumented objects.'
+  task :undoc do
+    r= `#{yard_cmd} stats --list-undoc`
+    # Add colour to filenames
+    r.gsub! /(\(in file:\s+)(.+)(\))\s*$/, "\\1\e[35m\\2\e[m\\3"
+    puts r
+  end
 end
 
 namespace :clean do
