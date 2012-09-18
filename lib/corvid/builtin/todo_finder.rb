@@ -57,6 +57,40 @@ module Corvid
         cmds.join ' | '
       end
 
+      def run
+        r= `#{self.cmd}`
+        lines= r.split($/)
+        if lines.empty?
+          puts "Congratulations. No T\ODOs found."
+        else
+          puts "Found #{r.split($/).size} T\ODOs."
+
+          # Try to parse and align results
+          parsed_ok= true
+          lines.map!{|l|
+            m= /
+                (?<color> (?:\e\[.*?[mK])*){0}
+                (?<colon> \g<color>:\g<color>){0}
+                ^(?<location> .+? (?:\g<colon>\d+?)? ) \g<colon> \s* (?<content>.+)$
+              /x.match l
+            m ? [m[:location],m[:content]] : parsed_ok= false
+          }
+          if parsed_ok
+            # Parsing good. Now align content
+            width= lines.map{|l| l[0].size}.max
+            color_reset= r["\e["] ? "\e[m" : ''
+            lines.each{|l|
+              printf "%-#{width}s%s %s\n", l[0], color_reset, l[1]
+            }
+          else
+            # Parsing failed - just display what we got
+            puts r
+          end
+        end
+      end
+
+      protected
+
       def q(str)
         return str.map{|s| q s }.join ' ' if str.is_a? Array
         return str if /\A[A-Za-z0-9_.=-]*\z/ === str

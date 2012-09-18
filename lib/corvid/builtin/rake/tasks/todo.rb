@@ -15,8 +15,6 @@ task :todo do
   end
 
   # Run and display results
-  r= `#{todo_finder.cmd}`
-  puts "Found #{r.split($/).size} T\ODOs."
-  puts r
+  todo_finder.run
 end
 
