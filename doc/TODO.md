@@ -26,6 +26,7 @@
 * `.corvid/Gemfile` should check if certain features are installed rather than `Dir.exist?` checks
 * Re-eval all the old, initial Corvid template stuff (bootstraps, etc).
 * Corvid init should take a project name arg and verify that it's valid.
+* Some tmp dirs not being cleaned up by tests
 
 ### New Functionality
 * Provide ext point: test bootstraps
