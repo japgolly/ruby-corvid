@@ -66,7 +66,7 @@ module Corvid
       # @return [ResPatchManager]
       def rpm_for(plugin)
         @rpms ||= {}
-        @rpms[plugin.name] ||= ::Corvid::ResPatchManager.new(plugin.resources_path)
+        @rpms[plugin.name] ||= new_rpm_for(plugin)
       end
 
       # Provides an instance of Corvid's built-in plugin.
@@ -77,6 +77,17 @@ module Corvid
           require 'corvid/builtin/builtin_plugin'
           ::Corvid::Builtin::BuiltinPlugin.new
         )
+      end
+
+      # Returns the names of all features installed for a given plugin.
+      #
+      # @param [String] plugin_name The name of the plugin.
+      # @return [Array<String>] An array of feature names, _not_ feature ids. May return an empty array but never `nil`.
+      def features_installed_for_plugin(plugin_name)
+        (feature_registry.read_client_features || [])
+          .map   {|f|   split_feature_id f }
+          .select{|p,f| plugin_name === p }
+          .map   {|p,f| f }
       end
 
       # Reads and parses the contents of the client's {Constants::VERSIONS_FILE VERSIONS_FILE} if it exists.
@@ -124,8 +135,7 @@ module Corvid
       # resources.
       #
       # @return [String] An existing directory.
-      # @raise If resources haven't bene made available.
-      # @see #with_resources
+      # @raise If resources haven't been made available by {#with_resources}.
       def res_dir
         $corvid_global_thor_source_root || raise("Resources not available. Call with_resources() first.")
       end
@@ -133,8 +143,7 @@ module Corvid
       # The current resource-patch manager (as specified by {#with_resources}) that the generator will use.
       #
       # @return [ResPatchManager]
-      # @raise If resources haven't bene made available.
-      # @see #with_resources
+      # @raise If resources haven't been made available by {#with_resources}.
       def rpm
         return @@rpm if @@rpm
         raise("Resources not available. Call with_resources() first.")
@@ -223,6 +232,7 @@ module Corvid
           setup_proc= lambda {|dir|
             @@with_resource_plugin= plugin_name
             @@with_resource_version= ver
+            @@with_resource_features= plugin ? features_installed_for_plugin(plugin_name) : 'plugin not provided'
             @@rpm= plugin_rpm
             @source_paths= [dir]
             $corvid_global_thor_source_root= dir
@@ -242,13 +252,7 @@ module Corvid
 
         ensure
           # Clean up when done
-          if (@@with_resource_depth -= 1) == 0
-            @@with_resource_plugin= nil
-            @@with_resource_version= nil
-            @@rpm= nil
-            @source_paths= nil
-            $corvid_global_thor_source_root= nil
-          end
+          self.class.clear_with_resource_state if (@@with_resource_depth -= 1) == 0
         end
       end
 
@@ -402,6 +406,7 @@ module Corvid
 
         # Install feature
         # TODO remember that plugins can call install_feature 'corvid:test_unit' & install feature of a diff plugin
+        @feature_being_installed= feature_name
         with_resources(plugin, ver || :latest) {|actual_ver|
           fi= feature_installer!(feature_name)
 
@@ -418,6 +423,8 @@ module Corvid
           yield actual_ver if block_given?
           run_bundle_at_exit() if options[:run_bundle_at_exit]
         }
+      ensure
+        @feature_being_installed= nil
       end
 
       # @!visibility private
@@ -744,11 +751,167 @@ module Corvid
         end
       end
 
+      # When a new {ResPatchManager} is created this method is called to provide any custom configuration.
+      #
+      # @param [ResPatchManager] rpm The object to configure.
+      # @return [void]
+      def configure_new_rpm(rpm)
+      end
+
+      # Creates two temporary directories to generally be used as 'from' and 'to' locations when generating patches,
+      # and configures the generator to use whatever the current directory is as its target/deployment location.
+      #
+      # @param [String] project_dir_name The client's project directory basename.
+      # @yieldparam [String] from_dir Temporary directory #1.
+      # @yieldparam [String] to_dir Temporary directory #2.
+      # @return [void]
+      def with_temp_from_to_dirs(project_dir_name)
+        @destination_stack.push '.'
+        pop_dest_stack= true
+        Dir.mktmpdir {|tmpdir|
+          Dir.mkdir from_dir= "#{tmpdir}/a"
+          Dir.mkdir from_dir= "#{from_dir}/#{project_dir_name}"
+          Dir.mkdir to_dir= "#{tmpdir}/b"
+          Dir.mkdir to_dir= "#{to_dir}/#{project_dir_name}"
+          yield from_dir, to_dir
+        }
+      ensure
+        @destination_stack.pop if pop_dest_stack
+      end
+
+      # Wrapper for code that will apply a patch.
+      #
+      # * Allows interactive patching for the duration of the block.
+      # * Puts suitable messages on the screen before and after patching.
+      #
+      # @param [ResPatchManager] rpm The RPM that will be used to apply patches.
+      # @param [String] msg A description of what is about to happen, to be displayed to the user.
+      # @yield The patching should occur within this block.
+      # @yieldreturn [Boolean] Whether merge conflicts occurred.
+      # @return [void]
+      def patch(rpm, msg, &block)
+        rpm.allow_interactive_patching do
+          say_status 'patch', msg, :cyan
+
+          conflicts= block.()
+
+          if conflicts
+            say_status 'patch', 'Applied but with merge conflicts.', :red
+          else
+            say_status 'patch', 'Applied cleanly.', :green
+          end
+        end
+      end
+
+      # Is a feature installed (or in the process of being installed)?
+      #
+      # For use in templates and in conjunction with {#regenerate_template_with_feature}.
+      #
+      # @param [Symbol|String] feature_name The feature name (not feature id).
+      # @return [Boolean]
+      # @raise If resources haven't been made available by {#with_resources}.
+      def feature_installed?(feature_name)
+        feature_name= feature_name.to_s
+        features= @@with_resource_features
+        raise "Features not available. Call with_resources() first." unless features
+        raise "Features not available: #{features}." if features.is_a? String
+
+        @feature_being_installed == feature_name || features.include?(feature_name)
+      end
+
+      # Are a number of features installed (or in the process of being installed)?
+      #
+      # For use in templates and in conjunction with {#regenerate_template_with_feature}.
+      #
+      # @param [Array<Symbol|String>] feature_names Feature names (not feature ids).
+      # @return [Boolean] If all feature names are installed (or in the process of being installed).
+      # @raise If resources haven't been made available by {#with_resources}.
+      def features_installed?(*features)
+        features.flatten.compact.all?{|f| feature_installed? f }
+      end
+
+      # Regenerates a template previously generated by another feature in the same plugin via
+      # {ActionExtensions#template2}. The template is expected to produce different content by checking
+      # {#feature_installed?}.
+      #
+      # This action is only valid in feature installers and will not work outside of {#install_feature}.
+      #
+      # @example Feature installers
+      #     # Feature installer for a feature called "hot".
+      #     install {
+      #       template2 'example.txt.tt'
+      #     }
+      #
+      #     # Feature installer for a feature called "cold".
+      #     requirements 'example:hot'
+      #     install {
+      #       regenerate_template_with_feature 'example.txt.tt'
+      #     }
+      #
+      # @example Template: `example.txt.tt`
+      #     This is an example template.
+      #
+      #     <% if feature_installed? :hot -%>
+      #       It's a hot day.
+      #     <% end -%>
+      #
+      #     <% if feature_installed? :cold -%>
+      #       It's getting cold.
+      #     <% end -%>
+      #
+      # @param [String] template_name The template name to pass to {ActionExtensions#template2}.
+      # @param [Hash] options Options to pass to {ActionExtensions#template2}.
+      # @return [void]
+      def regenerate_template_with_feature(template_name, options={})
+        # TODO Noisy. Prints 2 lines about tmp files being written. Probaby happening during template updating too.
+        project_dir_name= File.basename(Dir.pwd)
+        preload_template_vars
+
+        with_temp_from_to_dirs(project_dir_name) {|from_dir, to_dir|
+          files= []
+          gen_proc= ->(d){ files<< template2(template_name, options) }
+
+          # Generate without feature
+          feature_being_installed= @feature_being_installed
+          begin
+            @feature_being_installed= nil
+            Dir.chdir from_dir, &gen_proc
+          ensure
+            @feature_being_installed= feature_being_installed
+          end
+
+          # Generate with feature
+          Dir.chdir to_dir, &gen_proc
+
+          # Apply patch
+          patch rpm, files.first do
+            rpm.migrate_changes_between_dirs from_dir, to_dir, '.', files
+          end
+        }
+      end
+
       private
-      @@with_resource_depth= 0
-      @@with_resource_plugin= nil
-      @@with_resource_version= nil
-      @@rpm= nil
+
+      # Creates a new {ResPatchManager} for a given plugin.
+      #
+      # @param [Plugin] The plugin for which to create an RPM.
+      # @return [ResPatchManager] A new RPM.
+      def new_rpm_for(plugin)
+        ::Corvid::ResPatchManager.new(plugin.resources_path)
+          .tap{|rpm| configure_new_rpm rpm }
+      end
+
+      # @!visibility private
+      def self.clear_with_resource_state
+        @@with_resource_depth= 0
+        @@with_resource_plugin= nil
+        @@with_resource_version= nil
+        @@with_resource_features= nil
+        @@rpm= nil
+        @source_paths= nil
+        $corvid_global_thor_source_root= nil
+      end
+      clear_with_resource_state
 
       # Re-enable Thor's support for assuming all public methods are tasks
       no_tasks {}

@@ -1,6 +1,8 @@
 # encoding: utf-8
 require_relative '../../bootstrap/spec'
 require 'corvid/generator/base'
+require 'corvid/feature'
+require 'corvid/plugin'
 
 describe Corvid::Generator::Base do
   $corvid_generator_base_spec_loaded= true
@@ -373,6 +375,68 @@ describe Corvid::Generator::Base do
     it("fails if it cant create a new instance of the generator"){
       @with_args[:generator]= AU2
       expect{ g.asd }.to raise_error /required arg.*name/
+    }
+  end
+
+  describe '#features_installed_for_plugin' do
+    it("returns [] when feature file doesn't exist"){
+      fr.stub read_client_features: nil
+      subject.features_installed_for_plugin('x').should == []
+    }
+
+    it("returns [] when no features installed for plugin"){
+      fr.stub read_client_features: %w[a:f1 a:f2 x:xxx]
+      subject.features_installed_for_plugin('c').should == []
+    }
+
+    it("returns names of features installed for plugin"){
+      fr.stub read_client_features: %w[a:f1 a:f2 x:xxx]
+      subject.features_installed_for_plugin('a').should equal_array %w[f1 f2]
+      subject.features_installed_for_plugin('x').should equal_array %w[xxx]
+    }
+  end
+
+  describe '#regenerate_template_with_feature' do
+    run_each_in_empty_dir
+
+    class X_F_Hot  < Corvid::Feature; since_ver 1 end
+    class X_F_Cold < Corvid::Feature; since_ver 1 end
+    class X_P < Corvid::Plugin
+      name 'fake'
+      require_path 'corvid/plugin'
+      resources_path "#{Fixtures::FIXTURE_ROOT}/regenerate_template_with_feature"
+      feature_manifest ({
+        'hot'  => [nil,X_F_Hot.to_s],
+        'cold' => [nil,X_F_Cold.to_s],
+      })
+    end
+    class Installer < Corvid::Generator::Base
+      P= X_P.new
+      desc 'hot',''
+      def hot
+        install_plugin P
+        install_feature P, 'hot'
+      end
+      desc 'cold',''
+      def cold
+        install_feature P, 'cold'
+      end
+      protected
+      def configure_new_rpm(rpm)
+        rpm.patch_cmd += ' --quiet'
+      end
+    end
+
+    it("patches a previously generated file with changed introduced by new feature"){
+      n= ->(s){ s.chomp.gsub /\n{2,}/, "\n" }
+
+      # Generate for first time
+      run_generator Installer, 'hot'
+      'example.txt'.should be_file_with_content("This is an example.\n  Hot day.\nDone!").when_normalised_with(&n)
+
+      # Regenerate with new feature
+      run_generator Installer, 'cold'
+      'example.txt'.should be_file_with_content("This is an example.\n  Hot day.\n  Getting cold.\nDone!").when_normalised_with(&n)
     }
   end
 end unless $corvid_generator_base_spec_loaded

@@ -5,11 +5,10 @@
 * Put guard lib stuff in its own group and require 1.3.2+
 * Determine whether best to generate Gemfile and patch via `regenerate_tempalte_with_feature`,
   or keep using `.corvid/Gemfile`
+* Ensure updating works with `regenerate_tempalte_with_feature`.
 
 ### New Functionality
 * Integration tests. (Like NS: new dir, Guard, Rake, Simplecov)
-* Something that re-evals a template with an without feature and applies patch.
-  `add_changes_to_feature`, `regenerate_tempalte_with_feature`
 
 ### Non-Functional / Under-The-Hood
 

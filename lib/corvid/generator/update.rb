@@ -398,40 +398,12 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
   #---------------------------------------------------------------------------------------------------------------------
 
-  def with_temp_from_to_dirs(project_dir_name)
-    @destination_stack.push '.'
-    pop_dest_stack= true
-    Dir.mktmpdir {|tmpdir|
-      Dir.mkdir from_dir= "#{tmpdir}/a"
-      Dir.mkdir from_dir= "#{from_dir}/#{project_dir_name}"
-      Dir.mkdir to_dir= "#{tmpdir}/b"
-      Dir.mkdir to_dir= "#{to_dir}/#{project_dir_name}"
-      yield from_dir, to_dir
-    }
-  ensure
-    @destination_stack.pop if pop_dest_stack
-  end
-
   def run_for_each_ver(rpm, from_ver, from_dir, to_ver, to_dir)
     [ [from_ver,from_dir] , [to_ver,to_dir] ].each do |ver,dir|
       with_resources rpm.ver_dir(ver) do
         Dir.chdir dir do
           yield ver
         end
-      end
-    end
-  end
-
-  def patch(rpm, msg, &block)
-    rpm.allow_interactive_patching do
-      say_status 'patch', msg, :cyan
-
-      conflicts= block.()
-
-      if conflicts
-        say_status 'patch', 'Applied but with merge conflicts.', :red
-      else
-        say_status 'patch', 'Applied cleanly.', :green
       end
     end
   end

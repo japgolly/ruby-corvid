@@ -1,0 +1,30 @@
+Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+After: f132b125c9796d85d7c85b2958197c6a8761939f3bbd4dfa31511e080e2bf6d4
+Patch: d41bf8827878aeb116b360da4f3d274a4d6318fd30a2b65f0596ac224e3b2b33
+--- /dev/null	1980-01-01 00:00:00.000000000 +1000
++++ corvid-features/cold.rb	2012-09-19 10:32:17.000000000 +1000
+@@ -0,0 +1,4 @@
++install {
++  regenerate_template_with_feature 'example.txt.tt'
++}
++
+--- /dev/null	1980-01-01 00:00:00.000000000 +1000
++++ corvid-features/hot.rb	2012-09-19 10:32:17.000000000 +1000
+@@ -0,0 +1,3 @@
++install {
++  template2 'example.txt.tt'
++}
+--- /dev/null	1980-01-01 00:00:00.000000000 +1000
++++ example.txt.tt	2012-09-19 10:32:17.000000000 +1000
+@@ -0,0 +1,11 @@
++This is an example.
++
++<% if feature_installed? :hot -%>
++  Hot day.
++<% end -%>
++
++<% if feature_installed? :cold -%>
++  Getting cold.
++<% end -%>
++
++Done!
