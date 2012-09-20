@@ -9,5 +9,5 @@ describe BUILTIN_PLUGIN do
     "#{dir}/1/Gemfile".should exist_as_file
   }
 
-  include_feature_update_install_tests
+  include_feature_update_tests
 end

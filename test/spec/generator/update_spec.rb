@@ -332,7 +332,7 @@ describe 'Auto-Update With Real Resources' do
       end
 
       include Corvid::Builtin::ResourcePatchTests
-      include_feature_update_install_tests P, context: nil
+      include_feature_update_tests P, context: nil
     end
 
     describe 'regenerate_template_with_feature()' do
@@ -349,11 +349,11 @@ describe 'Auto-Update With Real Resources' do
       end
 
       include Corvid::Builtin::ResourcePatchTests
-      include_feature_update_install_tests P, context: nil
+      include_feature_update_tests P, context: nil
 
       N= ->(s){ s.chomp.gsub /\n{2,}/, "\n" }
 
-      def feature_update_install_test__pre_update(plugin, feature_name, starting_version)
+      def feature_update_test__pre_update(feature_name, version)
         content= case feature_name
           when 'hot'  then "This is an example.\n  Hot day.\nDone!"
           when 'cold' then "This is an example.\n  Hot day.\n  Getting cold.\nDone!"
@@ -361,7 +361,7 @@ describe 'Auto-Update With Real Resources' do
         'example.txt'.should be_file_with_content(content).when_normalised_with(&N)
       end
 
-      def feature_update_install_test__post_update(plugin, feature_name, starting_version)
+      def feature_update_test__post_update(feature_name, version)
         n= ->(s){ s.chomp.gsub /\n{2,}/, "\n" }
         content= case feature_name
           when 'hot'  then "This is an example of an update.\n  Hot day.\nDone! Updating works!"

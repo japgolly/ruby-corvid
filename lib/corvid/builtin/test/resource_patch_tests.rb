@@ -54,7 +54,6 @@ module Corvid::Builtin
       # same results as install the feature at the latest version. Any missing steps in `update` or `install` of the
       # feature installer will be caught here.
       #
-      # TODO Rename include_feature_update_install_tests
       # @param [Plugin|Class<Plugin>] plugin The plugin instance or class, that contains the features to be tested.
       # @param [Hash] options
       # @option options [Array<String>] :features (plugin.feature_manifest.keys)
@@ -63,7 +62,7 @@ module Corvid::Builtin
       #   The title of the `describe` block that will house the tests, or `nil`/`false` to use the current context and
       #   not create a new one.
       # @return [void]
-      def include_feature_update_install_tests(plugin = subject.(), options={})
+      def include_feature_update_tests(plugin = subject.(), options={})
         plugin= plugin.new if plugin.is_a?(Class)
         options.validate_option_keys :features, :context
         features= options[:features] || plugin.feature_manifest.keys
@@ -71,7 +70,7 @@ module Corvid::Builtin
         ctx_start,ctx_end = ctx ? ["describe #{ctx.inspect}, slow: true do","end"] : ['','']
         latest_resource_version= Corvid::ResPatchManager.new(plugin.resources_path).latest_version
 
-        pa= ($include_feature_update_install_tests_plugin ||= [])
+        pa= ($include_feature_update_tests_plugin ||= [])
         pa<< plugin
         Corvid::FeatureRegistry.clear_cache.register_features_in(plugin)
 
@@ -80,7 +79,7 @@ module Corvid::Builtin
                  unless f.since_ver == latest_resource_version
                    %[
                      it("Testing feature: #{feature_name}"){
-                       p= $include_feature_update_install_tests_plugin[#{pa.size-1}]
+                       p= $include_feature_update_tests_plugin[#{pa.size-1}]
                        Corvid::PluginRegistry.clear_cache.register p
                        Corvid::FeatureRegistry.clear_cache.register_features_in p
                        test_feature_updates_match_install '#{plugin.name}', '#{feature_name}', #{f.since_ver}
@@ -187,13 +186,14 @@ module Corvid::Builtin
       Dir.mkdir 'install'
       Dir.chdir 'install' do
         quiet_generator(TestInstaller).install plugin, feature_name
+        feature_update_test__post_install(feature_name)
       end
 
       # Install old and update
       Dir.mkdir 'update'
       Dir.chdir 'update' do
         quiet_generator(TestInstaller).install plugin, feature_name, starting_version
-        feature_update_install_test__pre_update(plugin, feature_name, starting_version)
+        feature_update_test__pre_update(feature_name, starting_version)
 
         g= quiet_generator(Corvid::Generator::Update)
         rpm= g.rpm_for(plugin)
@@ -201,7 +201,7 @@ module Corvid::Builtin
         rpm.stub interactive_patching?: false
         features= g.features_installed_for_plugin(plugin)
         g.send :update!, plugin, starting_version, rpm.latest_version, features
-        feature_update_install_test__post_update(plugin, feature_name, starting_version)
+        feature_update_test__post_update(feature_name, rpm.latest_version)
       end
 
       # Compare directories
@@ -214,11 +214,28 @@ module Corvid::Builtin
       end
     end
 
-    # TODO rename and doc update/install test callbacks
-    def feature_update_install_test__pre_update(plugin, feature_name, starting_version)
+    # Callback invoked just after installing the latest version in tests created by {#include_feature_update_tests}.
+    # What has been generated here will be used to verify that updates work.
+    #
+    # @param [String] feature_name The feature currently being tested.
+    # @return [void]
+    def feature_update_test__post_install(feature_name)
     end
 
-    def feature_update_install_test__post_update(plugin, feature_name, starting_version)
+    # Callback invoked just before starting an update in tests created by {#include_feature_update_tests}.
+    #
+    # @param [String] feature_name The feature currently being tested.
+    # @param [Fixnum] version The current version of the installation.
+    # @return [void]
+    def feature_update_test__pre_update(feature_name, version)
+    end
+
+    # Callback invoked just after performing an update in tests created by {#include_feature_update_tests}.
+    #
+    # @param [String] feature_name The feature currently being tested.
+    # @param [Fixnum] version The current version of the installation.
+    # @return [void]
+    def feature_update_test__post_update(feature_name, version)
     end
 
   end

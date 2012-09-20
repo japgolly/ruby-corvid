@@ -27,7 +27,7 @@ describe Corvid::Builtin::Generator::NewPlugin do
           .and(%r|describe MyThing::HappyPlugin do|)
           .and(%r|include Corvid::Builtin::ResourcePatchTests|)
           .and(%r|include_resource_patch_tests|)
-          .and(%r|include_feature_update_install_tests|)
+          .and(%r|include_feature_update_tests|)
       }
 
       it("should create a CLI"){

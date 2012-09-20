@@ -1,6 +1,6 @@
 Before: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-After: aadf2d8f053d6a9d6dced24007c9fed2928b54d4b603847c429a352af62efc62
-Patch: cf7ef866a6769671e845536e4fe6e50aad86be8b1f2463e597da8a36e8ab48ad
+After: aa5716e985baeb09120aba9371889e32e26d261c1d28850ce5963f7f98149be4
+Patch: 30ebf2cc6290bbdf7c6512c0b6aa91b87f3d94efb9828e88df1c74e591dca10c
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
 +++ %project_name%.gemspec.tt	2012-09-07 15:57:57.000000000 +1000
 @@ -0,0 +1,23 @@
@@ -596,7 +596,7 @@ Patch: cf7ef866a6769671e845536e4fe6e50aad86be8b1f2463e597da8a36e8ab48ad
 +require_relative 'all'
 +require 'corvid/builtin/test/bootstrap/unit'
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
-+++ test/spec/%plugin_name%_plugin_spec.rb.tt	2012-09-16 14:54:37.000000000 +1000
++++ test/spec/%plugin_name%_plugin_spec.rb.tt	2012-09-20 11:18:09.000000000 +1000
 @@ -0,0 +1,12 @@
 +# encoding: utf-8
 +require_relative '../bootstrap/spec'
@@ -608,7 +608,7 @@ Patch: cf7ef866a6769671e845536e4fe6e50aad86be8b1f2463e597da8a36e8ab48ad
 +
 +  include_resource_patch_tests
 +
-+  include_feature_update_install_tests
++  include_feature_update_tests
 +end
 --- /dev/null	1980-01-01 00:00:00.000000000 +1000
 +++ test/spec/%src%_spec.rb.tt	2012-09-06 07:57:58.000000000 +1000

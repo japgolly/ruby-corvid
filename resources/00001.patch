@@ -1,6 +1,6 @@
-Before: aadf2d8f053d6a9d6dced24007c9fed2928b54d4b603847c429a352af62efc62
+Before: aa5716e985baeb09120aba9371889e32e26d261c1d28850ce5963f7f98149be4
 After: f3838f4e7116ec64801ae19321103deb8f58b63008869fdfb744deea4f82503c
-Patch: 372e15628c7069e8f9e722179c02907af9d93a1c0c39bde6b7723776ec0f5a3a
+Patch: 45177e47390f5d2a751c9b2739e466cb1698a777f4c0615192842ffab850dae2
 --- Guardfile	2012-09-16 16:33:53.000000000 +1000
 +++ Guardfile	2012-09-12 12:04:30.000000000 +1000
 @@ -1,7 +1,5 @@
@@ -32,9 +32,9 @@ Patch: 372e15628c7069e8f9e722179c02907af9d93a1c0c39bde6b7723776ec0f5a3a
  
      # Each spec
      watch(%r'^test/spec/.+_spec\.rb$')
---- test/spec/%plugin_name%_plugin_spec.rb.tt	2012-09-16 14:54:37.000000000 +1000
+--- test/spec/%plugin_name%_plugin_spec.rb.tt	2012-09-20 11:18:09.000000000 +1000
 +++ test/spec/%plugin_name%_plugin_spec.rb.tt	2012-09-11 16:52:34.000000000 +1000
-@@ -4,7 +4,7 @@
+@@ -4,9 +4,9 @@
  require '<%= require_path %>'
  
  describe <%= full_class_name %> do
@@ -43,3 +43,6 @@ Patch: 372e15628c7069e8f9e722179c02907af9d93a1c0c39bde6b7723776ec0f5a3a
  
    include_resource_patch_tests
  
+-  include_feature_update_tests
++  include_feature_update_install_tests
+ end

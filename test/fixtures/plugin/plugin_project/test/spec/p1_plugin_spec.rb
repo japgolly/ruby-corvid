@@ -8,5 +8,5 @@ describe PluginProject::P1Plugin do
 
   include_resource_patch_tests
 
-  include_feature_update_install_tests
+  include_feature_update_tests
 end
