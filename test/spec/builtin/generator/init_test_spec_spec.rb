@@ -7,13 +7,19 @@ describe Corvid::Builtin::Generator::InitTestSpec do
   include TestBootstraps
 
   describe 'init:test:spec' do
-    run_each_in_dynamic_fixture :bare
+    run_each_in_dynamic_fixture :corvid_only
 
     it("should initalise spec test support"){
       run_generator described_class, "spec"
       test_bootstraps true, false, true
       'test/spec'.should exist_as_dir
       assert_features_installed %w[corvid:corvid corvid:test_spec]
+      'Gemfile'.should be_file_with_contents(/gem.*corvid/)
+                       .and(/test/)
+                       .and(/guard/)
+                       .and(/rspec/)
+                       .and_not(/minitest/)
+                       .and_not(/^[<=>]{6}/)
     }
 
     it("should preserve the common bootstrap"){

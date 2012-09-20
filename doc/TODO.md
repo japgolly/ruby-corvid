@@ -2,9 +2,6 @@
 ------
 
 ### Fix / Enhance Existing Functionality
-* Put guard lib stuff in its own group and require 1.3.2+
-* Determine whether best to generate Gemfile and patch via `regenerate_tempalte_with_feature`,
-  or keep using `.corvid/Gemfile`
 
 ### New Functionality
 * Integration tests. (Like NS: new dir, Guard, Rake, Simplecov)
@@ -21,7 +18,6 @@
 --------
 
 ### Fix / Enhance Existing Functionality
-* `.corvid/Gemfile` should check if certain features are installed rather than `Dir.exist?` checks
 * Re-eval all the old, initial Corvid template stuff (bootstraps, etc).
 * Corvid init should take a project name arg and verify that it's valid.
 * Some tmp dirs not being cleaned up by tests

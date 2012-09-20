@@ -15,6 +15,10 @@ describe Corvid::Builtin::Generator::InitCorvid do
       'Gemfile'.should exist_as_a_file
     }
 
+    it("should not have any merge conflicts in Gemfile"){
+      'Gemfile'.should_not be_file_with_contents /^[<=>]{6}/
+    }
+
     it("should store the resource version"){
       assert_corvid_version_is_latest
     }
@@ -32,14 +36,13 @@ describe Corvid::Builtin::Generator::InitCorvid do
 
   context 'in an empty directory' do
     context 'base feature only' do
-      run_all_in_empty_dir("my_thing") {
-        run_generator described_class, "init --no-test-unit --no-test-spec"
-        #system "cat my_thing.gemspec"
-      }
-
+      run_all_in_dynamic_fixture :corvid_only
       include_examples 'corvid'
       it("should store the corvid plugin"){ assert_plugins_installed BUILTIN_PLUGIN_DETAILS }
       it("should store the corvid feature"){ assert_features_installed 'corvid:corvid' }
+      it("should not contain any test dependencies"){
+        'Gemfile'.should be_file_with_contents(/gem.*corvid/).and_not(/test/).and_not(/guard/).and_not(/rspec/)
+      }
     end
 
     context 'with additional features' do
@@ -49,6 +52,9 @@ describe Corvid::Builtin::Generator::InitCorvid do
 
       include_examples 'corvid'
       it("should store the corvid and test features"){ assert_features_installed %w[corvid:corvid corvid:test_unit corvid:test_spec] }
+      it("should contain test dependencies"){
+        'Gemfile'.should be_file_with_contents(/gem.*corvid/).and(/test/).and(/guard/).and(/rspec/)
+      }
     end
   end
 

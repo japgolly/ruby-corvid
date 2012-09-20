@@ -80,6 +80,36 @@ describe Corvid::Generator::Base do
     }
   end
 
+  describe '#all_features_installed?' do
+    before(:each){
+      subject.instance_eval 'def feature_installed?(f) [:a,:b].include? f end'
+    }
+    it("returns true if all installed"){
+      subject.send(:all_features_installed?, :a).should be_true
+      subject.send(:all_features_installed?, :b).should be_true
+      subject.send(:all_features_installed?, :a, :b).should be_true
+    }
+    it("returns false if any not installed"){
+      subject.send(:all_features_installed?, :c).should be_false
+      subject.send(:all_features_installed?, :c, :a).should be_false
+      subject.send(:all_features_installed?, :a, :c).should be_false
+    }
+  end
+
+  describe '#any_features_installed?' do
+    before(:each){
+      subject.instance_eval 'def feature_installed?(f) [:a,:b].include? f end'
+    }
+    it("returns true if any installed"){
+      subject.send(:any_features_installed?, :a).should be_true
+      subject.send(:any_features_installed?, :a, :c).should be_true
+      subject.send(:any_features_installed?, :c, :a).should be_true
+    }
+    it("returns false if none installed"){
+      subject.send(:any_features_installed?, :c).should be_false
+    }
+  end
+
   describe '#feature_installer' do
     def installer_for(code)
       subject.stub feature_installer_file: 'as.rb'

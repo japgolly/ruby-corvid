@@ -282,7 +282,8 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
     METHODS_TO_DELEGATE= [
       :find_in_source_paths,
       :feature_installed?,
-      :features_installed?,
+      :all_features_installed?,
+      :any_features_installed?,
     ].freeze
 
     class_eval [:template, :template2].map {|m| <<-EOB

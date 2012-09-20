@@ -87,9 +87,10 @@ module Corvid::Builtin
       decorate_generator g
     end
 
-    def decorate_generator(g)
+    def decorate_generator(g, quiet=true)
       # Use a test res-patch manager if available
       g.instance_variable_set :@rpms, @rpms if @rpms
+      g.instance_eval "def configure_new_rpm(rpm) rpm.patch_cmd += ' --quiet' end" if quiet
       g
     end
 

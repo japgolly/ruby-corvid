@@ -26,7 +26,7 @@ describe Corvid::Builtin::Generator::InitPlugin do
 
     context 'when installed the first time in a corvid project' do
       run_all_in_empty_dir {
-        copy_dynamic_fixture :bare
+        copy_dynamic_fixture :corvid_only
         run!
       }
       it("should install the plugin feature"){

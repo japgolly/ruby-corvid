@@ -6,6 +6,7 @@ end
 
 module GollyUtils::Testing::DynamicFixtures
 
+  # TODO fixture 'bare' should go or at least be renamed
   def_fixture :bare do
     require 'corvid/res_patch_manager'
     Dir.mkdir '.corvid'
@@ -14,6 +15,12 @@ module GollyUtils::Testing::DynamicFixtures
     add_version! 'corvid', Corvid::ResPatchManager.new.latest_version
   end
 
+  def_fixture :corvid_only, dir_name: 'my_thing' do
+    require 'corvid/builtin/generator/init_corvid'
+    run_generator Corvid::Builtin::Generator::InitCorvid, "init --no-test-unit --no-test-spec"
+  end
+
+  # TODO int only fixtures should be separated - invoke_corvid! = IT only
   def_fixture :bare_no_gemfile_lock, dir_name: 'int_test' do
     invoke_corvid! "init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec"
     init_gemfile true, false
