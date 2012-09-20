@@ -81,9 +81,10 @@ module Corvid
 
       # Returns the names of all features installed for a given plugin.
       #
-      # @param [String] plugin_name The name of the plugin.
+      # @param [Plugin|String] plugin A plugin instance, or name of a plugin.
       # @return [Array<String>] An array of feature names, _not_ feature ids. May return an empty array but never `nil`.
-      def features_installed_for_plugin(plugin_name)
+      def features_installed_for_plugin(plugin)
+        plugin_name= plugin.is_a?(Plugin) ? plugin.name : plugin
         (feature_registry.read_client_features || [])
           .map   {|f|   split_feature_id f }
           .select{|p,f| plugin_name === p }
@@ -809,14 +810,10 @@ module Corvid
       #
       # @param [Symbol|String] feature_name The feature name (not feature id).
       # @return [Boolean]
-      # @raise If resources haven't been made available by {#with_resources}.
+      # @raise If resources haven't been made available by {#with_resources} or {#override_installed_features}.
       def feature_installed?(feature_name)
-        feature_name= feature_name.to_s
-        features= @@with_resource_features
-        raise "Features not available. Call with_resources() first." unless features
-        raise "Features not available: #{features}." if features.is_a? String
-
-        @feature_being_installed == feature_name || features.include?(feature_name)
+        :feature_name.validate_lvar_type!{[ Symbol, String ]}
+        __features_installed.include? feature_name.to_s
       end
 
       # Are a number of features installed (or in the process of being installed)?
@@ -825,7 +822,7 @@ module Corvid
       #
       # @param [Array<Symbol|String>] feature_names Feature names (not feature ids).
       # @return [Boolean] If all feature names are installed (or in the process of being installed).
-      # @raise If resources haven't been made available by {#with_resources}.
+      # @raise If resources haven't been made available by {#with_resources} or {#override_installed_features}.
       def features_installed?(*features)
         features.flatten.compact.all?{|f| feature_installed? f }
       end
@@ -890,7 +887,40 @@ module Corvid
         }
       end
 
+      # For the duration of the given block, {#feature_installed?} will reference the features specified here, rather
+      # than the features that were actually installed when {#with_resources} was called.
+      #
+      # @overload override_installed_features(plugin)
+      #   @param [Plugin|String] plugin A plugin (or its name), in which case the feature set will be determined by
+      #     calling {#features_installed_for_plugin}.
+      # @overload override_installed_features(feature_names)
+      #   @param [Array<String>] feature_names The list of installed features to use.
+      # @yield Invokes the given block with the given features in place.
+      # @return [Object] Whatever the given block returns.
+      def override_installed_features(arg)
+        :arg.validate_lvar_type!{[ Array, String, Plugin ]}
+        arg= arg.name if arg.is_a? Plugin
+        arg= features_installed_for_plugin(arg) if arg.is_a? String
+        features= arg.flatten.compact.map{|f| f.to_s}
+
+        old= @overridden_installed_features
+        begin
+          @overridden_installed_features= features
+          return yield
+        ensure
+          @overridden_installed_features= old
+        end
+      end
+
       private
+
+      def __features_installed
+        features= @overridden_installed_features || @@with_resource_features
+        raise "Features not available. Call with_resources() or override_installed_features() first." unless features
+        raise "Features not available: #{features}." if features.is_a? String
+        features= features + [@feature_being_installed] if @feature_being_installed
+        features
+      end
 
       # Creates a new {ResPatchManager} for a given plugin.
       #

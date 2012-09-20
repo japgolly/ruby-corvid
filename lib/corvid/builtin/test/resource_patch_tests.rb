@@ -3,7 +3,9 @@ require 'corvid/feature_registry'
 require 'corvid/generator/update'
 require 'corvid/naming_policy'
 require 'corvid/res_patch_manager'
+require 'corvid/requirement_validator'
 require 'corvid/builtin/test/helpers/plugins'
+require 'golly-utils/ruby_ext/options'
 require 'golly-utils/testing/rspec/arrays'
 require 'golly-utils/testing/rspec/files'
 require 'yaml'
@@ -52,16 +54,21 @@ module Corvid::Builtin
       # same results as install the feature at the latest version. Any missing steps in `update` or `install` of the
       # feature installer will be caught here.
       #
-      # TODO
-      # @overload include_feature_update_install_tests(plugin)
-      #   @param [Plugin] plugin A plugin instance.
-      # @overload include_feature_update_install_tests(plugin_name, feature_manifest)
-      #   @param [String] plugin_name The name of the plugin that provides the features.
-      #   @param [Hash<String,Array>] feature_manifest A map of features to require path and class names.
-      #   @see Plugin#feature_manifest
+      # TODO Rename include_feature_update_install_tests
+      # @param [Plugin|Class<Plugin>] plugin The plugin instance or class, that contains the features to be tested.
+      # @param [Hash] options
+      # @option options [Array<String>] :features (plugin.feature_manifest.keys)
+      #   The names (not ids) of features to test.
+      # @option options [nil|false|String] :context ("Feature Installers: Update vs Install")
+      #   The title of the `describe` block that will house the tests, or `nil`/`false` to use the current context and
+      #   not create a new one.
       # @return [void]
-      def include_feature_update_install_tests(plugin = subject.(), features=nil)
-        features ||= plugin.feature_manifest.keys
+      def include_feature_update_install_tests(plugin = subject.(), options={})
+        plugin= plugin.new if plugin.is_a?(Class)
+        options.validate_option_keys :features, :context
+        features= options[:features] || plugin.feature_manifest.keys
+        ctx= options.has_key?(:context) ? options[:context] : 'Feature Installers: Update vs Install'
+        ctx_start,ctx_end = ctx ? ["describe #{ctx.inspect}, slow: true do","end"] : ['','']
         latest_resource_version= Corvid::ResPatchManager.new(plugin.resources_path).latest_version
 
         pa= ($include_feature_update_install_tests_plugin ||= [])
@@ -83,14 +90,14 @@ module Corvid::Builtin
                }.compact
         unless tests.empty?
           class_eval <<-EOB
-            describe 'Feature Installers: Update vs Install', slow: true do
+            #{ctx_start}
               run_each_in_empty_dir
               #{tests * "\n"}
               after(:all){
                 Corvid::FeatureRegistry.clear_cache
                 Corvid::PluginRegistry.clear_cache
               }
-            end
+            #{ctx_end}
           EOB
         end
       end
@@ -107,21 +114,68 @@ module Corvid::Builtin
 
           ver ||= rpm_for(plugin).latest_version
           feature_id= feature_id_for(plugin.name, feature_name)
-          # TODO Hardcoded-logic here but all features apart from corvid, requrie corvid to be installed first.
-          corvid_feature_id= feature_id_for('corvid','corvid')
-          unless feature_id == corvid_feature_id
-            Dir.mkdir '.corvid' unless Dir.exists?('.corvid')
-            add_plugin! 'corvid'
-            add_feature! corvid_feature_id
-            add_version! 'corvid', ver
-          end
+
+          Dir.mkdir '.corvid' unless Dir.exists?('.corvid')
           with_resources(plugin, ver) {
-            with_action_context feature_installer!(feature_name), &:install
-            add_feature feature_id
+            fi= feature_installer!(feature_name)
+
+            # Satisfy feature's requirements
+            satisfy_requirements plugin, fi, ver
+
+            # Pretend this plugin already installed
+            add_plugin! plugin
             add_version plugin, ver
+
+            # Install feature
+            override_installed_features(plugin.name){
+              @feature_being_installed= feature_name
+              with_action_context fi, &:install
+            }
+            @feature_being_installed= nil
+            add_feature feature_id
           }
+
+          # Alternate way of installing feature, but with uncontrollable side effects as method futher evolves...
+          #install_feature plugin, feature_name, run_bundle_at_exit: false
         end
       }
+      protected
+      def configure_new_rpm(rpm)
+        rpm.patch_cmd += ' --quiet'
+      end
+
+      def satisfy_requirements(plugin, fi, ver)
+        return unless fi.respond_to?(:requirements)
+        prereq_features_to_install= []
+
+        # Process each requirement
+        rv= ::Corvid::RequirementValidator.new
+        rv.add fi.requirements
+        rv.requirements.each do |r|
+
+          # Satisfy required plugin
+          if p= r[:plugin]
+            add_plugin! p
+            v= plugin.name == p && ver
+            add_version! p, (v || 1)
+          end
+
+          # Satisfy required feature
+          if f_id= r[:feature_id]
+            p,f = split_feature_id(f_id)
+            if plugin.name == p
+              # Same plugin: install for real
+              prereq_features_to_install<< f unless features_installed_for_plugin(plugin).include? f
+            else
+              # Diff plugin: pretend it's installed
+              add_feature! f_id
+            end
+          end
+        end
+
+        # Install required features from this plugin
+        prereq_features_to_install.each{|f| install plugin, f, ver }
+      end
     end
 
     # @!visibility private
@@ -139,10 +193,15 @@ module Corvid::Builtin
       Dir.mkdir 'update'
       Dir.chdir 'update' do
         quiet_generator(TestInstaller).install plugin, feature_name, starting_version
+        feature_update_install_test__pre_update(plugin, feature_name, starting_version)
+
         g= quiet_generator(Corvid::Generator::Update)
         rpm= g.rpm_for(plugin)
         rpm.patch_cmd += ' --quiet'
-        g.send :update!, plugin, starting_version, rpm.latest_version, [feature_name]
+        rpm.stub interactive_patching?: false
+        features= g.features_installed_for_plugin(plugin)
+        g.send :update!, plugin, starting_version, rpm.latest_version, features
+        feature_update_install_test__post_update(plugin, feature_name, starting_version)
       end
 
       # Compare directories
@@ -151,8 +210,15 @@ module Corvid::Builtin
       get_dirs('update').should equal_array get_dirs('install')
       files.each do |f|
         next if f == '.corvid/versions.yml'
-        "update/#{f}".should be_file_with_contents File.read("install/#{f}")
+        File.read("update/#{f}").should == File.read("install/#{f}")
       end
+    end
+
+    # TODO rename and doc update/install test callbacks
+    def feature_update_install_test__pre_update(plugin, feature_name, starting_version)
+    end
+
+    def feature_update_install_test__post_update(plugin, feature_name, starting_version)
     end
 
   end

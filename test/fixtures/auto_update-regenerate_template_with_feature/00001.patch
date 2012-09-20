@@ -1,0 +1,17 @@
+Before: 6d29e0da667d482673380def736af0984c687568e56751ed43d61c2191204329
+After: 73c3cd06285a6ca49679a5223923aa87ade34ebad438e2bb0eb799be681254b2
+Patch: a9c06099a1a386095315ea50cd7377b41e9d21b3723ff290789f9cd40c164a81
+--- example.txt.tt	2012-09-19 17:43:56.000000000 +1000
++++ example.txt.tt	2012-09-19 17:43:56.000000000 +1000
+@@ -1,4 +1,4 @@
+-This is an example of an update.
++This is an example.
+ 
+ <% if feature_installed? :hot -%>
+   Hot day.
+@@ -8,4 +8,4 @@
+   Getting cold.
+ <% end -%>
+ 
+-Done! Updating works!
++Done!

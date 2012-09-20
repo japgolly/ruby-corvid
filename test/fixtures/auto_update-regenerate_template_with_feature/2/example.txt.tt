@@ -1,0 +1,11 @@
+This is an example of an update.
+
+<% if feature_installed? :hot -%>
+  Hot day.
+<% end -%>
+
+<% if feature_installed? :cold -%>
+  Getting cold.
+<% end -%>
+
+Done! Updating works!

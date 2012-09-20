@@ -1,0 +1,1 @@
+../auto_update-templates/regen.sh

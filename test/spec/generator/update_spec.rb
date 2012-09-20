@@ -61,7 +61,7 @@ describe Corvid::Generator::Update do
     end
   end
 
-  describe '#update_loose_templates_for_template2!' do
+  describe '#update_loose_templates_for_template2!', :slow do
     run_each_in_empty_dir
 
     class FakeGen < ::Corvid::Generator::Base
@@ -186,10 +186,13 @@ describe Corvid::Generator::Update do
       test p1.name
     }
   end
+end
 
-  #---------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------
 
-  describe 'Real Updating With Sample Resources', :slow do
+describe 'Auto-Update With Real Resources' do
+
+  describe 'Basic Functionality', :slow do
     include Fixtures::Upgrading
 
     run_all_in_empty_dir {
@@ -210,8 +213,8 @@ describe Corvid::Generator::Update do
 
       it("should refuse to update"){
         g= quiet_generator(Corvid::Generator::Update)
-        subject.should_not_receive :update!
-        subject.all
+        g.should_not_receive :update!
+        g.all
         get_files().should be_empty
       }
     end
@@ -314,22 +317,59 @@ describe Corvid::Generator::Update do
       }
     }
   end
-end
 
-#-----------------------------------------------------------------------------------------------------------------------
+  #---------------------------------------------------------------------------------------------------------------------
 
-class AutoUpdateTemplatesPluginFeature < Corvid::Feature
-  since_ver 1
-end
-class AutoUpdateTemplatesPlugin < Corvid::Plugin
-  name 'fake'
-  resources_path "#{Fixtures::FIXTURE_ROOT}/auto_update-templates"
-  feature_manifest ({
-    'template2' => [nil,AutoUpdateTemplatesPluginFeature.to_s]
-  })
-end
+  describe 'Advanced Functionality', :slow do
 
-describe AutoUpdateTemplatesPlugin do
-  include Corvid::Builtin::ResourcePatchTests
-  include_feature_update_install_tests
+    describe 'template2()' do
+      class F < Corvid::Feature; since_ver 1 end
+      class P < Corvid::Plugin
+        name 'fake'
+        resources_path "#{Fixtures::FIXTURE_ROOT}/auto_update-templates"
+        require_path 'corvid/plugin'
+        feature_manifest 'template2' => [nil,F.to_s]
+      end
+
+      include Corvid::Builtin::ResourcePatchTests
+      include_feature_update_install_tests P, context: nil
+    end
+
+    describe 'regenerate_template_with_feature()' do
+      class Hot < Corvid::Feature; since_ver 1 end
+      class Cold < Corvid::Feature; since_ver 1 end
+      class P < Corvid::Plugin
+        name 'fake'
+        resources_path "#{Fixtures::FIXTURE_ROOT}/auto_update-regenerate_template_with_feature"
+        require_path 'corvid/plugin'
+        feature_manifest ({
+          'hot' => [nil,Hot.to_s],
+          'cold' => [nil,Cold.to_s],
+        })
+      end
+
+      include Corvid::Builtin::ResourcePatchTests
+      include_feature_update_install_tests P, context: nil
+
+      N= ->(s){ s.chomp.gsub /\n{2,}/, "\n" }
+
+      def feature_update_install_test__pre_update(plugin, feature_name, starting_version)
+        content= case feature_name
+          when 'hot'  then "This is an example.\n  Hot day.\nDone!"
+          when 'cold' then "This is an example.\n  Hot day.\n  Getting cold.\nDone!"
+          end
+        'example.txt'.should be_file_with_content(content).when_normalised_with(&N)
+      end
+
+      def feature_update_install_test__post_update(plugin, feature_name, starting_version)
+        n= ->(s){ s.chomp.gsub /\n{2,}/, "\n" }
+        content= case feature_name
+          when 'hot'  then "This is an example of an update.\n  Hot day.\nDone! Updating works!"
+          when 'cold' then "This is an example of an update.\n  Hot day.\n  Getting cold.\nDone! Updating works!"
+          end
+        'example.txt'.should be_file_with_content(content).when_normalised_with(&N)
+      end
+    end
+
+  end
 end

@@ -27,7 +27,10 @@ group :spec do
     watch(%r'^test/fixtures/auto_update.*?/[^/]+\.patch$') {"test/spec/generator/update_spec.rb"}
 
     # Exceptional cases
-    watch(%r'^lib/corvid/test/resource_patch_tests\.rb') {'test/spec/builtin/builtin_plugin_spec.rb'}
+    watch(%r'^lib/corvid/builtin/test/resource_patch_tests\.rb') {%w[
+        test/spec/generator/update_spec.rb
+        test/spec/builtin/builtin_plugin_spec.rb
+      ]} if bulk?
   end
 end
 

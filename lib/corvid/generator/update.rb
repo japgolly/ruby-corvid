@@ -128,36 +128,39 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
         rv.validate!
       end
 
-      # Pre-load template vars in the client project before creating templates and such in temp dirs for auto-patching.
+      # Lock-down project state.
+      # We don't want differing results because we're generating templates and such in tmp dirs
       preload_template_vars
+      override_installed_features plugin do
 
-      # Auto-update eligible feature files
-      update_feature_files!     rpm, installers, from, to
-      update_feature_templates! rpm, installers, from, to, project_dir_name
+        # Auto-update eligible feature files
+        update_feature_files!     rpm, installers, from, to
+        update_feature_templates! rpm, installers, from, to, project_dir_name
 
-      # Perform feature migration steps
-      (from + 1).upto(to) do |ver|
-        next unless grp= installers[ver]
-        with_resources rpm.ver_dir(ver) do
-          grp.each do |feature,fd|
-            installer= fd[:installer]
-            if installer.respond_to?(:update)
+        # Perform feature migration steps
+        (from + 1).upto(to) do |ver|
+          next unless grp= installers[ver]
+          with_resources rpm.ver_dir(ver) do
+            grp.each do |feature,fd|
+              installer= fd[:installer]
+              if installer.respond_to?(:update)
 
-              # Disable actions that have been auto-updated so that already-patched files aren't overwritten
-              installer.instance_eval AUTO_UPDATE_ACTIONS.map{|m| "def #{m}(*) end" }.join ';'
+                # Disable actions that have been auto-updated so that already-patched files aren't overwritten
+                installer.instance_eval AUTO_UPDATE_ACTIONS.map{|m| "def #{m}(*) end" }.join ';'
 
-              # Call update() in the installer
-              with_action_context(installer) {
-                installer.update ver
-              }
+                # Call update() in the installer
+                with_action_context(installer) {
+                  installer.update ver
+                }
 
+              end
             end
           end
         end
-      end
 
-      # Auto-update loose templates
-      update_loose_templates! plugin.name, rpm, from, to, project_dir_name
+        # Auto-update loose templates
+        update_loose_templates! plugin.name, rpm, from, to, project_dir_name
+      end
 
       # Update version file
       add_version plugin.name, to
@@ -278,6 +281,8 @@ class Corvid::Generator::Update < ::Corvid::Generator::Base
 
     METHODS_TO_DELEGATE= [
       :find_in_source_paths,
+      :feature_installed?,
+      :features_installed?,
     ].freeze
 
     class_eval [:template, :template2].map {|m| <<-EOB
