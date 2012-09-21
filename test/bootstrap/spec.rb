@@ -1,4 +1,5 @@
 require_relative 'all'
+require 'fixtures/dynamic_fixtures-spec'
 
 module TestHelpers
 

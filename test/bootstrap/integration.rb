@@ -1,4 +1,5 @@
 require_relative 'all'
+require 'fixtures/dynamic_fixtures-int'
 
 module GollyUtils::Testing::DynamicFixtures
   def after_dynamic_fixture_creation(name, creation_time_in_sec)
