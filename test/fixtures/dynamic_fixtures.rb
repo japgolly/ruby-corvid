@@ -20,6 +20,18 @@ module GollyUtils::Testing::DynamicFixtures
     run_generator Corvid::Builtin::Generator::InitCorvid, "init --no-test-unit --no-test-spec"
   end
 
+  def_fixture :corvid_then_test_unit do
+    copy_dynamic_fixture :corvid_only
+    require 'corvid/builtin/generator/init_test_unit'
+    run_generator Corvid::Builtin::Generator::InitTestUnit, "unit"
+  end
+
+  def_fixture :corvid_then_test_spec do
+    copy_dynamic_fixture :corvid_only
+    require 'corvid/builtin/generator/init_test_spec'
+    run_generator Corvid::Builtin::Generator::InitTestSpec, "spec"
+  end
+
   # TODO int only fixtures should be separated - invoke_corvid! = IT only
   def_fixture :bare_no_gemfile_lock, dir_name: 'int_test' do
     invoke_corvid! "init --no-#{RUN_BUNDLE} --no-test-unit --no-test-spec"

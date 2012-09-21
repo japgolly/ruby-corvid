@@ -7,13 +7,13 @@ module Corvid::Builtin
     Constants= Corvid::Constants
 
     def assert_features_installed(*expected)
-      client_features.should equal_array expected.flatten
+      client_features.sort.should equal_array expected.flatten.sort
     end
 
     def assert_plugins_installed(expected_names_or_hash)
       f= client_plugins
       if expected_names_or_hash.is_a?(Array)
-        f.keys.should equal_array expected_names_or_hash
+        f.keys.sort.should equal_array expected_names_or_hash.sort
       else
         f.should == expected_names_or_hash
       end
