@@ -16,7 +16,7 @@ function patch_gemfile {
   sed -i -e "
     s!\(corvid.*\)\$!\1, path: '$corvid_home'!
     /golly-utils/d; \$i$golly_utils_dep
-  " .corvid/Gemfile
+  " Gemfile
 }
 
 corvid_home="$(dirname $0)/../.."

@@ -1,13 +1,18 @@
 source :rubygems
 gemspec
 
-# Load Corvid dependencies
-eval File.read(File.expand_path '../.corvid/Gemfile', __FILE__)
+gem 'corvid', path: '../../../..'
 
-# Parser for Markdown documentation
+gem 'rake', group: :rake
+
 group :doc do
+  gem 'yard'
+  # Parsers for Markdown documentation
   gem 'rdiscount', platforms: :mri
   gem 'kramdown', platforms: :jruby
 end
 
+# vim:ft=ruby et ts=2 sw=2:
+
+gem 'golly-utils', git: 'git://github.com/japgolly/golly-utils.git' # TODO use proper golly-utils
 gem "plugin_project", path: '../plugin_project'

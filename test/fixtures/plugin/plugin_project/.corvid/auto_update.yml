@@ -1,0 +1,48 @@
+---
+- :type: template2
+  :plugin: corvid
+  :data:
+    :generator:
+      :class: Corvid::Builtin::Generator::NewPlugin
+      :require: corvid/builtin/generator/new_plugin
+      :args:
+      - p1
+    :filename: lib/%project_name%/%plugin_name%_plugin.rb.tt
+- :type: template2
+  :plugin: corvid
+  :data:
+    :generator:
+      :class: Corvid::Builtin::Generator::NewPlugin
+      :require: corvid/builtin/generator/new_plugin
+      :args:
+      - p1
+    :filename: test/spec/%plugin_name%_plugin_spec.rb.tt
+- :type: template2
+  :plugin: corvid
+  :data:
+    :generator:
+      :class: Corvid::Builtin::Generator::NewPlugin
+      :require: corvid/builtin/generator/new_plugin
+      :args:
+      - p1
+    :options:
+      :perms: 493
+    :filename: bin/%plugin_name%.tt
+- :type: template2
+  :plugin: corvid
+  :data:
+    :generator:
+      :class: Corvid::Builtin::Generator::NewFeature
+      :require: corvid/builtin/generator/new_feature
+      :args:
+      - f1
+    :filename: lib/%project_name%/%feature_name%_feature.rb.tt
+- :type: template2
+  :plugin: corvid
+  :data:
+    :generator:
+      :class: Corvid::Builtin::Generator::NewFeature
+      :require: corvid/builtin/generator/new_feature
+      :args:
+      - f1
+    :filename: resources/latest/corvid-features/%feature_name%.rb.tt
