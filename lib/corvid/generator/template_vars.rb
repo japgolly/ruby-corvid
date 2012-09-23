@@ -87,6 +87,28 @@ module Corvid
         read_git_config_value 'user.email'
       end
 
+      # Takes a name that could potentially be a project lib filename, and strips it down to a name.
+      #
+      # @example
+      #   'lib/my_project/engine/core.rb'  # => 'engine/core'
+      #   'my_project/engine/core.rb'      # => 'engine/core'
+      #   'lib/engine/core.rb'             # => 'engine/core'
+      #   'engine/core.rb'                 # => 'engine/core'
+      #   'engine/core'                    # => 'engine/core'
+      #   'core.rb'                        # => 'core'
+      #   'core'                           # => 'core'
+      #   'MyStuff'                        # => 'my_stuff'
+      #
+      # @param [String] name The given name.
+      # @return [String]
+      def preprocess_template_name_arg(name)
+        name
+          .gsub(/^[\\\/]+|\.rb$/,'')
+          .sub(/^lib[\\\/]+/,'')
+          .underscore
+          .sub(/^#{Regexp.quote project_name.underscore}[\\\/]+/,'')
+      end
+
       private
 
       def read_git_config_value(name)

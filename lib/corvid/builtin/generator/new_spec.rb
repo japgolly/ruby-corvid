@@ -16,11 +16,9 @@ class Corvid::Builtin::Generator::NewSpec < ::Corvid::Generator::Base
   # Template vars
   private
   def src
-    name.underscore
-        .gsub(/^[\\\/]+|\.rb$/,'')
-        .sub(/^lib[\\\/]+/,'')
-        .sub(/^#{Regexp.quote project_name}[\\\/]+/,'')
-        .sub(/_spec$/,'')
+    preprocess_template_name_arg(name)
+      .sub(/^test[\\\/]+spec[\\\/]+/,'')
+      .sub(/_spec$/,'')
   end
   def bootstrap_dir; '../'*src.split(/[\\\/]+/).size + 'bootstrap' end
   def testcase_name; src.split(/[\\\/]+/).last.camelcase end
